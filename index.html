@@ -142,6 +142,9 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 
 <!-- MI TURNO VIEW -->
 <div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button id="miEditBtn" onclick="toggleMiEdit()" style="padding:6px 14px;border-radius:8px;border:1px solid #dee2e6;background:#fff3cd;color:#856404;cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔒 Editar mi turno</button>
+  </div>
   <div id="miTurnoContent"></div>
 </div>
 
@@ -454,7 +457,7 @@ function toggleMiEdit(){
 }
 
 function openEdit(ri,di){
-  if(!editMode)return;
+  if(!editMode&&!miEditMode)return;
   editCtx={ri,di};
   const cell=ROTA[ri][di];
   editTurn=cell?cell[0]:null;
@@ -572,9 +575,7 @@ function renderMiTurno(){
     <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center;flex:1">${MONTHS_ES[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
     <button onclick="miMonth++;if(miMonth>11){miMonth=0;miYear++;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">›</button>
   </div>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-    <button id="miEditBtn" onclick="toggleMiEdit()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:#fff3cd;color:#856404;cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔒 Editar mi turno</button>
-  </div>
+
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
     <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">☀️ ${cM}M</span>
     <span style="background:var(--N2b);color:var(--N2);padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
@@ -613,11 +614,9 @@ function renderMiTurno(){
         const lbl=t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
-        const miCanEdit=miEditMode&&(userRow===0||userRow===pi_unused);
-        const miClick=miEditMode?`onclick="openEdit(${ri},${dow})"`:"";
-        html+=`<td style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle">
+        html+=`<td data-ri="${ri}" data-di="${dow}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
-          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;cursor:${miEditMode?'pointer':'default'};font-weight:800" ${miClick}>${lbl}</div>
+          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800">${lbl}</div>
           ${(()=>{const lk=(ri+1)+"_"+DAYS_ES[dow];const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
         </td>`;
         day++;
@@ -629,6 +628,13 @@ function renderMiTurno(){
   html+=`</tbody></table>`;
 
   document.getElementById("miTurnoContent").innerHTML=html;
+  // Add click handler via event delegation
+  document.getElementById("miTurnoContent").onclick=function(e){
+    if(!miEditMode) return;
+    const td=e.target.closest("td[data-ri]");
+    if(!td) return;
+    openEdit(parseInt(td.dataset.ri), parseInt(td.dataset.di));
+  };
 }
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
 window.onload=()=>{
