@@ -2,106 +2,160 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>TCAES 3ºC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#f8f9fa; --s1:#ffffff; --s2:#f0f2f5; --bd:#dee2e6; --tx:#1a1a2e; --mu:#6c757d;
   --I:#c0392b; --Ib:#fde8e8; --Ix:#c0392b;
   --V:#1e8449; --Vb:#d5f5e3; --Vx:#1e8449;
   --N2:#34495e; --N2b:#eaecee; --N2x:#34495e;
   --A:#1a5276; --Ab:#d6eaf8; --Ax:#1a5276;
-  --neu:#6c757d; --neub:#f8f9fa; --neubx:#6c757d;
+  --bd:#dee2e6; --bg:#f8f9fa; --s1:#fff; --s2:#f0f2f5;
+  --tx:#1a1a2e; --mu:#6c757d;
+  --today:#1b5e20; --today-bg:#4caf50;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font-family:"DM Mono",monospace;min-height:100vh}
-header{background:var(--s1);border-bottom:1px solid var(--bd);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100}
-h1{font-family:"Syne",sans-serif;font-size:1.05rem;font-weight:800}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:"DM Mono",monospace;display:flex;flex-direction:column}
+header{background:var(--s1);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0}
+h1{font-family:"Syne",sans-serif;font-size:1rem;font-weight:800}
 h1 em{color:var(--I);font-style:normal}
-.hbtn{padding:6px 14px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-family:"DM Mono",monospace;font-size:.8rem}
-.hbtn.primary{background:var(--I);color:#fff;border-color:var(--I)}
-.legend{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:.7rem}
-.lc{padding:2px 8px;border-radius:4px;font-weight:500;border:1.5px solid}
+.hbtn{padding:5px 12px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-family:"DM Mono",monospace;font-size:.78rem}
+.hbtn.primary{background:#c62828;color:#fff;border-color:#c62828}
+.hbtn.edit-on{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.legend{display:flex;gap:5px;flex-wrap:wrap;padding:7px 16px;background:var(--s1);border-bottom:1px solid var(--bd);font-size:.68rem;flex-shrink:0}
+.lc{padding:2px 7px;border-radius:4px;font-weight:500;border:1.5px solid}
 .lc.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
 .lc.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
 .lc.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
 .lc.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
-.lc.neu{background:var(--neub);color:var(--neu);border-color:var(--neubx)}
-.wrap{overflow-x:auto;flex:1}
-table{border-collapse:collapse;table-layout:fixed}
-thead tr{background:var(--s1);border-bottom:2px solid var(--bd)}
-th{padding:6px 2px;font-size:.68rem;font-weight:600;color:var(--mu);text-align:center;white-space:nowrap}
-th.name-col{text-align:left;padding-left:10px;min-width:90px;width:90px;position:sticky;left:0;background:var(--s1);z-index:2;border-right:1px solid var(--bd)}
-th.month-hdr{background:var(--s2);color:var(--tx);font-family:"Syne",sans-serif;font-size:.75rem;font-weight:700;border-right:2px solid var(--bd)}
-th.sun{background:#e8e0f5}
+.lc.neu{background:#f8f9fa;color:#6c757d;border-color:#dee2e6}
+.wrap{flex:1;overflow:auto;min-height:0}
+table{border-collapse:collapse;height:100%}
+thead th{padding:4px 2px;font-size:.65rem;font-weight:600;color:var(--mu);text-align:center;white-space:nowrap;background:var(--s1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:3}
+th.name-col{text-align:left;padding-left:8px;min-width:82px;width:82px;left:0;z-index:4;border-right:1px solid var(--bd)}
+th.month-hdr{background:var(--s2);color:var(--tx);font-family:"Syne",sans-serif;font-size:.72rem;border-right:2px solid var(--bd);border-bottom:2px solid var(--bd);letter-spacing:10px;text-transform:uppercase}
+th.sun{background:#ede7f6}
 th.we{color:#6f42c1}
+th.today-hdr{background:var(--today)!important;color:#fff!important;font-weight:700}
 tbody tr{border-bottom:1px solid var(--bd)}
-tbody tr:hover td{background:var(--s2)}
-td{padding:2px 1px;text-align:center;border-bottom:1px solid var(--bd)}
-td.name-col{text-align:left;padding-left:8px;font-size:.78rem;font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--bg);z-index:1;border-right:1px solid var(--bd)}
-td.sun{background:#f0ecf8}
-.chip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:5px;font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid transparent;transition:transform .1s}
-.chip:hover{transform:scale(1.12)}
+td{padding:2px 1px;text-align:center;vertical-align:middle}
+td.name-col{text-align:left;padding-left:8px;font-size:.75rem;font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--bg);z-index:1;border-right:1px solid var(--bd)}
+td.sun{background:#f3e5f5}
+td.today-col{background:var(--today-bg)!important}
+.chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;border:1.5px solid transparent;position:relative}
 .chip.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
 .chip.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
 .chip.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
 .chip.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
-.chip.neu{background:var(--neub);color:var(--neu);border-color:var(--neubx)}
-.chip.today-chip{outline:2px solid #1a7a40;outline-offset:1px}
-.today-col{background:#e8f5e9!important}
+.chip.neu{background:#f8f9fa;color:#aaa;border-color:#dee2e6}
+.chip.locked{cursor:default}
+.change-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;cursor:pointer;z-index:2}
 /* Modal */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:22px;width:94%;max-width:340px;transform:translateY(10px);transition:transform .2s}
+.modal{background:var(--s1);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;transform:translateY(20px);transition:transform .2s;max-height:85vh;overflow-y:auto}
 .overlay.open .modal{transform:translateY(0)}
-.modal h2{font-family:"Syne",sans-serif;font-size:.95rem;margin-bottom:4px}
-.msub{font-size:.72rem;color:var(--mu);margin-bottom:14px}
-.slabel{font-size:.74rem;color:var(--mu);margin-bottom:7px}
-.turn-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.tbtn{padding:7px 10px;border-radius:7px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.78rem;font-weight:500}
+.modal h2{font-family:"Syne",sans-serif;font-size:.95rem;margin-bottom:3px}
+.msub{font-size:.72rem;color:var(--mu);margin-bottom:12px}
+.slabel{font-size:.73rem;color:var(--mu);margin-bottom:6px;margin-top:8px}
+.turn-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.tbtn{padding:8px 10px;border-radius:7px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.78rem;font-weight:500}
 .tbtn.active{border-color:var(--I);color:var(--I);background:var(--Ib)}
-.unit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
-.ubtn{padding:9px 4px;border-radius:7px;border:1.5px solid;cursor:pointer;font-size:.75rem;font-weight:600;text-align:center;opacity:.5}
+.unit-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px}
+.ubtn{padding:9px 4px;border-radius:7px;border:1.5px solid;cursor:pointer;font-size:.74rem;font-weight:600;text-align:center;opacity:.45;transition:opacity .15s}
 .ubtn.active{opacity:1}
 .ubtn.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
 .ubtn.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
 .ubtn.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
 .ubtn.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
-.mfooter{display:flex;justify-content:space-between;gap:8px}
-.mbtn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:.8rem;font-weight:500}
+input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd);font-size:.82rem;font-family:"DM Mono",monospace;background:var(--s2);color:var(--tx);outline:none;margin-top:2px}
+.mfooter{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+.mbtn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:500;font-family:"DM Mono",monospace}
 .mbtn-ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
 .mbtn-save{background:var(--I);color:#fff}
 .mbtn-del{background:#fde8e8;color:var(--I);border:1px solid var(--Ix)}
+/* Name screen */
+#nameScreen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center}
+.name-card{background:var(--s1);border-radius:16px;padding:28px;width:90%;max-width:340px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.name-card h2{font-family:"Syne",sans-serif;font-size:1.1rem;margin-bottom:8px}
+.name-card p{font-size:.78rem;color:var(--mu);margin-bottom:18px}
+.name-btns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+/* Change log popup */
+.log-popup{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:.75rem;z-index:500;max-width:320px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;font-family:"DM Mono",monospace;font-size:.82rem;cursor:pointer;color:var(--mu);border-bottom:3px solid transparent;transition:all .15s}
+.tab-btn.active{color:var(--I);border-bottom-color:var(--I);font-weight:600}
+.mi-day{display:flex;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:6px;gap:12px;border:1.5px solid var(--bd)}
+.mi-day.today{border-color:var(--I);background:#fff9f9}
+.mi-day-num{font-size:1.1rem;font-weight:700;min-width:32px;text-align:center}
+.mi-day-name{font-size:.72rem;color:var(--mu)}
+.mi-chip{padding:5px 14px;border-radius:7px;font-size:.85rem;font-weight:700}
+.mi-chip.I{background:var(--Ib);color:var(--I);border:1.5px solid var(--Ix)}
+.mi-chip.V{background:var(--Vb);color:var(--V);border:1.5px solid var(--Vx)}
+.mi-chip.N2{background:var(--N2b);color:var(--N2);border:1.5px solid var(--N2x)}
+.mi-chip.A{background:var(--Ab);color:var(--A);border:1.5px solid var(--Ax)}
+.mi-chip.neu{background:var(--neub);color:var(--mu);border:1.5px solid var(--bd)}
+.mi-month-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.mi-month-nav button{padding:5px 12px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;font-size:.8rem}
+.mi-month-nav span{font-family:"Syne",sans-serif;font-weight:700;font-size:.95rem}
 </style>
 </head>
 <body>
+
+<!-- NAME SCREEN -->
+<div id="nameScreen">
+  <div class="name-card">
+    <h2>🏥 TCAES 3ºC</h2>
+    <p>¿Cuál es tu nombre? Se usará para identificarte al hacer cambios.</p>
+    <input type="text" id="nameInput" placeholder="Escribe tu nombre..." autofocus>
+    <div id="nameError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left;line-height:1.4"></div>
+    <div class="name-btns">
+      <button class="mbtn mbtn-save" onclick="saveName()" style="width:100%">Entrar</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <h1>🏥 TCAES <em>3ºC</em></h1>
-  <div style="display:flex;gap:8px;align-items:center">
+  <div style="display:flex;gap:6px;align-items:center">
     <button class="hbtn" onclick="changeYear(-1)">‹</button>
-    <span id="yearLabel" style="font-family:Syne,sans-serif;font-weight:700;min-width:50px;text-align:center"></span>
+    <span id="yearLabel" style="font-family:Syne,sans-serif;font-weight:700;min-width:46px;text-align:center"></span>
     <button class="hbtn" onclick="changeYear(1)">›</button>
     <button class="hbtn primary" onclick="goToToday()">📍 Hoy</button>
+
   </div>
 </header>
 <div class="legend">
-  <span style="color:var(--mu);margin-right:4px">Unidad →</span>
+  <span style="color:var(--mu)">Unidad →</span>
   <div class="lc I">🔴 Ictus</div>
   <div class="lc V">🟢 351-353</div>
   <div class="lc N2">⚫ 354/337-339</div>
   <div class="lc A">🔵 340-345</div>
-  <div class="lc neu">L libre · / sal.</div>
-  <span style="font-size:.68rem;color:var(--mu)">← desliza →</span>
+  <div class="lc neu">L · /</div>
+  <span style="font-size:.65rem;color:var(--mu)">← desliza →</span>
 </div>
+<div style="display:flex;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0">
+  <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
+  <button class="tab-btn" id="tab-todos" onclick="showTab('todos')">📅 Todos</button>
+</div>
+
+<!-- MI TURNO VIEW -->
+<div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
+  <div id="miTurnoContent"></div>
+</div>
+
+<!-- TODOS VIEW -->
+<div id="view-todos" style="flex:1;overflow:auto;display:none">
 <div class="wrap" id="wrap">
-  <table id="tbl">
+  <table id="tbl" style="border-collapse:collapse;width:max-content">
     <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
+</div><!-- end view-todos -->
 
-<!-- MODAL -->
+<!-- EDIT MODAL -->
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
   <div class="modal">
     <h2 id="mTitle">Editar</h2>
@@ -114,6 +168,12 @@ td.sun{background:#f0ecf8}
       <div class="slabel" id="unitLabel2" style="display:none">Segunda unidad:</div>
       <div class="unit-grid" id="unitGrid2" style="display:none"></div>
     </div>
+    <div class="slabel">Tu nombre:</div>
+    <input type="text" id="inputWho" placeholder="Tu nombre...">
+    <div class="slabel">Cambio con:</div>
+    <input type="text" id="inputWith" placeholder="Nombre de la compañera...">
+    <div class="slabel">Comentario (opcional):</div>
+    <input type="text" id="inputComment" placeholder="Ej: me cubre ella el día 20...">
     <div class="mfooter">
       <button class="mbtn mbtn-del" onclick="applyEdit(null,null,null)">✕ Borrar</button>
       <div style="display:flex;gap:8px">
@@ -123,6 +183,9 @@ td.sun{background:#f0ecf8}
     </div>
   </div>
 </div>
+
+<!-- CHANGE LOG POPUP -->
+<div class="log-popup" id="logPopup" style="display:none"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -162,202 +225,420 @@ const PEOPLE = [
   {name:"Vanesa",startRow:15},
 ];
 
-const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAYS_ES = ["L","M","X","J","V","S","D"];
-const REF_MONDAY = new Date(2026,3,6);
-const UNIT_LABELS = {I:"🔴 Ictus",V:"🟢 351-353",N2:"⚫ 354/337-339",A:"🔵 340-345"};
+const MONTHS_ES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DAYS_ES=["L","M","X","J","V","S","D"];
+const REF_MONDAY=new Date(2026,3,6);
+const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
+const TURNS=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"]];
 
-let currentYear = new Date().getFullYear();
-let editCtx = null, editTurn = null, editUnit = null, editUnit2 = null;
+let currentYear=new Date().getFullYear();
+let editMode=false;
+let userName=localStorage.getItem("tcaes_user")||"";
+let userRow=parseInt(localStorage.getItem("tcaes_row")||"0"); // 0=admin/unknown, 1-15=person row // 0=admin
+let editCtx=null,editTurn=null,editUnit=null,editUnit2=null;
+let changeLogData={};
+let db=null;
 
-// Firebase
-let db = null;
-try {
-  const fc = {
-    apiKey:"AIzaSyADK5CA7AZotGERWaU3Bpjym4vYLZm9grU",
-    authDomain:"rotatorio-tcaes.firebaseapp.com",
-    databaseURL:"https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"rotatorio-tcaes",
-    storageBucket:"rotatorio-tcaes.firebasestorage.app",
-    messagingSenderId:"362053048865",
-    appId:"1:362053048865:web:e77a2ba4d053c4f7b6a160"
-  };
-  firebase.initializeApp(fc);
-  db = firebase.database();
-  db.ref("rota_changes").on("value", snap => {
-    const ch = snap.val();
-    if(ch) Object.entries(ch).forEach(([k,v]) => {
-      const [ri,di] = k.split("_").map(Number);
-      ROTA[ri][di] = v;
-    });
-    render();
-  });
-} catch(e) { render(); }
-
-function mondayOf(d) {
-  const dt = new Date(d); const day = dt.getDay();
-  dt.setDate(dt.getDate() + (day===0?-6:1-day)); return dt;
+// Name screen
+function saveName(){
+  const n=document.getElementById("nameInput").value.trim();
+  if(!n) return;
+  userName=n;
+  localStorage.setItem("tcaes_user",n);
+  // Find exact matching row
+  const nl=n.toLowerCase();
+  const idx=PEOPLE.findIndex(p=>p.name.toLowerCase()===nl);
+  if(idx<0){
+    const nameList = PEOPLE.map(p=>p.name).join(", ");
+    document.getElementById("nameError").textContent="❌ Nombre no encontrado. Nombres válidos: "+nameList;
+    document.getElementById("nameError").style.display="block";
+    return;
+  }
+  document.getElementById("nameError").style.display="none";
+  userRow=idx+1;
+  localStorage.setItem("tcaes_row",String(userRow));
+  document.getElementById("nameScreen").style.display="none";
+  initApp();
+  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
 }
-function addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
-function weekOff(mon) { return Math.round((mon-REF_MONDAY)/(7*86400000)); }
-function rowFor(sr,mon) { const o=weekOff(mon); return((sr-1+o)%15+15)%15; }
-function fmtD(d) { return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0"); }
+document.getElementById("nameInput").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();});
 
-function chipCls(t,u) {
-  if(!t||t==="L"||t==="/"||t==="MT"||t==="TN") return "neu";
+function fixErrors(){
+  if(!db) return;
+  // Solo ejecutar si no se ha hecho ya
+  db.ref("fixes/fix_mayo_cristina_diana").once("value").then(snap=>{
+    if(snap.val()) return; // ya hecho
+    db.ref("rota_changes/9_2").set(["/",null,null]);
+    db.ref("rota_changes/9_3").set(["L",null,null]);
+    db.ref("rota_changes/10_2").set(["N","N2",null]);
+    db.ref("rota_changes/10_3").set(["/",null,null]);
+    const keysToClean = ["10_X","10_J","11_X"];
+    db.ref("change_log").once("value").then(snap=>{
+      const logs=snap.val();
+      if(!logs) return;
+      Object.entries(logs).forEach(([pushKey,entry])=>{
+        const k=entry.fila+"_"+entry.dia;
+        if(keysToClean.includes(k)) db.ref("change_log/"+pushKey).remove();
+      });
+    });
+    db.ref("fixes/fix_mayo_cristina_diana").set(true);
+    console.log("Fix aplicado");
+  });
+}
+
+function initApp(){
+  // Firebase
+  try{
+    const fc={
+      apiKey:"AIzaSyADK5CA7AZotGERWaU3Bpjym4vYLZm9grU",
+      authDomain:"rotatorio-tcaes.firebaseapp.com",
+      databaseURL:"https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:"rotatorio-tcaes",
+      storageBucket:"rotatorio-tcaes.firebasestorage.app",
+      messagingSenderId:"362053048865",
+      appId:"1:362053048865:web:e77a2ba4d053c4f7b6a160"
+    };
+    firebase.initializeApp(fc);
+    db=firebase.database();
+    fixErrors();
+    db.ref("rota_changes").on("value",snap=>{
+      const ch=snap.val();
+      if(ch) Object.entries(ch).forEach(([k,v])=>{const[ri,di]=k.split("_").map(Number);ROTA[ri][di]=v;});
+      render();
+    });
+    db.ref("change_log").on("value",snap=>{
+      changeLogData={};
+      const logs=snap.val();
+      if(logs) Object.values(logs).forEach(e=>{
+        const key=e.fila+"_"+e.dia;
+        if(!changeLogData[key])changeLogData[key]=[];
+        changeLogData[key].push(e);
+      });
+      render();
+    });
+  }catch(e){render();}
+}
+
+// Check if user already has name
+if(userName){
+  document.getElementById("nameScreen").style.display="none";
+  initApp();
+  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
+} else {
+  document.getElementById("nameScreen").style.display="flex";
+}
+
+function mondayOf(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));return dt;}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function weekOff(mon){return Math.round((mon-REF_MONDAY)/(7*86400000));}
+function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%15+15)%15;}
+
+function chipCls(t,u){
+  if(!t||t==="L"||t==="/"||t==="MT"||t==="TN")return"neu";
   return u||"neu";
 }
 
-function chipHtml(t,u,ri,di) {
-  const cls = chipCls(t,u);
-  const lbl = t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
-  const sz = (t==="MT"||t==="TN")?".55rem":".72rem";
-  const today = new Date(); const isToday = false;
-  return `<div class="chip ${cls}" style="font-size:${sz}" onclick="openEdit(${ri},${di})">${lbl}</div>`;
-}
+function render(){
+  document.getElementById("yearLabel").textContent=currentYear;
+  const today=new Date();
 
-function render() {
-  document.getElementById("yearLabel").textContent = currentYear;
-  const today = new Date();
-
-  // Build list of (year,month) pairs
-  const months = [];
-  for(let m=0;m<12;m++) months.push([currentYear,m]);
-
-  // Count days total
-  let headHTML = '<tr><th class="name-col">Persona</th>';
-  let prevMonth = -1;
-  const dayCols = []; // {year,month,day,dow,isSun,isToday}
-
-  months.forEach(([yr,mn]) => {
-    const last = new Date(yr,mn+1,0).getDate();
-    for(let d=1;d<=last;d++) {
-      const date = new Date(yr,mn,d);
-      const dow = (date.getDay()+6)%7;
-      const isSun = dow===6;
-      const isToday2 = date.toDateString()===today.toDateString();
-      dayCols.push({yr,mn,d,dow,isSun,isToday:isToday2});
+  const dayCols=[];
+  for(let m=0;m<12;m++){
+    const last=new Date(currentYear,m+1,0).getDate();
+    for(let d=1;d<=last;d++){
+      const date=new Date(currentYear,m,d);
+      const dow=(date.getDay()+6)%7;
+      dayCols.push({yr:currentYear,mn:m,d,dow,isSun:dow===6,isWE:dow>=5,isToday:date.toDateString()===today.toDateString()});
     }
-  });
+  }
 
-  // Month header row
-  let headRow1 = '<tr><th class="name-col" rowspan="2"></th>';
-  let mSpan = 0; let mName = "";
-  dayCols.forEach((dc,i) => {
-    if(dc.mn !== (i>0?dayCols[i-1].mn:-1)) {
-      if(mSpan>0) headRow1 += `<th class="month-hdr" colspan="${mSpan}">${mName}</th>`;
-      mSpan=0; mName=MONTHS_ES[dc.mn];
-    }
-    mSpan++;
-    if(i===dayCols.length-1) headRow1+=`<th class="month-hdr" colspan="${mSpan}">${mName}</th>`;
+  // Month header
+  let h1='<tr><th class="name-col" rowspan="2" style="position:sticky;left:0;top:0;z-index:5">Nombre</th>';
+  let prev=-1,span=0;
+  dayCols.forEach((dc,i)=>{
+    if(dc.mn!==prev){if(span>0)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS_ES[dayCols[i-span].mn]}</th>`;span=0;prev=dc.mn;}
+    span++;
+    if(i===dayCols.length-1)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS_ES[dc.mn]}</th>`;
   });
-  headRow1 += '</tr>';
+  h1+='</tr>';
 
-  // Day numbers row
-  let headRow2 = '<tr>';
-  dayCols.forEach(dc => {
-    const we = dc.dow>=5;
-    headRow2 += `<th class="${dc.isSun?"sun":""} ${we?"we":""}" style="${dc.isToday?"background:#c8e6c9;color:#1a7a40;font-weight:700":""}">${dc.d}<br><span style="font-size:.58rem">${DAYS_ES[dc.dow]}</span></th>`;
+  // Day numbers
+  let h2='<tr>';
+  dayCols.forEach(dc=>{
+    const cls=(dc.isToday?"today-hdr ":"")+(dc.isSun?"sun ":dc.isWE?"we ":"");
+    h2+=`<th class="${cls}" style="min-width:40px;width:40px">${dc.d}<br><span style="font-size:.56rem">${DAYS_ES[dc.dow]}</span></th>`;
   });
-  headRow2 += '</tr>';
-
-  document.getElementById("thead").innerHTML = headRow1 + headRow2;
+  h2+='</tr>';
+  document.getElementById("thead").innerHTML=h1+h2;
 
   // Body
-  let bodyHTML = '';
-  PEOPLE.forEach((p,pi) => {
-    const bg = pi%2===0?"#ffffff":"#f8f9fa";
-    bodyHTML += `<tr><td class="name-col" style="background:${bg}">${p.name}</td>`;
-    dayCols.forEach(dc => {
-      const mon = mondayOf(new Date(dc.yr,dc.mn,dc.d));
-      const ri = rowFor(p.startRow,mon);
-      const cell = ROTA[ri][dc.dow];
-      const t=cell?cell[0]:null, u=cell?cell[1]:null;
-      const cellBg = dc.isToday?"#c8e6c9":dc.isSun?"#f0ecf8":bg;
-      bodyHTML += `<td style="background:${cellBg}">${chipHtml(t,u,ri,dc.dow)}</td>`;
+  let body='';
+  PEOPLE.forEach((p,pi)=>{
+    const isMyRow=(userRow===pi+1);
+    const bg=pi%2===0?"#fff":"#f8f9fa";
+    body+=`<tr><td class="name-col" style="background:${bg};${isMyRow?"font-weight:700;color:var(--I)":""}">${p.name}</td>`;
+    dayCols.forEach(dc=>{
+      const mon=mondayOf(new Date(dc.yr,dc.mn,dc.d));
+      const ri=rowFor(p.startRow,mon);
+      const cell=ROTA[ri][dc.dow];
+      const t=cell?cell[0]:null,u=cell?cell[1]:null;
+      const cls=chipCls(t,u);
+      const lbl=t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
+      const sz=(t==="MT"||t==="TN")?".55rem":".8rem";
+      const cellBg=dc.isToday?"#4caf50":dc.isSun?"#f3e5f5":bg;
+      // Change log dot
+      const logKey=(ri+1)+"_"+DAYS_ES[dc.dow];
+      const hasLog=changeLogData[logKey]&&changeLogData[logKey].length>0;
+      const dot=hasLog?`<span class="change-dot" onclick="showLog(event,'${logKey}')">✎</span>`:"";
+      // Editable only if editMode AND (my row OR admin)
+      const canEdit=false; // editing only in Mi turno tab
+      const onclick=canEdit?`openEdit(${ri},${dc.dow})`:"";
+      body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
+        <div style="position:relative;display:inline-block">
+          <div class="chip ${cls}${canEdit?"":" locked"}" style="font-size:${sz}" ${onclick?`onclick="${onclick}"`:""}>${lbl}</div>
+          ${dot}
+        </div>
+      </td>`;
     });
-    bodyHTML += '</tr>';
+    body+='</tr>';
   });
-  document.getElementById("tbody").innerHTML = bodyHTML;
-
-  // Set column widths
-  const tbl = document.getElementById("tbl");
-  tbl.style.minWidth = (90 + dayCols.length*32)+"px";
+  document.getElementById("tbody").innerHTML=body;
+  if(typeof renderMiTurno==="function") renderMiTurno();
 }
 
-function changeYear(d) { currentYear+=d; render(); }
+function showLog(e,key){
+  e.stopPropagation();
+  const logs=changeLogData[key];
+  if(!logs||!logs.length)return;
+  const last=logs[logs.length-1];
+  const popup=document.getElementById("logPopup");
+  popup.innerHTML=`✎ <b>${last.quien}</b> con <b>${last.con}</b><br>${last.fecha}`;
+  popup.style.display="block";
+  setTimeout(()=>popup.style.display="none",4000);
+}
 
-function goToToday() {
-  currentYear = new Date().getFullYear();
+document.addEventListener("click",()=>document.getElementById("logPopup").style.display="none");
+
+function changeYear(d){currentYear+=d;render();}
+
+function goToToday(){
+  currentYear=new Date().getFullYear();
   render();
-  setTimeout(() => {
-    const wrap = document.getElementById("wrap");
-    const today = new Date();
-    let offset = 90;
-    let d2 = new Date(currentYear,0,1);
-    while(d2 <= today) {
-      if(d2.toDateString()!==today.toDateString()) offset+=32;
-      else break;
-      d2.setDate(d2.getDate()+1);
+  setTimeout(()=>{
+    const wrap=document.getElementById("wrap");
+    // Find today's column header using the highlighted class
+    const todayTh=document.querySelector("th.today-hdr");
+    if(todayTh){
+      const cellLeft=todayTh.offsetLeft;
+      wrap.scrollLeft=cellLeft-wrap.clientWidth/2+todayTh.offsetWidth/2;
     }
-    wrap.scrollLeft = offset - wrap.clientWidth/2;
-  },100);
+  },200);
 }
 
-// ── MODAL ──
-const UNITS = [["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
-const TURNS = [["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"]];
+function toggleEdit(){
+  editMode=!editMode;
+  render();
+}
 
-function openEdit(ri,di) {
+let miEditMode=false;
+function toggleMiEdit(){
+  miEditMode=!miEditMode;
+  const btn=document.getElementById("miEditBtn");
+  if(btn){
+    btn.textContent=miEditMode?"✏️ Editando":"🔒 Editar mi turno";
+    btn.style.background=miEditMode?"#d4edda":"#fff3cd";
+    btn.style.color=miEditMode?"#155724":"#856404";
+    btn.style.borderColor=miEditMode?"#28a745":"var(--bd)";
+  }
+  renderMiTurno();
+}
+
+function openEdit(ri,di){
+  if(!editMode)return;
   editCtx={ri,di};
   const cell=ROTA[ri][di];
   editTurn=cell?cell[0]:null;
   editUnit=cell?cell[1]:null;
   editUnit2=cell?cell[2]:null;
   document.getElementById("mTitle").textContent=`Fila ${ri+1} · ${DAYS_ES[di]}`;
-  document.getElementById("mSub").textContent=cell?`Actual: ${cell[0]}${cell[1]?" — "+UNIT_LABELS[cell[1]]:""}`:""
-  renderTurnBtns(); renderUnitBtns();
+  document.getElementById("mSub").textContent=cell?`Actual: ${cell[0]}${cell[1]?" · "+cell[1]:""}`:""
+  renderTurnBtns();renderUnitBtns();
+  document.getElementById("inputWho").value=userName||"";
+  document.getElementById("inputWith").value="";
+  document.getElementById("inputComment").value="";
+  // Pre-fill with existing comment if any
+  const logKey=(editCtx.ri+1)+"_"+DAYS_ES[editCtx.di];
+  const existingLogs=changeLogData[logKey];
+  if(existingLogs&&existingLogs.length>0){
+    const last=existingLogs[existingLogs.length-1];
+    if(last.con&&last.con!=="—") document.getElementById("inputWith").value=last.con;
+    if(last.comentario) document.getElementById("inputComment").value=last.comentario;
+  }
   document.getElementById("overlay").classList.add("open");
 }
 
-function renderTurnBtns() {
+function renderTurnBtns(){
   document.getElementById("turnRow").innerHTML=TURNS.map(([k,l])=>
     `<div class="tbtn ${editTurn===k?"active":""}" onclick="selTurn('${k}')">${l}</div>`).join("");
 }
-
-function renderUnitBtns() {
-  const isDouble=editTurn==="MT"||editTurn==="TN";
+function renderUnitBtns(){
+  const isD=editTurn==="MT"||editTurn==="TN";
   const show=editTurn&&editTurn!=="L"&&editTurn!=="/";
   document.getElementById("unitSection").style.display=show?"":"none";
-  if(!show) return;
-  const lbl1=isDouble?(editTurn==="MT"?"☀️ Turno mañana:":"🌤 Turno tarde:"):"Unidad:";
-  const lbl2=isDouble?(editTurn==="MT"?"🌤 Turno tarde:":"🌙 Turno noche:"):"";
-  document.getElementById("unitLabel1").textContent=lbl1;
+  if(!show)return;
+  const l1=isD?(editTurn==="MT"?"☀️ 1ª unidad:":"🌤 1ª unidad:"):"Unidad:";
+  const l2=isD?(editTurn==="MT"?"🌤 2ª unidad:":"🌙 2ª unidad:"):"";
+  document.getElementById("unitLabel1").textContent=l1;
   document.getElementById("unitGrid1").innerHTML=UNITS.map(([k,l])=>
     `<div class="ubtn ${k} ${editUnit===k?"active":""}" onclick="selUnit1('${k}')">${l}</div>`).join("");
-  document.getElementById("unitLabel2").style.display=isDouble?"":"none";
-  document.getElementById("unitGrid2").style.display=isDouble?"grid":"none";
-  if(isDouble) document.getElementById("unitGrid2").innerHTML=UNITS.map(([k,l])=>
+  document.getElementById("unitLabel2").style.display=isD?"":"none";
+  document.getElementById("unitGrid2").style.display=isD?"grid":"none";
+  if(isD)document.getElementById("unitGrid2").innerHTML=UNITS.map(([k,l])=>
     `<div class="ubtn ${k} ${editUnit2===k?"active":""}" onclick="selUnit2('${k}')">${l}</div>`).join("");
 }
+function selTurn(t){editTurn=t;if(t==="L"||t==="/"){editUnit=null;editUnit2=null;}renderTurnBtns();renderUnitBtns();}
+function selUnit1(u){editUnit=u;renderUnitBtns();}
+function selUnit2(u){editUnit2=u;renderUnitBtns();}
+function confirmEdit(){applyEdit(editTurn,editUnit,editUnit2);}
 
-function selTurn(t) { editTurn=t; if(t==="L"||t==="/") {editUnit=null;editUnit2=null;} renderTurnBtns(); renderUnitBtns(); }
-function selUnit1(u) { editUnit=u; renderUnitBtns(); }
-function selUnit2(u) { editUnit2=u; renderUnitBtns(); }
-function confirmEdit() { applyEdit(editTurn,editUnit,editUnit2); }
-
-function applyEdit(t,u,u2) {
-  if(!editCtx) return;
-  const val = t?[t,u||null,u2||null]:null;
-  ROTA[editCtx.ri][editCtx.di] = val;
-  if(db) db.ref("rota_changes/"+editCtx.ri+"_"+editCtx.di).set(val).catch(()=>{});
-  closeModal(); render();
+function applyEdit(t,u,u2){
+  if(!editCtx)return;
+  const val=t?[t,u||null,u2||null]:null;
+  ROTA[editCtx.ri][editCtx.di]=val;
+  const who=document.getElementById("inputWho")?document.getElementById("inputWho").value.trim()||userName:"sistema";
+  const withWho=document.getElementById("inputWith")?document.getElementById("inputWith").value.trim()||"—":"—";
+  if(who){userName=who;localStorage.setItem("tcaes_user",who);}
+  if(db){
+    db.ref("rota_changes/"+editCtx.ri+"_"+editCtx.di).set(val).catch(()=>{});
+    const comment=document.getElementById("inputComment")?document.getElementById("inputComment").value.trim():"";
+    db.ref("change_log").push({
+      quien:who,con:withWho,
+      comentario:comment||"",
+      fecha:new Date().toLocaleString("es-ES"),
+      fila:editCtx.ri+1,dia:DAYS_ES[editCtx.di],
+      cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado"
+    }).catch(()=>{});
+  }
+  closeModal();render();
 }
 
-function closeModal() { document.getElementById("overlay").classList.remove("open"); editCtx=null; }
-function outsideClose(e) { if(e.target.id==="overlay") closeModal(); }
+function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 
-window.onload = function() { render(); setTimeout(goToToday,200); };
+let miMonth = new Date().getMonth();
+let miYear = new Date().getFullYear();
+
+function showTab(tab){
+  document.getElementById("view-mi").style.display = tab==="mi"?"block":"none";
+  document.getElementById("view-todos").style.display = tab==="todos"?"block":"none";
+  document.getElementById("tab-mi").classList.toggle("active", tab==="mi");
+  document.getElementById("tab-todos").classList.toggle("active", tab==="todos");
+  if(tab==="todos"){
+    setTimeout(()=>{
+      const wrap=document.getElementById("wrap");
+      const todayTh=document.querySelector("th.today-hdr");
+      if(todayTh){
+        wrap.scrollLeft=todayTh.offsetLeft-wrap.clientWidth/2+todayTh.offsetWidth/2;
+      }
+    },50);
+  }
+}
+
+function renderMiTurno(){
+  if(userRow===0){
+    document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);font-size:.82rem;padding:20px">No se encontró tu fila en el rotatorio.</p>';
+    return;
+  }
+  const me = PEOPLE[userRow-1];
+  const today = new Date();
+  const last = new Date(miYear, miMonth+1, 0).getDate();
+  const firstDow = (new Date(miYear,miMonth,1).getDay()+6)%7; // 0=Mon
+
+  // Count M/T/N
+  let cM=0,cT=0,cN=0;
+  for(let d=1;d<=last;d++){
+    const date=new Date(miYear,miMonth,d);
+    const dow=(date.getDay()+6)%7;
+    const mon=mondayOf(date);
+    const ri=rowFor(me.startRow,mon);
+    const cell=ROTA[ri][dow];
+    const t=cell?cell[0]:null;
+    if(t==="M"||t==="MT")cM++;
+    if(t==="T"||t==="MT"||t==="TN")cT++;
+    if(t==="N"||t==="TN")cN++;
+  }
+
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px">
+    <button onclick="miMonth--;if(miMonth<0){miMonth=11;miYear--;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">‹</button>
+    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center;flex:1">${MONTHS_ES[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
+    <button onclick="miMonth++;if(miMonth>11){miMonth=0;miYear++;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">›</button>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button id="miEditBtn" onclick="toggleMiEdit()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:#fff3cd;color:#856404;cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔒 Editar mi turno</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
+    <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">☀️ ${cM}M</span>
+    <span style="background:var(--N2b);color:var(--N2);padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
+    <span style="background:var(--Ab);color:var(--A);padding:3px 10px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
+  </div>`;
+
+  // Calendar grid
+  html += `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    <thead><tr>`;
+  ["L","M","X","J","V","S","D"].forEach((d,i)=>{
+    const isWE=i>=5;
+    html+=`<th style="text-align:center;padding:8px 2px;font-size:.88rem;color:${isWE?"#6f42c1":"var(--mu)"};font-weight:700;border-bottom:2px solid var(--bd)">${d}</th>`;
+  });
+  html+=`</tr></thead><tbody>`;
+
+  // Build weeks
+  let day=1;
+  let started=false;
+  while(day<=last){
+    html+=`<tr>`;
+    for(let dow=0;dow<7;dow++){
+      if(!started && dow<firstDow){
+        html+=`<td style="padding:4px 2px"></td>`;
+      } else if(day>last){
+        html+=`<td style="padding:4px 2px"></td>`;
+      } else {
+        started=true;
+        const date=new Date(miYear,miMonth,day);
+        const isToday=date.toDateString()===today.toDateString();
+        const isWE=dow>=5;
+        const mon=mondayOf(date);
+        const ri=rowFor(me.startRow,mon);
+        const cell=ROTA[ri][dow];
+        const t=cell?cell[0]:null,u=cell?cell[1]:null;
+        const cls=t&&t!=="L"&&t!=="/"?(u||"neu"):"neu";
+        const lbl=t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
+        const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
+        const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
+        const miCanEdit=miEditMode&&(userRow===0||userRow===pi_unused);
+        const miClick=miEditMode?`onclick="openEdit(${ri},${dow})"`:"";
+        html+=`<td style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle">
+          <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
+          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;cursor:${miEditMode?'pointer':'default'};font-weight:800" ${miClick}>${lbl}</div>
+          ${(()=>{const lk=(ri+1)+"_"+DAYS_ES[dow];const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
+        </td>`;
+        day++;
+      }
+    }
+    html+=`</tr>`;
+    if(!started) started=true;
+  }
+  html+=`</tbody></table>`;
+
+  document.getElementById("miTurnoContent").innerHTML=html;
+}
+function outsideClose(e){if(e.target.id==="overlay")closeModal();}
+window.onload=()=>{
+  if(userName){
+    render();
+    renderMiTurno();
+    showTab("mi");
+    setTimeout(goToToday,400);
+  }
+};
 </script>
 </body>
 </html>
