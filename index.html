@@ -121,17 +121,44 @@ input[type=text]{width:180px}
 .mbtn-ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
 .mbtn-save{background:var(--I);color:#fff}
 .mbtn-del{background:#280808;color:#f06060;border:1px solid #602020}
+
+/* Edit Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:22px 24px;width:94%;max-width:360px;transform:translateY(12px);transition:transform .2s}
+.overlay.open .modal{transform:translateY(0)}
+.modal h2{font-family:"Syne",sans-serif;font-size:.95rem;margin-bottom:4px}
+.modal .msub{font-size:.73rem;color:var(--mu);margin-bottom:14px}
+.slabel{font-size:.75rem;color:var(--mu);margin-bottom:8px}
+.turn-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tbtn{padding:8px 12px;border-radius:7px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-family:"DM Mono",monospace;font-size:.8rem;font-weight:500;transition:all .15s}
+.tbtn.active{border-color:var(--I);color:var(--I);background:var(--Ib)}
+.unit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.ubtn{padding:10px 6px;border-radius:7px;border:1.5px solid;cursor:pointer;font-family:"DM Mono",monospace;font-size:.78rem;font-weight:600;text-align:center;transition:transform .12s,opacity .12s;opacity:.5}
+.ubtn:hover{opacity:.85;transform:scale(1.04)}
+.ubtn.active{opacity:1;transform:scale(1.04)}
+.ubtn.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
+.ubtn.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
+.ubtn.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
+.ubtn.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
+.modal-footer{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.mbtn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-family:"DM Mono",monospace;font-size:.8rem;font-weight:500}
+.mbtn-ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
+.mbtn-save{background:var(--I);color:#fff}
+.mbtn-del{background:#280808;color:#f06060;border:1px solid #602020}
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <h1>🏥 TCAES <em>3ºC</em></h1>
-  <button class="hbtn primary" onclick="showDataPanel()">💾 Datos</button>
-  <div class="tabs">
-    <button class="tab" onclick="showTab('config')">⚙️ Personas</button>
-    <button class="tab active" onclick="showTab('semana')">🗓 Mes</button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="hbtn" onclick="changeTimelineYear(-1)">‹</button>
+    <span id="headerYearLabel" style="font-family:Syne,sans-serif;font-size:.95rem;font-weight:700;min-width:50px;text-align:center"></span>
+    <button class="hbtn" onclick="changeTimelineYear(1)">›</button>
+    <button class="hbtn primary" onclick="scrollToToday()">📍 Hoy</button>
   </div>
+
 </header>
 
 <!-- CONFIG -->
@@ -160,12 +187,6 @@ input[type=text]{width:180px}
       <div class="lc neu" style="color:#6c757d;border-color:#6c757d">L libre · / sal.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="year-nav">
-        <button class="wnav-btn" onclick="changeTimelineYear(-1)">‹</button>
-        <div class="year-label" id="timelineYearLabel"></div>
-        <button class="wnav-btn" onclick="changeTimelineYear(1)">›</button>
-      </div>
-      <button class="today-btn" onclick="scrollToToday()">📍 Hoy</button>
       <span style="font-size:.72rem;color:var(--mu)">← desliza para ver todas las semanas →</span>
     </div>
   </div>
@@ -177,6 +198,25 @@ input[type=text]{width:180px}
   </div>
 </div>
 
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="editOverlay" onclick="outsideClose(event)">
+  <div class="modal">
+    <h2 id="mTitle">Editar celda</h2>
+    <div class="msub" id="mSub"></div>
+    <div class="slabel">Turno:</div>
+    <div class="turn-row" id="turnRow"></div>
+    <div class="slabel" id="unitLabel">Unidad:</div>
+    <div class="unit-grid" id="unitGrid"></div>
+    <div class="modal-footer">
+      <button class="mbtn mbtn-del" onclick="applyEdit(null,null)">✕ Borrar</button>
+      <div style="display:flex;gap:8px">
+        <button class="mbtn mbtn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="mbtn mbtn-save" onclick="confirmEdit()">Guardar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- DATA PANEL -->
@@ -198,6 +238,8 @@ input[type=text]{width:180px}
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 const ROTA = [
   [["T","V"],["T","I"],["N","I"],["/",null],["L",null],["L",null],["M","I"]],
@@ -219,6 +261,58 @@ const ROTA = [
 
 // ROTA versioning — bump this when hardcoded ROTA changes
 const ROTA_VERSION = "v5";
+
+// ── FIREBASE ──
+const firebaseConfig = {
+  apiKey: "AIzaSyADK5CA7AZotGERWaU3Bpjym4vYLZm9grU",
+  authDomain: "rotatorio-tcaes.firebaseapp.com",
+  databaseURL: "https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "rotatorio-tcaes",
+  storageBucket: "rotatorio-tcaes.firebasestorage.app",
+  messagingSenderId: "362053048865",
+  appId: "1:362053048865:web:e77a2ba4d053c4f7b6a160"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Load ROTA changes from Firebase on start — fallback to local if offline
+try {
+  db.ref("rota_changes").once("value").then(snap => {
+    const changes = snap.val();
+    if(changes) {
+      Object.entries(changes).forEach(([key, val]) => {
+        const [ri, di] = key.split("_").map(Number);
+        ROTA[ri][di] = val;
+      });
+    }
+    renderTimeline();
+    setTimeout(scrollToToday, 300);
+  }).catch(() => {
+    renderTimeline();
+    setTimeout(scrollToToday, 300);
+  });
+
+  // Listen for realtime changes
+  db.ref("rota_changes").on("value", snap => {
+    const changes = snap.val();
+    if(changes) {
+      Object.entries(changes).forEach(([key, val]) => {
+        const [ri, di] = key.split("_").map(Number);
+        ROTA[ri][di] = val;
+      });
+      if(document.getElementById("timelineBody").innerHTML !== "") renderTimeline();
+    }
+  });
+} catch(e) {
+  renderTimeline();
+  setTimeout(scrollToToday, 300);
+}
+
+// Save change to Firebase
+function saveToFirebase(rowIdx, colIdx, val) {
+  const key = rowIdx + "_" + colIdx;
+  db.ref("rota_changes/" + key).set(val);
+}
 (function(){
   try {
     const savedVersion = localStorage.getItem("aux2_rota_version");
@@ -268,6 +362,7 @@ function fmtDateFull(d){return d.getDate()+" "+MONTHS_ES[d.getMonth()]+" "+d.get
 
 function chipCls(t,u){
   if(!t||t==="L"||t==="/")return "neu";
+  if(t==="MT"||t==="TN")return "neu";
   return u||"neu";
 }
 function renderChip(cell, clickHandler){
@@ -275,6 +370,9 @@ function renderChip(cell, clickHandler){
   const cls=chipCls(t,u);
   const label=u?UNIT_LABELS[u]?.split(" ")[1]||u:"";
   const onclick=clickHandler?`onclick="${clickHandler}"`:"";
+  // Double shifts
+  if(t==="MT") return `<div class="chip" style="background:var(--Mb);border:1px solid var(--Mx);color:var(--M)" ${onclick}><span class="ct" style="font-size:.6rem">M/T</span></div>`;
+  if(t==="TN") return `<div class="chip" style="background:var(--Nb);border:1px solid var(--Nx);color:var(--N)" ${onclick}><span class="ct" style="font-size:.6rem">T/N</span></div>`;
   return `<div class="chip ${cls}" ${onclick}>
     <span class="ct">${t||"·"}</span>
     ${label?`<span class="cu">${label}</span>`:""}
@@ -417,7 +515,7 @@ function changeTimelineYear(d){ timelineYear+=d; renderTimeline(); }
 
 function renderTimeline(){
   if(!document.getElementById("timelineHead")) return;
-  document.getElementById("timelineYearLabel").textContent = timelineYear;
+  if(document.getElementById("headerYearLabel")) document.getElementById("headerYearLabel").textContent = timelineYear;
 
   // Build all mondays in the year
   const mondays = [];
@@ -502,7 +600,13 @@ function renderTimeline(){
         const borderR = di===6 ? 'border-right:3px solid #6f42c1;' : '';
         // Mini chip inline
         let chipColor = '';
-        if(cls==="I") chipColor='background:var(--Ib);color:var(--I);border:1px solid var(--Ix)';
+        if(t==="MT"||t==="TN"){
+          const c1=cell?cell[1]:null, c2=cell?cell[2]:null;
+          const col1 = c1==="I"?"#ff6060":c1==="V"?"#42d47e":c1==="A"?"#5aabff":"#aaa";
+          const col2 = c2==="I"?"#ff6060":c2==="V"?"#42d47e":c2==="A"?"#5aabff":"#aaa";
+          chipColor=`background:linear-gradient(135deg,#082535 50%,#1a1035 50%);color:${col1};border:1px solid #333`;
+        } else
+        else if(cls==="I") chipColor='background:var(--Ib);color:var(--I);border:1px solid var(--Ix)';
         else if(cls==="V") chipColor='background:var(--Vb);color:var(--V);border:1px solid var(--Vx)';
         else if(cls==="N2") chipColor='background:var(--N2b);color:var(--N2);border:1px solid var(--N2x)';
         else if(cls==="A") chipColor='background:var(--Ab);color:var(--A);border:1px solid var(--Ax)';
@@ -512,7 +616,7 @@ function renderTimeline(){
         const dayC = addDays(mon,di); const isTodayC = dayC.toDateString()===new Date().toDateString();
         const cellBg = isTodayC ? '#0a2a18' : (isSun ? '#d4c5f0' : bg);
         bodyHTML += `<td style="padding:2px 1px;text-align:center;border-bottom:1px solid var(--bd);${borderR}background:${cellBg}">
-          <div onclick="openEdit(${rowIdx},${di})" style="display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:5px;font-size:.68rem;font-weight:700;cursor:pointer;${chipColor}">${t||'·'}</div>
+          <div onclick="openEdit(${rowIdx},${di})" style="display:inline-flex;align-items:center;justify-content:center;width:29px;height:29px;border-radius:5px;font-size:.52rem;font-weight:700;cursor:pointer;${chipColor}">${t==="MT"?"M/T":t==="TN"?"T/N":(t||'·')}</div>
         </td>`;
       });
     });
@@ -599,26 +703,48 @@ function openEdit(rowIdx, colIdx){
   document.getElementById("editOverlay").classList.add("open");
 }
 function renderTurnBtns(){
-  const turns=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"]];
+  const turns=[
+    ["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],
+    ["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],
+    ["L","✅ L"],["/","/ Sal"]
+  ];
   document.getElementById("turnRow").innerHTML=turns.map(([k,l])=>
     `<div class="tbtn ${editTurn===k?"active":""}" onclick="selTurn('${k}')">${l}</div>`).join("");
 }
 function renderUnitBtns(){
-  const show=editTurn&&editTurn!=="L"&&editTurn!=="/";
+  const isDouble = editTurn==="MT"||editTurn==="TN";
+  const show = editTurn&&editTurn!=="L"&&editTurn!=="/";
   document.getElementById("unitLabel").style.display=show?"":"none";
   const grid=document.getElementById("unitGrid");
   if(!show){grid.innerHTML="";return;}
   const units=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
-  grid.innerHTML=units.map(([k,l])=>
+  const label1 = isDouble ? (editTurn==="MT"?"☀️ Mañana:":"🌤 Tarde:") : "Unidad:";
+  const label2 = isDouble ? (editTurn==="MT"?"🌤 Tarde:":"🌙 Noche:") : "";
+  let html = `<div style="font-size:.72rem;color:var(--mu);grid-column:1/-1;margin-bottom:2px">${label1}</div>`;
+  html += units.map(([k,l])=>
     `<div class="ubtn ${k} ${editUnit===k?"active":""}" onclick="selUnit('${k}')">${l}</div>`).join("");
+  if(isDouble){
+    html += `<div style="font-size:.72rem;color:var(--mu);grid-column:1/-1;margin-top:6px;margin-bottom:2px">${label2}</div>`;
+    html += units.map(([k,l])=>
+      `<div class="ubtn ${k} ${editUnit2===k?"active":""}" onclick="selUnit2('${k}')">${l}</div>`).join("");
+  }
+  grid.innerHTML=html;
 }
+
+function selUnit2(u){editUnit2=u;renderUnitBtns();}
 function selTurn(t){editTurn=t;if(t==="L"||t==="/")editUnit=null;renderTurnBtns();renderUnitBtns();}
 function selUnit(u){editUnit=u;renderUnitBtns();}
-function confirmEdit(){if(!editCtx)return;applyEdit(editTurn,editUnit);}
-function applyEdit(t,u){
+function confirmEdit(){
   if(!editCtx)return;
-  ROTA[editCtx.rowIdx][editCtx.colIdx]=t?[t,u]:["L",null];
+  const isDouble = editTurn==="MT"||editTurn==="TN";
+  applyEdit(editTurn, editUnit, isDouble?editUnit2:null);
+}
+function applyEdit(t,u,u2){
+  if(!editCtx)return;
+  const newVal = t?[t,u,u2||null]:["L",null,null];
+  ROTA[editCtx.rowIdx][editCtx.colIdx] = newVal;
   try{ localStorage.setItem("aux2_rota", JSON.stringify(ROTA)); localStorage.setItem("aux2_rota_version", ROTA_VERSION); }catch(e){}
+  saveToFirebase(editCtx.rowIdx, editCtx.colIdx, newVal);
   closeModal();
   if(document.querySelector(".tab.active").textContent.includes("Semana"))renderWeekView();
   else renderYearGrid();
@@ -659,10 +785,13 @@ function loadFromText(){
 }
 
 renderConfig();
-setTimeout(function(){
-  renderTimeline();
-  scrollToToday();
-}, 300);
+// Fallback: if Firebase fails to init, render anyway
+setTimeout(() => {
+  if(document.getElementById("timelineBody").innerHTML === "") {
+    renderTimeline();
+    setTimeout(scrollToToday, 300);
+  }
+}, 2000);
 </script>
 </body>
 </html>
