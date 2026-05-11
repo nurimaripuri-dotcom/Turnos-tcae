@@ -10,7 +10,7 @@
   --I:#c0392b; --Ib:#fde8e8; --Ix:#c0392b;
   --V:#1e8449; --Vb:#d5f5e3; --Vx:#1e8449;
   --N2:#34495e; --N2b:#eaecee; --N2x:#34495e;
-  --A:#1a5276; --Ab:#d6eaf8; --Ax:#1a5276;
+  --A:#1565c0; --Ab:#d6eaf8; --Ax:#1565c0;
   --bd:#dee2e6; --bg:#f8f9fa; --s1:#fff; --s2:#f0f2f5;
   --tx:#1a1a2e; --mu:#6c757d;
   --today:#1b5e20; --today-bg:#4caf50;
@@ -268,24 +268,23 @@ document.getElementById("nameInput").addEventListener("keydown",e=>{if(e.key==="
 
 function fixErrors(){
   if(!db) return;
-  // Solo ejecutar si no se ha hecho ya
-  db.ref("fixes/fix_mayo_cristina_diana").once("value").then(snap=>{
-    if(snap.val()) return; // ya hecho
+  db.ref("fixes/fix_cleanup_v2").once("value").then(snap=>{
+    if(snap.val()) return;
+    // Fix 1: restore Cristina/Diana May 13-14
     db.ref("rota_changes/9_2").set(["/",null,null]);
     db.ref("rota_changes/9_3").set(["L",null,null]);
     db.ref("rota_changes/10_2").set(["N","N2",null]);
     db.ref("rota_changes/10_3").set(["/",null,null]);
-    const keysToClean = ["10_X","10_J","11_X"];
+    // Fix 2: delete ALL old change_log entries without dateKey (they cause duplicate icons)
     db.ref("change_log").once("value").then(snap=>{
       const logs=snap.val();
       if(!logs) return;
       Object.entries(logs).forEach(([pushKey,entry])=>{
-        const k=entry.fila+"_"+entry.dia;
-        if(keysToClean.includes(k)) db.ref("change_log/"+pushKey).remove();
+        if(!entry.dateKey) db.ref("change_log/"+pushKey).remove();
       });
     });
-    db.ref("fixes/fix_mayo_cristina_diana").set(true);
-    console.log("Fix aplicado");
+    db.ref("fixes/fix_cleanup_v2").set(true);
+    console.log("Cleanup v2 aplicado");
   });
 }
 
@@ -313,9 +312,10 @@ function initApp(){
       changeLogData={};
       const logs=snap.val();
       if(logs) Object.values(logs).forEach(e=>{
-        const key=e.fila+"_"+e.dia;
-        if(!changeLogData[key])changeLogData[key]=[];
-        changeLogData[key].push(e);
+        if(e.dateKey){
+          if(!changeLogData[e.dateKey])changeLogData[e.dateKey]=[];
+          changeLogData[e.dateKey].push(e);
+        }
       });
       render();
     });
@@ -386,16 +386,26 @@ function render(){
       const cell=ROTA[ri][dc.dow];
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
       const cls=chipCls(t,u);
-      const lbl=t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
-      const sz=(t==="MT"||t==="TN")?".55rem":".8rem";
+      const u2=cell?cell[2]:null;
+      const UCOL={I:"#c0392b",V:"#1e8449",N2:"#34495e",A:"#1565c0"};
+      let lbl,sz;
+      if(t==="MT"||t==="TN"){
+        const c1=UCOL[u]||"#888", c2=UCOL[u2]||"#888";
+        const l1=t==="MT"?"M":"T", l2=t==="MT"?"T":"N";
+        lbl=`<span style="color:${c1};font-size:.65rem;font-weight:800">${l1}</span><span style="color:#aaa;font-size:.55rem">/</span><span style="color:${c2};font-size:.65rem;font-weight:800">${l2}</span>`;
+        sz=".65rem";
+      } else {
+        lbl=t||"·";
+        sz=".8rem";
+      }
       const cellBg=dc.isToday?"#4caf50":dc.isSun?"#f3e5f5":bg;
       // Change log dot
-      const logKey=(ri+1)+"_"+DAYS_ES[dc.dow];
-      const hasLog=changeLogData[logKey]&&changeLogData[logKey].length>0;
+      const logKey=dc.yr+"_"+(dc.mn+1)+"_"+dc.d;
+      const hasLog=(changeLogData[logKey]&&changeLogData[logKey].length>0);
       const dot=hasLog?`<span class="change-dot" onclick="showLog(event,'${logKey}')">✎</span>`:"";
       // Editable only if editMode AND (my row OR admin)
       const canEdit=false; // editing only in Mi turno tab
-      const onclick=canEdit?`openEdit(${ri},${dc.dow})`:"";
+      const dateKey=dc.yr+"_"+(dc.mn+1)+"_"+dc.d;
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
           <div class="chip ${cls}${canEdit?"":" locked"}" style="font-size:${sz}" ${onclick?`onclick="${onclick}"`:""}>${lbl}</div>
@@ -456,9 +466,9 @@ function toggleMiEdit(){
   renderMiTurno();
 }
 
-function openEdit(ri,di){
+function openEdit(ri,di,dk){
   if(!editMode&&!miEditMode)return;
-  editCtx={ri,di};
+  editCtx={ri,di,dateKey:dk||''};
   const cell=ROTA[ri][di];
   editTurn=cell?cell[0]:null;
   editUnit=cell?cell[1]:null;
@@ -514,13 +524,16 @@ function applyEdit(t,u,u2){
   if(db){
     db.ref("rota_changes/"+editCtx.ri+"_"+editCtx.di).set(val).catch(()=>{});
     const comment=document.getElementById("inputComment")?document.getElementById("inputComment").value.trim():"";
-    db.ref("change_log").push({
-      quien:who,con:withWho,
-      comentario:comment||"",
-      fecha:new Date().toLocaleString("es-ES"),
-      fila:editCtx.ri+1,dia:DAYS_ES[editCtx.di],
-      cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado"
-    }).catch(()=>{});
+    if(editCtx.dateKey){
+      db.ref("change_log").push({
+        quien:who,con:withWho,
+        comentario:comment||"",
+        fecha:new Date().toLocaleString("es-ES"),
+        fila:editCtx.ri+1,dia:DAYS_ES[editCtx.di],
+        cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado",
+        dateKey:editCtx.dateKey
+      }).catch(()=>{});
+    }
   }
   closeModal();render();
 }
@@ -611,13 +624,20 @@ function renderMiTurno(){
         const cell=ROTA[ri][dow];
         const t=cell?cell[0]:null,u=cell?cell[1]:null;
         const cls=t&&t!=="L"&&t!=="/"?(u||"neu"):"neu";
-        const lbl=t==="MT"?"M/T":t==="TN"?"T/N":(t||"·");
+        const u2mi=cell?cell[2]:null;
+        const UCOL2={I:"#c0392b",V:"#1e8449",N2:"#34495e",A:"#1565c0"};
+        let lbl;
+        if(t==="MT"||t==="TN"){
+          const c1=UCOL2[u]||"#888",c2=UCOL2[u2mi]||"#888";
+          const l1=t==="MT"?"M":"T",l2=t==="MT"?"T":"N";
+          lbl=`<span style="color:${c1};font-weight:800">${l1}</span><span style="color:#aaa;font-size:.8rem">/</span><span style="color:${c2};font-weight:800">${l2}</span>`;
+        } else { lbl=t||"·"; }
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
-        html+=`<td data-ri="${ri}" data-di="${dow}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
+        html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
-          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800">${lbl}</div>
-          ${(()=>{const lk=(ri+1)+"_"+DAYS_ES[dow];const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
+          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px">${lbl}</div>
+          ${(()=>{const lk=miYear+"_"+(miMonth+1)+"_"+day;const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
         </td>`;
         day++;
       }
@@ -633,7 +653,8 @@ function renderMiTurno(){
     if(!miEditMode) return;
     const td=e.target.closest("td[data-ri]");
     if(!td) return;
-    openEdit(parseInt(td.dataset.ri), parseInt(td.dataset.di));
+    const dk=miYear+"_"+(miMonth+1)+"_"+td.dataset.day;
+    openEdit(parseInt(td.dataset.ri), parseInt(td.dataset.di), dk);
   };
 }
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
