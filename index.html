@@ -390,7 +390,7 @@ function render(){
       }
       const cellBg=dc.isToday?"#4caf50":dc.isSun?"#f3e5f5":bg;
       // Change log dot
-      const logKey=pi+"_"+dc.yr+"_"+(dc.mn+1)+"_"+dc.d;
+      const logKey=pi+"_"+dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
       const hasLog=(changeLogData[logKey]&&changeLogData[logKey].length>0);
       const dot=hasLog?`<span class="change-dot" onclick="showLog(event,'${logKey}')">✎</span>`:"";
       // Editable only if editMode AND (my row OR admin)
@@ -521,7 +521,7 @@ function applyEdit(t,u,u2){
         fecha:new Date().toLocaleString("es-ES"),
         fila:editCtx.ri+1,dia:DAYS_ES[editCtx.di],
         cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado",
-        dateKey:editCtx.pi+"_"+editCtx.dateKey
+        dateKey:editCtx.dateKey
       }).catch(()=>{});
     }
   }
@@ -627,7 +627,7 @@ function renderMiTurno(){
         html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
           <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px">${lbl}</div>
-          ${(()=>{const lk=(userRow-1)+"_"+miYear+"_"+(miMonth+1)+"_"+day;const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
+          ${(()=>{const lk=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
         </td>`;
         day++;
       }
@@ -643,7 +643,9 @@ function renderMiTurno(){
     if(!miEditMode) return;
     const td=e.target.closest("td[data-ri]");
     if(!td) return;
-    const dk=(userRow-1)+"_"+miYear+"_"+(miMonth+1)+"_"+td.dataset.day;
+    const day_=td.dataset.day.padStart(2,"0");
+    const mo_=String(miMonth+1).padStart(2,"0");
+    const dk=(userRow-1)+"_"+miYear+mo_+day_;
     openEdit(parseInt(td.dataset.ri), parseInt(td.dataset.di), dk);
   };
 }
