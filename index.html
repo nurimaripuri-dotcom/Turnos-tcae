@@ -240,6 +240,8 @@ let userName=localStorage.getItem("tcaes_user")||"";
 let userRow=parseInt(localStorage.getItem("tcaes_row")||"0"); // 0=admin/unknown, 1-15=person row // 0=admin
 let editCtx=null,editTurn=null,editUnit=null,editUnit2=null;
 let changeLogData={};
+let changeIcons={};
+window.dateOverrides={}; // {pi_YYYYMMDD: cellValue}
 let db=null;
 
 // Name screen
@@ -293,9 +295,12 @@ function initApp(){
     firebase.initializeApp(fc);
     db=firebase.database();
     fixErrors();
+    db.ref("change_icons").on("value",snap=>{
+      changeIcons=snap.val()||{};
+      render();
+    });
     db.ref("rota_changes").on("value",snap=>{
-      const ch=snap.val();
-      if(ch) Object.entries(ch).forEach(([k,v])=>{const[ri,di]=k.split("_").map(Number);ROTA[ri][di]=v;});
+      window.dateOverrides=snap.val()||{};
       render();
     });
     db.ref("change_log").on("value",snap=>{
@@ -373,7 +378,9 @@ function render(){
     dayCols.forEach(dc=>{
       const mon=mondayOf(new Date(dc.yr,dc.mn,dc.d));
       const ri=rowFor(p.startRow,mon);
-      const cell=ROTA[ri][dc.dow];
+      const dateStr2=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
+      const overrideKey=pi+"_"+dateStr2;
+      const cell=window.dateOverrides[overrideKey]!==undefined?window.dateOverrides[overrideKey]:ROTA[ri][dc.dow];
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
       const cls=chipCls(t,u);
       const u2=cell?cell[2]:null;
@@ -390,9 +397,10 @@ function render(){
       }
       const cellBg=dc.isToday?"#4caf50":dc.isSun?"#f3e5f5":bg;
       // Change log dot
-      const logKey=pi+"_"+dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
-      const hasLog=(changeLogData[logKey]&&changeLogData[logKey].length>0);
-      const dot=hasLog?`<span class="change-dot" onclick="showLog(event,'${logKey}')">✎</span>`:"";
+      const dateStr=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
+      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr];
+      const hasLog=!!iconData;
+      const dot=hasLog?`<span class="change-dot" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       // Editable only if editMode AND (my row OR admin)
       const canEdit=false; // editing only in Mi turno tab
       const dateKey=dc.yr+"_"+(dc.mn+1)+"_"+dc.d;
@@ -409,13 +417,12 @@ function render(){
   if(typeof renderMiTurno==="function") renderMiTurno();
 }
 
-function showLog(e,key){
+function showLog(e,pi_,dateStr){
   e.stopPropagation();
-  const logs=changeLogData[key];
-  if(!logs||!logs.length)return;
-  const last=logs[logs.length-1];
+  const data=changeIcons[pi_]&&changeIcons[pi_][dateStr];
+  if(!data)return;
   const popup=document.getElementById("logPopup");
-  popup.innerHTML=`✎ <b>${last.quien}</b> con <b>${last.con}</b><br>${last.fecha}`;
+  popup.innerHTML=`✎ <b>${data.quien||"?"}</b> con <b>${data.con||"—"}</b><br>Cambio: ${data.cambio||""}`;
   popup.style.display="block";
   setTimeout(()=>popup.style.display="none",4000);
 }
@@ -507,12 +514,20 @@ function confirmEdit(){applyEdit(editTurn,editUnit,editUnit2);}
 function applyEdit(t,u,u2){
   if(!editCtx)return;
   const val=t?[t,u||null,u2||null]:null;
-  ROTA[editCtx.ri][editCtx.di]=val;
+  // Store as date override, not ROTA modification
+  if(editCtx.dateKey){
+    const ovKey=editCtx.dateKey; // already pi_YYYYMMDD
+    window.dateOverrides[ovKey]=val;
+  } else {
+    ROTA[editCtx.ri][editCtx.di]=val;
+  }
   const who=document.getElementById("inputWho")?document.getElementById("inputWho").value.trim()||userName:"sistema";
   const withWho=document.getElementById("inputWith")?document.getElementById("inputWith").value.trim()||"—":"—";
   if(who){userName=who;localStorage.setItem("tcaes_user",who);}
   if(db){
-    db.ref("rota_changes/"+editCtx.ri+"_"+editCtx.di).set(val).catch(()=>{});
+    if(editCtx.dateKey){
+      db.ref("rota_changes/"+editCtx.dateKey).set(val).catch(()=>{});
+    }
     const comment=document.getElementById("inputComment")?document.getElementById("inputComment").value.trim():"";
     if(editCtx.dateKey){
       db.ref("change_log").push({
@@ -523,6 +538,14 @@ function applyEdit(t,u,u2){
         cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado",
         dateKey:editCtx.dateKey
       }).catch(()=>{});
+      // Save icon marker: change_icons/pi/date
+      const parts=editCtx.dateKey.split("_");
+      const pi_=parts[0], date_=parts[1];
+      if(val){
+        db.ref("change_icons/"+pi_+"/"+date_).set({quien:who,con:withWho,cambio:val[0]}).catch(()=>{});
+      } else {
+        db.ref("change_icons/"+pi_+"/"+date_).remove().catch(()=>{});
+      }
     }
   }
   closeModal();render();
@@ -566,7 +589,9 @@ function renderMiTurno(){
     const dow=(date.getDay()+6)%7;
     const mon=mondayOf(date);
     const ri=rowFor(me.startRow,mon);
-    const cell=ROTA[ri][dow];
+    const dateStrC=miYear+String(miMonth+1).padStart(2,"0")+String(d).padStart(2,"0");
+    const ovKeyC=(userRow-1)+"_"+dateStrC;
+    const cell=window.dateOverrides[ovKeyC]!==undefined?window.dateOverrides[ovKeyC]:ROTA[ri][dow];
     const t=cell?cell[0]:null;
     if(t==="M"||t==="MT")cM++;
     if(t==="T"||t==="MT"||t==="TN")cT++;
@@ -611,7 +636,9 @@ function renderMiTurno(){
         const isWE=dow>=5;
         const mon=mondayOf(date);
         const ri=rowFor(me.startRow,mon);
-        const cell=ROTA[ri][dow];
+        const dateStrM=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
+        const ovKeyM=(userRow-1)+"_"+dateStrM;
+        const cell=window.dateOverrides[ovKeyM]!==undefined?window.dateOverrides[ovKeyM]:ROTA[ri][dow];
         const t=cell?cell[0]:null,u=cell?cell[1]:null;
         const cls=t&&t!=="L"&&t!=="/"?(u||"neu"):"neu";
         const u2mi=cell?cell[2]:null;
@@ -627,7 +654,8 @@ function renderMiTurno(){
         html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
           <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px">${lbl}</div>
-          ${(()=>{const lk=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");const lg=changeLogData[lk];if(lg&&lg.length>0){const e=lg[lg.length-1];const txt=[e.con&&e.con!=="—"?e.con:"",e.comentario||""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
+          ${(()=>{const dateStrMi=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
+        const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStrMi];if(iconMi){const txt=[iconMi.con&&iconMi.con!=="—"?iconMi.con:""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
         </td>`;
         day++;
       }
