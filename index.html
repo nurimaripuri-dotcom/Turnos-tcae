@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>TCAES 3ºC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -417,6 +419,23 @@ function render(){
   if(typeof renderMiTurno==="function") renderMiTurno();
 }
 
+function showMiLog(e,day){
+  e.stopPropagation();
+  const dateStr=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
+  const data=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr];
+  if(!data)return;
+  const popup=document.getElementById("logPopup");
+  const txt=[
+    data.quien?"👤 "+data.quien:"",
+    data.con&&data.con!=="—"?"🔄 Con: "+data.con:"",
+    data.comentario?"💬 "+data.comentario:"",
+    data.cambio?"📋 "+data.cambio:""
+  ].filter(Boolean).join("<br>");
+  popup.innerHTML=txt;
+  popup.style.display="block";
+  setTimeout(()=>popup.style.display="none",5000);
+}
+
 function showLog(e,pi_,dateStr){
   e.stopPropagation();
   const data=changeIcons[pi_]&&changeIcons[pi_][dateStr];
@@ -651,11 +670,16 @@ function renderMiTurno(){
         } else { lbl=t||"·"; }
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
-        html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'}">
+        html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
           <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px">${lbl}</div>
           ${(()=>{const dateStrMi=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
-        const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStrMi];if(iconMi){const txt=[iconMi.con&&iconMi.con!=="—"?iconMi.con:""].filter(Boolean).join(" · ");return txt?`<div style="font-size:.58rem;color:#555;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""}return "";})()}
+        const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStrMi];
+        if(iconMi){
+          const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" · ");
+          return `<div onclick="showMiLog(event,${day})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`
+            +(txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:"");
+        }return "";})()}
         </td>`;
         day++;
       }
