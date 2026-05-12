@@ -302,7 +302,18 @@ function initApp(){
       render();
     });
     db.ref("rota_changes").on("value",snap=>{
-      window.dateOverrides=snap.val()||{};
+      const raw=snap.val()||{};
+      // Firebase stores JS arrays as objects {0:v0,1:v1,...} - convert back
+      window.dateOverrides={};
+      Object.entries(raw).forEach(([k,v])=>{
+        if(v===null){window.dateOverrides[k]=null;}
+        else if(typeof v==="object"&&!Array.isArray(v)){
+          // Convert Firebase object back to array
+          window.dateOverrides[k]=Object.values(v);
+        } else {
+          window.dateOverrides[k]=v;
+        }
+      });
       render();
     });
     db.ref("change_log").on("value",snap=>{
@@ -422,18 +433,26 @@ function render(){
 function showMiLog(e,day){
   e.stopPropagation();
   const dateStr=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
-  const data=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr];
-  if(!data)return;
+  const icon=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr];
+  // Also look in changeLogData for comment
+  const logKey=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
+  const logs=changeLogData[logKey];
+  const last=logs&&logs.length>0?logs[logs.length-1]:null;
+  if(!icon&&!last)return;
+  const quien=last?last.quien:icon?icon.quien:"";
+  const con=last?last.con:icon?icon.con:"";
+  const comentario=last?last.comentario:"";
+  const cambio=last?last.cambio:icon?icon.cambio:"";
   const popup=document.getElementById("logPopup");
   const txt=[
-    data.quien?"👤 "+data.quien:"",
-    data.con&&data.con!=="—"?"🔄 Con: "+data.con:"",
-    data.comentario?"💬 "+data.comentario:"",
-    data.cambio?"📋 "+data.cambio:""
+    quien?"👤 "+quien:"",
+    con&&con!=="—"?"🔄 Con: "+con:"",
+    comentario?"💬 "+comentario:"",
+    cambio?"📋 "+cambio:""
   ].filter(Boolean).join("<br>");
   popup.innerHTML=txt;
   popup.style.display="block";
-  setTimeout(()=>popup.style.display="none",5000);
+  setTimeout(()=>popup.style.display="none",6000);
 }
 
 function showLog(e,pi_,dateStr){
