@@ -700,11 +700,12 @@ function renderMiTurno(){
         } else if(t==="V"){lbl="🏖";}
         else if(t==="LD"){lbl="LD";}
         else { lbl=t||"·"; }
-        const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
+        const isLorSlash=!t||t==="L"||t==="/";
+        const bg=isToday?"#4caf50":isWE?"#f3e5f5":isLorSlash?"#ffffff":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
         html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
-          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px">${lbl}</div>
+          <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:block;border-radius:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:2px;${(cls==="neu"?"background:#fff;color:#333;border:2px solid #333;":"")}">${lbl}</div>
           ${(()=>{const dateStrMi=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
         const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStrMi];
         if(iconMi){
