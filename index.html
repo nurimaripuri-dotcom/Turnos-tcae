@@ -51,7 +51,12 @@ td.today-col{background:var(--today-bg)!important}
 .chip.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
 .chip.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
 .chip.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
-.chip.neu{background:#f8f9fa;color:#aaa;border-color:#dee2e6}
+.chip.neu{background:#ffffff;color:#333333;border-color:#333333;border-width:2px}
+.chip.vac{background:#fff3cd;color:#856404;border-color:#ffc107}
+.chip.ld{background:#d1ecf1;color:#0c5460;border-color:#bee5eb}
+.mi-chip.neu{background:#ffffff;color:#333333;border:2px solid #333333}
+.mi-chip.vac{background:#fff3cd;color:#856404;border-color:#ffc107}
+.mi-chip.ld{background:#d1ecf1;color:#0c5460;border-color:#bee5eb}
 .chip.locked{cursor:default}
 .change-dot{position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;cursor:pointer;z-index:2}
 /* Modal */
@@ -135,6 +140,8 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   <div class="lc N2">⚫ 354/337-339</div>
   <div class="lc A">🔵 340-345</div>
   <div class="lc neu">L · /</div>
+  <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
+  <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
   <span style="font-size:.65rem;color:var(--mu)">← desliza →</span>
 </div>
 <div style="display:flex;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0">
@@ -219,7 +226,7 @@ const PEOPLE = [
   {name:"Alberto",startRow:4},
   {name:"Cristina",startRow:5},
   {name:"Diana",startRow:6},
-  {name:"Laura",startRow:7},
+  {name:"Patricia",startRow:7},
   {name:"Loly",startRow:8},
   {name:"Josefa",startRow:9},
   {name:"Ana Irib.",startRow:10},
@@ -234,7 +241,7 @@ const MONTHS_ES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agost
 const DAYS_ES=["L","M","X","J","V","S","D"];
 const REF_MONDAY=new Date(2026,3,6);
 const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
-const TURNS=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"]];
+const TURNS=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
 let currentYear=new Date().getFullYear();
 let editMode=false;
@@ -346,6 +353,8 @@ function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%15+15)%15;}
 
 function chipCls(t,u){
   if(!t||t==="L"||t==="/"||t==="MT"||t==="TN")return"neu";
+  if(t==="V")return"vac";
+  if(t==="LD")return"ld";
   return u||"neu";
 }
 
@@ -404,7 +413,9 @@ function render(){
         const l1=t==="MT"?"M":"T", l2=t==="MT"?"T":"N";
         lbl=`<span style="color:${c1};font-size:.65rem;font-weight:800">${l1}</span><span style="color:#aaa;font-size:.55rem">/</span><span style="color:${c2};font-size:.65rem;font-weight:800">${l2}</span>`;
         sz=".65rem";
-      } else {
+      } else if(t==="V"){lbl="🏖";sz=".75rem";}
+      else if(t==="LD"){lbl="LD";sz=".65rem";}
+      else {
         lbl=t||"·";
         sz=".8rem";
       }
@@ -531,7 +542,7 @@ function renderTurnBtns(){
 }
 function renderUnitBtns(){
   const isD=editTurn==="MT"||editTurn==="TN";
-  const show=editTurn&&editTurn!=="L"&&editTurn!=="/";
+  const show=editTurn&&editTurn!=="L"&&editTurn!=="/"&&editTurn!=="V"&&editTurn!=="LD";
   document.getElementById("unitSection").style.display=show?"":"none";
   if(!show)return;
   const l1=isD?(editTurn==="MT"?"☀️ 1ª unidad:":"🌤 1ª unidad:"):"Unidad:";
@@ -544,7 +555,7 @@ function renderUnitBtns(){
   if(isD)document.getElementById("unitGrid2").innerHTML=UNITS.map(([k,l])=>
     `<div class="ubtn ${k} ${editUnit2===k?"active":""}" onclick="selUnit2('${k}')">${l}</div>`).join("");
 }
-function selTurn(t){editTurn=t;if(t==="L"||t==="/"){editUnit=null;editUnit2=null;}renderTurnBtns();renderUnitBtns();}
+function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD"){editUnit=null;editUnit2=null;}renderTurnBtns();renderUnitBtns();}
 function selUnit1(u){editUnit=u;renderUnitBtns();}
 function selUnit2(u){editUnit2=u;renderUnitBtns();}
 function confirmEdit(){applyEdit(editTurn,editUnit,editUnit2);}
@@ -686,7 +697,9 @@ function renderMiTurno(){
           const c1=UCOL2[u]||"#888",c2=UCOL2[u2mi]||"#888";
           const l1=t==="MT"?"M":"T",l2=t==="MT"?"T":"N";
           lbl=`<span style="color:${c1};font-weight:800">${l1}</span><span style="color:#aaa;font-size:.8rem">/</span><span style="color:${c2};font-weight:800">${l2}</span>`;
-        } else { lbl=t||"·"; }
+        } else if(t==="V"){lbl="🏖";}
+        else if(t==="LD"){lbl="LD";}
+        else { lbl=t||"·"; }
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
         html+=`<td data-ri="${ri}" data-di="${dow}" data-day="${day}" style="padding:5px 3px;text-align:center;border:1px solid var(--bd);background:${bg};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?'pointer':'default'};position:relative">
