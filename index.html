@@ -147,6 +147,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 <div style="display:flex;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0">
   <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
   <button class="tab-btn" id="tab-todos" onclick="showTab('todos')">📅 Todos</button>
+  <button class="tab-btn" id="tab-resumen" onclick="showTab('resumen')">📊 Resumen</button>
 </div>
 
 <!-- MI TURNO VIEW -->
@@ -166,6 +167,11 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   </table>
 </div>
 </div><!-- end view-todos -->
+
+<!-- RESUMEN VIEW -->
+<div id="view-resumen" style="flex:1;overflow:auto;padding:14px 16px;display:none">
+  <div id="resumenContent"></div>
+</div>
 
 <!-- EDIT MODAL -->
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
@@ -245,6 +251,9 @@ const TURNS=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/
 
 let currentYear=new Date().getFullYear();
 let editMode=false;
+let miEditMode=false;
+let miMonth=new Date().getMonth();
+let miYear=new Date().getFullYear();
 let userName=localStorage.getItem("tcaes_user")||"";
 let userRow=parseInt(localStorage.getItem("tcaes_row")||"0"); // 0=admin/unknown, 1-15=person row // 0=admin
 let editCtx=null,editTurn=null,editUnit=null,editUnit2=null;
@@ -499,7 +508,6 @@ function toggleEdit(){
   render();
 }
 
-let miEditMode=false;
 function toggleMiEdit(){
   miEditMode=!miEditMode;
   const btn=document.getElementById("miEditBtn");
@@ -600,16 +608,75 @@ function applyEdit(t,u,u2){
   closeModal();render();
 }
 
+
+function renderResumen(){
+  if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
+  const me=PEOPLE[userRow-1];
+  const pi=userRow-1;
+  const year=currentYear||new Date().getFullYear();
+  const counts={M:0,T:0,D:0,N:0,V:0,LD:0};
+  let d=new Date(year,0,1);
+  while(d.getFullYear()===year){
+    const dow=(d.getDay()+6)%7;
+    const mon=mondayOf(d);
+    const ri=rowFor(me.startRow,mon);
+    const ds=year+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+    const ov=window.dateOverrides[pi+"_"+ds];
+    const cell=ov!==undefined?ov:ROTA[ri][dow];
+    const t=cell&&Array.isArray(cell)?cell[0]:(cell?cell[0]:null);
+    if(t&&counts[t]!==undefined)counts[t]++;
+    d.setDate(d.getDate()+1);
+  }
+  const year2=year+1;
+  const counts2={M:0,T:0,D:0,N:0,V:0,LD:0};
+  let d2=new Date(year2,0,1);
+  while(d2.getFullYear()===year2){
+    const dow=(d2.getDay()+6)%7;
+    const mon=mondayOf(d2);
+    const ri=rowFor(me.startRow,mon);
+    const ds=year2+String(d2.getMonth()+1).padStart(2,"0")+String(d2.getDate()).padStart(2,"0");
+    const ov=window.dateOverrides[pi+"_"+ds];
+    const cell=ov!==undefined?ov:ROTA[ri][dow];
+    const t=cell?cell[0]:null;
+    if(t&&counts2[t]!==undefined)counts2[t]++;
+    d2.setDate(d2.getDate()+1);
+  }
+
+  function row(yr, c){
+    let html=`<tr style="border-bottom:1px solid var(--bd)"><td style="padding:8px;font-weight:600">${yr}</td>`;
+    html+=`<td style="text-align:center;padding:8px">${c.M}</td><td style="text-align:center;padding:8px">${c.T}</td>`;
+    html+=`<td style="text-align:center;padding:8px">${c.N}</td>`;
+    html+=`<td style="text-align:center;padding:8px">${c.V!==undefined?c.V:"-"}</td>`;
+    html+=`<td style="text-align:center;padding:8px">${c.LD!==undefined?c.LD:"-"}</td>`;
+    html+='</tr>';
+    return html;
+  }
+
+  let html=`<h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:4px">📊 Resumen de <span style="color:var(--I)">${me.name}</span></h2>`;
+  html+='<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-top:14px">';
+  html+='<thead><tr style="background:var(--s2);border-bottom:2px solid var(--bd)">';
+  html+='<th style="text-align:left;padding:8px;font-weight:600">Año</th>';
+  html+='<th style="text-align:center;padding:8px;color:var(--I)">M</th><th style="text-align:center;padding:8px;color:var(--V)">T</th>';
+  html+='<th style="text-align:center;padding:8px;color:var(--A)">N</th>';
+  html+='<th style="text-align:center;padding:8px;color:#856404">🏖</th>';
+  html+='<th style="text-align:center;padding:8px;color:#0c5460">LD</th>';
+  html+='</tr></thead><tbody>';
+  html+=row(year, counts);
+  html+=row(year2, counts2);
+  html+='</tbody></table>';
+  document.getElementById("resumenContent").innerHTML=html;
+}
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 
-let miMonth = new Date().getMonth();
-let miYear = new Date().getFullYear();
 
 function showTab(tab){
   document.getElementById("view-mi").style.display = tab==="mi"?"block":"none";
   document.getElementById("view-todos").style.display = tab==="todos"?"block":"none";
   document.getElementById("tab-mi").classList.toggle("active", tab==="mi");
   document.getElementById("tab-todos").classList.toggle("active", tab==="todos");
+  document.getElementById("view-resumen").style.display=tab==="resumen"?"block":"none";
+  document.getElementById("tab-resumen").classList.toggle("active",tab==="resumen");
+  if(tab==="resumen")renderResumen();
   if(tab==="todos"){
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
