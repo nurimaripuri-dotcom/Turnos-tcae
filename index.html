@@ -633,112 +633,84 @@ function renderResumen(){
   if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
   const me=PEOPLE[userRow-1];
   const pi=userRow-1;
-  const year=currentYear||new Date().getFullYear();
-  const counts={M:0,T:0,D:0,N:0,V:0,LD:0};
-  let d=new Date(year,0,1);
-  while(d.getFullYear()===year){
-    const dow=(d.getDay()+6)%7;
-    const mon=mondayOf(d);
-    const ri=rowFor(me.startRow,mon);
-    const ds=year+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
-    const ov=window.dateOverrides[pi+"_"+ds];
-    const cell=ov!==undefined?ov:ROTA[ri][dow];
-    const t=cell&&Array.isArray(cell)?cell[0]:(cell?cell[0]:null);
-    if(t&&counts[t]!==undefined)counts[t]++;
-    d.setDate(d.getDate()+1);
-  }
-  const year2=year+1;
-  const counts2={M:0,T:0,D:0,N:0,V:0,LD:0};
-  let d2=new Date(year2,0,1);
-  while(d2.getFullYear()===year2){
-    const dow=(d2.getDay()+6)%7;
-    const mon=mondayOf(d2);
-    const ri=rowFor(me.startRow,mon);
-    const ds=year2+String(d2.getMonth()+1).padStart(2,"0")+String(d2.getDate()).padStart(2,"0");
-    const ov=window.dateOverrides[pi+"_"+ds];
-    const cell=ov!==undefined?ov:ROTA[ri][dow];
-    const t=cell?cell[0]:null;
-    if(t&&counts2[t]!==undefined)counts2[t]++;
-    d2.setDate(d2.getDate()+1);
+
+  // CIG table: 0N→1533, 1N→1526, then -3 per night
+  function cigJornada(n){
+    if(n===0) return 1533;
+    if(n===1) return 1526;
+    return Math.max(1533-7-3*(n-1), 0);
   }
 
-  function row(yr, c){
-    let html=`<tr style="border-bottom:1px solid var(--bd)"><td style="padding:8px;font-weight:600">${yr}</td>`;
-    html+=`<td style="text-align:center;padding:8px">${c.M}</td><td style="text-align:center;padding:8px">${c.T}</td>`;
-    html+=`<td style="text-align:center;padding:8px">${c.N}</td>`;
-    html+=`<td style="text-align:center;padding:8px">${c.V!==undefined?c.V:"-"}</td>`;
-    html+=`<td style="text-align:center;padding:8px">${c.LD!==undefined?c.LD:"-"}</td>`;
+  function calcYear(yr){
+    const counts={M:0,T:0,D:0,N:0,V:0,LD:0,MT:0,TN:0};
+    let d=new Date(yr,0,1);
+    while(d.getFullYear()===yr){
+      const dow=(d.getDay()+6)%7;
+      const mon=mondayOf(d);
+      const ri=rowFor(me.startRow,mon);
+      const ds=yr+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+      const ov=window.dateOverrides[pi+"_"+ds];
+      const cell=ov!==undefined?ov:ROTA[ri][dow];
+      const t=cell&&Array.isArray(cell)?cell[0]:(cell?cell[0]:null);
+      if(t&&counts[t]!==undefined)counts[t]++;
+      // Handle MT and TN
+      if(t==="MT"){counts.M++;counts.T++;}
+      if(t==="TN"){counts.T++;counts.N++;}
+      d.setDate(d.getDate()+1);
+    }
+    return counts;
+  }
+
+  function buildTable(yr){
+    const counts=calcYear(yr);
+    const M=counts.M||0,T=counts.T||0,N=counts.N||0;
+    const horas=M*7+T*7+N*10;
+    const jornada=cigJornada(N);
+    const exceso=horas-jornada;
+    const lds=(exceso/7).toFixed(1);
+    const ldsColor=exceso>0?"#2e7d32":"#c62828";
+
+    let html=`<h3 style="font-family:Syne,sans-serif;font-size:.9rem;margin:16px 0 8px">${yr}</h3>`;
+    html+='<table style="width:100%;border-collapse:collapse;font-size:.78rem">';
+    html+='<thead><tr style="background:var(--s2);border-bottom:2px solid var(--bd)">';
+    html+='<th style="text-align:left;padding:6px;font-weight:600">Año</th>';
+    html+='<th style="text-align:center;padding:6px;color:var(--I)">M</th>';
+  html+='<th style="text-align:center;padding:6px;color:var(--V)">T</th>';
+  html+='<th style="text-align:center;padding:6px;color:var(--A)">N</th>';
+  html+='<th style="text-align:center;padding:6px;color:#856404">🏖</th>';
+  html+='<th style="text-align:center;padding:6px;color:#0c5460">LD</th>';
+  html+='<th style="text-align:center;padding:6px;color:#555">Horas</th>';
+  html+='<th style="text-align:center;padding:6px;color:#c62828">Exceso</th>';
+  html+='<th style="text-align:center;padding:6px;font-weight:700;color:#2e7d32">LDs</th>';
+    html+='</tr></thead><tbody>';
+    html+=`<tr style="border-bottom:1px solid var(--bd)">`;
+    html+=`<td style="padding:6px;font-weight:600">${yr}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${M}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${T}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${N}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${counts.V}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${counts.LD}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${horas}h</td>`;
+    html+=`<td style="text-align:center;padding:6px;color:${exceso>0?"#2e7d32":"#c62828"}">${exceso>0?"+":""}${exceso}h</td>`;
+    html+=`<td style="text-align:center;padding:6px;font-weight:700;color:${ldsColor}">${exceso>0?"+":""}${lds}</td>`;
     html+='</tr>';
+    html+='</tbody></table>';
+    // Jornada info
+    html+=`<p style="font-size:.7rem;color:var(--mu);margin-top:4px">Jornada obligatoria (${N} noches): ${jornada}h · Horas realizadas: ${horas}h</p>`;
     return html;
   }
 
+  const year=currentYear||new Date().getFullYear();
   let html=`<h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:4px">📊 Resumen de <span style="color:var(--I)">${me.name}</span></h2>`;
-  html+='<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-top:14px">';
-  html+='<thead><tr style="background:var(--s2);border-bottom:2px solid var(--bd)">';
-  html+='<th style="text-align:left;padding:8px;font-weight:600">Año</th>';
-  html+='<th style="text-align:center;padding:8px;color:var(--I)">M</th><th style="text-align:center;padding:8px;color:var(--V)">T</th>';
-  html+='<th style="text-align:center;padding:8px;color:var(--A)">N</th>';
-  html+='<th style="text-align:center;padding:8px;color:#856404">🏖</th>';
-  html+='<th style="text-align:center;padding:8px;color:#0c5460">LD</th>';
-  html+='</tr></thead><tbody>';
-  html+=row(year, counts);
-  html+=row(year2, counts2);
-  html+='</tbody></table>';
+  html+=buildTable(year);
+  html+=buildTable(year+1);
+  
+  // Disclaimer
+  html+=`<div style="margin-top:16px;padding:12px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:.72rem;color:#856404;line-height:1.5">
+    ⚠️ <b>Cálculo orientativo.</b> Este resumen puede contener errores. Por favor, consulta con tu supervisor/a antes de tomar decisiones basadas en estos datos.
+  </div>`;
+
   document.getElementById("resumenContent").innerHTML=html;
-}
-
-function checkPin(){
-  const pin=document.getElementById("pinInput").value.trim();
-  if(pin.length!==4||!/^\d{4}$/.test(pin)){
-    document.getElementById("pinError").textContent="❌ El PIN debe ser 4 números";
-    document.getElementById("pinError").style.display="block";
-    return;
-  }
-  // Check against Firebase
-  if(db){
-    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
-      const stored=snap.val()||"0000";
-      if(pin===stored){
-        enterApp();
-      } else {
-        document.getElementById("pinError").textContent="❌ PIN incorrecto";
-        document.getElementById("pinError").style.display="block";
-        document.getElementById("pinInput").value="";
-      }
-    }).catch(()=>enterApp()); // If Firebase error, let them in
-  } else {
-    // No Firebase (local), use localStorage
-    const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
-    if(pin===stored){
-      enterApp();
-    } else {
-      document.getElementById("pinError").textContent="❌ PIN incorrecto";
-      document.getElementById("pinError").style.display="block";
-      document.getElementById("pinInput").value="";
-    }
-  }
-}
-
-function enterApp(){
-  document.getElementById("nameScreen").style.display="none";
-  initApp();
-  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
-}
-
-function changePin(){
-  const oldPin=prompt("PIN actual:");
-  if(!oldPin) return;
-  if(db){
-    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
-      const stored=snap.val()||"0000";
-      if(oldPin!==stored){ alert("PIN incorrecto"); return; }
-      const newPin=prompt("Nuevo PIN (4 números):");
-      if(!newPin||!/^\d{4}$/.test(newPin)){ alert("El PIN debe ser 4 números"); return; }
-      const confirm=prompt("Repite el nuevo PIN:");
-      if(newPin!==confirm){ alert("Los PINes no coinciden"); return; }
-      db.ref("tcaes_pins/"+userRow).set(newPin).then(()=>alert("✅ PIN cambiado correctamente"));
-    });
-  }
 }
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 
@@ -878,11 +850,18 @@ function renderMiTurno(){
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
 window.onload=()=>{
   if(userName){
-    render();
-    renderMiTurno();
-    showTab("mi");
-    setTimeout(goToToday,400);
+  const verified=localStorage.getItem("tcaes_verified_"+userRow);
+  if(verified){
+    document.getElementById("nameScreen").style.display="none";
+    initApp();
+    setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
+  } else {
+    document.getElementById("nameScreen").style.display="flex";
+    document.getElementById("nameInput").value=userName;
+    document.getElementById("stepName").style.display="none";
+    document.getElementById("stepPin").style.display="block";
   }
+}
 };
 </script>
 </body>
