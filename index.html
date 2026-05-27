@@ -303,6 +303,59 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(pi) pi.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
 });
 
+
+function checkPin(){
+  const pin=document.getElementById("pinInput").value.trim();
+  if(pin.length!==4||!/^[0-9]{4}$/.test(pin)){
+    document.getElementById("pinError").textContent="❌ El PIN debe ser 4 números";
+    document.getElementById("pinError").style.display="block";
+    return;
+  }
+  if(db){
+    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
+      const stored=snap.val()||"0000";
+      if(pin===stored){
+        enterApp();
+      } else {
+        document.getElementById("pinError").textContent="❌ PIN incorrecto";
+        document.getElementById("pinError").style.display="block";
+        document.getElementById("pinInput").value="";
+      }
+    }).catch(()=>enterApp());
+  } else {
+    const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
+    if(pin===stored){enterApp();}
+    else {
+      document.getElementById("pinError").textContent="❌ PIN incorrecto";
+      document.getElementById("pinError").style.display="block";
+      document.getElementById("pinInput").value="";
+    }
+  }
+}
+
+function enterApp(){
+  localStorage.setItem("tcaes_verified_"+userRow,"1");
+  document.getElementById("nameScreen").style.display="none";
+  initApp();
+  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
+}
+
+function changePin(){
+  const oldPin=prompt("PIN actual:");
+  if(!oldPin) return;
+  if(db){
+    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
+      const stored=snap.val()||"0000";
+      if(oldPin!==stored){alert("PIN incorrecto");return;}
+      const newPin=prompt("Nuevo PIN (4 números):");
+      if(!newPin||!/^[0-9]{4}$/.test(newPin)){alert("El PIN debe ser 4 números");return;}
+      const confirm2=prompt("Repite el nuevo PIN:");
+      if(newPin!==confirm2){alert("Los PINes no coinciden");return;}
+      db.ref("tcaes_pins/"+userRow).set(newPin).then(()=>alert("✅ PIN cambiado correctamente"));
+    });
+  }
+}
+
 function fixErrors(){
   if(!db) return;
   db.ref("fixes/fix_cleanup_v3").once("value").then(snap=>{
