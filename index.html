@@ -696,6 +696,8 @@ function renderResumen(){
 
   function calcYear(yr){
     const counts={M:0,T:0,D:0,N:0,V:0,LD:0,MT:0,TN:0};
+    // Vacation deductions - what would have been worked
+    const vacDeduct={M:0,T:0,D:0,N:0};
     let d=new Date(yr,0,1);
     while(d.getFullYear()===yr){
       const dow=(d.getDay()+6)%7;
@@ -703,14 +705,39 @@ function renderResumen(){
       const ri=rowFor(me.startRow,mon);
       const ds=yr+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
       const ov=window.dateOverrides[pi+"_"+ds];
-      const cell=ov!==undefined?ov:ROTA[ri][dow];
-      const t=cell&&Array.isArray(cell)?cell[0]:(cell?cell[0]:null);
-      if(t&&counts[t]!==undefined)counts[t]++;
-      // Handle MT and TN
-      if(t==="MT"){counts.M++;counts.T++;}
-      if(t==="TN"){counts.T++;counts.N++;}
+      const baseCell=ROTA[ri][dow];
+      const baseT=baseCell&&Array.isArray(baseCell)?baseCell[0]:(baseCell?baseCell[0]:null);
+      
+      if(ov!==undefined){
+        const t=ov&&Array.isArray(ov)?ov[0]:(ov?ov[0]:null);
+        if(t==="V"){
+          // Vacation day - subtract what would have been worked
+          if(baseT==="M") vacDeduct.M++;
+          else if(baseT==="T") vacDeduct.T++;
+          else if(baseT==="N") vacDeduct.N++;
+          else if(baseT==="D") vacDeduct.D++;
+          else if(baseT==="MT"){vacDeduct.M++;vacDeduct.T++;}
+          else if(baseT==="TN"){vacDeduct.T++;vacDeduct.N++;}
+          counts.V++;
+        } else if(t==="LD"){
+          counts.LD++;
+        } else {
+          if(t&&counts[t]!==undefined)counts[t]++;
+          if(t==="MT"){counts.M++;counts.T++;}
+          if(t==="TN"){counts.T++;counts.N++;}
+        }
+      } else {
+        if(baseT&&counts[baseT]!==undefined)counts[baseT]++;
+        if(baseT==="MT"){counts.M++;counts.T++;}
+        if(baseT==="TN"){counts.T++;counts.N++;}
+      }
       d.setDate(d.getDate()+1);
     }
+    // Subtract vacation shifts from worked counts
+    counts.M=Math.max(0,(counts.M||0)-vacDeduct.M);
+    counts.T=Math.max(0,(counts.T||0)-vacDeduct.T);
+    counts.N=Math.max(0,(counts.N||0)-vacDeduct.N);
+    counts.D=Math.max(0,(counts.D||0)-vacDeduct.D);
     return counts;
   }
 
