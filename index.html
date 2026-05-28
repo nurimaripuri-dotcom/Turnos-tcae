@@ -267,32 +267,30 @@ let db=null;
 // Name screen
 function saveName(){
   const n=document.getElementById("nameInput").value.trim();
-  if(!n) return;
-  userName=n;
-  localStorage.setItem("tcaes_user",n);
-  // Find exact matching row
+  if(!n)return;
   const nl=n.toLowerCase();
   const idx=PEOPLE.findIndex(p=>p.name.toLowerCase()===nl);
   if(idx<0){
-    const nameList = PEOPLE.map(p=>p.name).join(", ");
-    document.getElementById("nameError").textContent="❌ Nombre no encontrado. Nombres válidos: "+nameList;
+    const names=PEOPLE.map(p=>p.name).join(", ");
+    document.getElementById("nameError").textContent="❌ No encontrado. Nombres: "+names;
     document.getElementById("nameError").style.display="block";
     return;
   }
   document.getElementById("nameError").style.display="none";
-  userRow=idx+1;
+  userName=n; userRow=idx+1;
+  localStorage.setItem("tcaes_user",n);
   localStorage.setItem("tcaes_row",String(userRow));
-  showStep("pin");
+  document.getElementById("stepName").style.display="none";
+  document.getElementById("stepPin").style.display="block";
+  document.getElementById("pinInput").value="";
+  document.getElementById("pinError").style.display="none";
+  document.getElementById("pinInput").focus();
 }
 document.getElementById("nameInput").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();});
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&document.getElementById("stepPin").style.display!=="none")checkPin();
-});
 document.addEventListener("DOMContentLoaded",()=>{
   const pi=document.getElementById("pinInput");
   if(pi) pi.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
 });
-
 
 function checkPin(){
   const pin=document.getElementById("pinInput").value.trim();
@@ -304,9 +302,8 @@ function checkPin(){
   if(db){
     db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
       const stored=snap.val()||"0000";
-      if(pin===stored){
-        enterApp();
-      } else {
+      if(pin===stored){enterApp();}
+      else{
         document.getElementById("pinError").textContent="❌ PIN incorrecto";
         document.getElementById("pinError").style.display="block";
         document.getElementById("pinInput").value="";
@@ -315,7 +312,7 @@ function checkPin(){
   } else {
     const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
     if(pin===stored){enterApp();}
-    else {
+    else{
       document.getElementById("pinError").textContent="❌ PIN incorrecto";
       document.getElementById("pinError").style.display="block";
       document.getElementById("pinInput").value="";
@@ -345,6 +342,7 @@ function changePin(){
     });
   }
 }
+
 
 function fixErrors(){
   if(!db) return;
@@ -408,31 +406,23 @@ function initApp(){
 
 // Check if user already has name
 function showStep(step){
-  document.getElementById("stepName").style.display = step==="name" ? "block" : "none";
-  document.getElementById("stepPin").style.display  = step==="pin"  ? "block" : "none";
-  if(step==="pin"){
-    document.getElementById("pinInput").value="";
-    document.getElementById("pinError").style.display="none";
-    setTimeout(()=>document.getElementById("pinInput").focus(),100);
-  }
-  if(step==="name"){
-    setTimeout(()=>document.getElementById("nameInput").focus(),100);
+  document.getElementById("stepName").style.display=step==="name"?"block":"none";
+  document.getElementById("stepPin").style.display=step==="pin"?"block":"none";
+}
+
+if(userName){
+  const verified=localStorage.getItem("tcaes_verified_"+userRow);
+  if(verified){
+    document.getElementById("nameScreen").style.display="none";
+    initApp();
+    setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
+  } else {
+    document.getElementById("nameInput").value=userName;
+    document.getElementById("stepName").style.display="none";
+    document.getElementById("stepPin").style.display="block";
   }
 }
 
-window.onload=function(){
-  if(userName){
-    const verified=localStorage.getItem("tcaes_verified_"+userRow);
-    if(verified){
-      document.getElementById("nameScreen").style.display="none";
-      initApp();
-      setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
-    } else {
-      document.getElementById("nameInput").value=userName;
-      showStep("pin");
-    }
-  }
-};
 
 function mondayOf(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));return dt;}
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
