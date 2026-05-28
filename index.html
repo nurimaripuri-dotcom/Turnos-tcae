@@ -599,26 +599,25 @@ function checkPin(){
     document.getElementById("pinError").style.display="block";
     return;
   }
-  if(db){
-    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
-      const stored=snap.val()||"0000";
-      if(pin===stored){
-        enterApp();
-      } else {
-        document.getElementById("pinError").textContent="❌ PIN incorrecto";
-        document.getElementById("pinError").style.display="block";
-        document.getElementById("pinInput").value="";
-      }
-    }).catch(()=>enterApp());
-  } else {
-    const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
-    if(pin===stored){enterApp();}
-    else {
+  if(!db){
+    document.getElementById("pinError").textContent="⏳ Conectando... inténtalo de nuevo";
+    document.getElementById("pinError").style.display="block";
+    setTimeout(()=>{document.getElementById("pinError").style.display="none";},1500);
+    return;
+  }
+  db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
+    const stored=snap.val()||"0000";
+    if(pin===stored){
+      enterApp();
+    } else {
       document.getElementById("pinError").textContent="❌ PIN incorrecto";
       document.getElementById("pinError").style.display="block";
       document.getElementById("pinInput").value="";
     }
-  }
+  }).catch(()=>{
+    document.getElementById("pinError").textContent="❌ Error de conexión";
+    document.getElementById("pinError").style.display="block";
+  });
 }
 
 function enterApp(){
