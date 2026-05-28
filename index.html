@@ -114,20 +114,18 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 <div id="nameScreen">
   <div class="name-card">
     <h2>🏥 TCAES 3ºC</h2>
-    <p>¿Cuál es tu nombre? Se usará para identificarte al hacer cambios.</p>
-    <!-- STEP 1: Name -->
     <div id="stepName">
-      <input type="text" id="nameInput" placeholder="Escribe tu nombre..." autofocus>
-      <div id="nameError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left;line-height:1.4"></div>
+      <p style="font-size:.82rem;color:var(--mu);margin-bottom:12px">¿Cuál es tu nombre?</p>
+      <input type="text" id="nameInput" placeholder="Escribe tu nombre...">
+      <div id="nameError" style="display:none;color:var(--I);font-size:.72rem;margin-top:6px;line-height:1.4"></div>
       <button class="mbtn mbtn-save" onclick="saveName()" style="width:100%;margin-top:12px">Siguiente →</button>
     </div>
-    <!-- STEP 2: PIN -->
     <div id="stepPin" style="display:none">
-      <p style="font-size:.78rem;color:var(--mu);margin-bottom:10px" id="pinLabel">Introduce tu PIN (por defecto 0000):</p>
-      <input type="password" id="pinInput" placeholder="····" maxlength="4" style="text-align:center;font-size:1.5rem;letter-spacing:8px;width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2)">
-      <div id="pinError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left"></div>
+      <p style="font-size:.82rem;color:var(--mu);margin-bottom:12px">PIN (por defecto 0000):</p>
+      <input type="password" id="pinInput" maxlength="4" placeholder="0000" style="width:100%;padding:10px;text-align:center;font-size:1.4rem;letter-spacing:6px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:monospace">
+      <div id="pinError" style="display:none;color:var(--I);font-size:.72rem;margin-top:6px"></div>
       <button class="mbtn mbtn-save" onclick="checkPin()" style="width:100%;margin-top:12px">Entrar</button>
-      <button class="mbtn mbtn-ghost" onclick="document.getElementById('stepPin').style.display='none';document.getElementById('stepName').style.display='block'" style="width:100%;margin-top:8px;border:1px solid var(--bd)">← Volver</button>
+      <button class="mbtn mbtn-ghost" onclick="showStep('name')" style="width:100%;margin-top:8px;border:1px solid var(--bd)">← Volver</button>
     </div>
   </div>
 </div>
@@ -284,14 +282,12 @@ function saveName(){
   document.getElementById("nameError").style.display="none";
   userRow=idx+1;
   localStorage.setItem("tcaes_row",String(userRow));
-  // Go to PIN step
-  document.getElementById("stepName").style.display="none";
-  document.getElementById("stepPin").style.display="block";
-  document.getElementById("pinInput").value="";
-  document.getElementById("pinError").style.display="none";
-  document.getElementById("pinInput").focus();
+  showStep("pin");
 }
 document.getElementById("nameInput").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&document.getElementById("stepPin").style.display!=="none")checkPin();
+});
 document.addEventListener("DOMContentLoaded",()=>{
   const pi=document.getElementById("pinInput");
   if(pi) pi.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
@@ -329,9 +325,7 @@ function checkPin(){
 
 function enterApp(){
   localStorage.setItem("tcaes_verified_"+userRow,"1");
-  document.getElementById("nameScreen").style.display="none";
-  initApp();
-  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
+  showStep("pin");
 }
 
 function changePin(){
@@ -411,6 +405,19 @@ function initApp(){
 }
 
 // Check if user already has name
+function showStep(step){
+  document.getElementById("stepName").style.display = step==="name" ? "block" : "none";
+  document.getElementById("stepPin").style.display  = step==="pin"  ? "block" : "none";
+  if(step==="pin"){
+    document.getElementById("pinInput").value="";
+    document.getElementById("pinError").style.display="none";
+    setTimeout(()=>document.getElementById("pinInput").focus(),100);
+  }
+  if(step==="name"){
+    setTimeout(()=>document.getElementById("nameInput").focus(),100);
+  }
+}
+
 window.onload=function(){
   if(userName){
     const verified=localStorage.getItem("tcaes_verified_"+userRow);
@@ -419,15 +426,9 @@ window.onload=function(){
       initApp();
       setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
     } else {
-      document.getElementById("stepName").style.display="none";
-      document.getElementById("stepPin").style.display="block";
       document.getElementById("nameInput").value=userName;
-      document.getElementById("pinInput").value="";
-      document.getElementById("pinError").style.display="none";
-      document.getElementById("pinInput").focus();
+      showStep("pin");
     }
-  } else {
-    document.getElementById("nameScreen").style.display="flex";
   }
 };
 
