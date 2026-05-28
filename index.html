@@ -411,16 +411,25 @@ function initApp(){
 }
 
 // Check if user already has name
-if(userName){
-  // Go to PIN step
-  document.getElementById("stepName").style.display="none";
-  document.getElementById("stepPin").style.display="block";
-  document.getElementById("pinInput").value="";
-  document.getElementById("pinError").style.display="none";
-  document.getElementById("pinInput").focus();
-} else {
-  document.getElementById("nameScreen").style.display="flex";
-}
+window.onload=function(){
+  if(userName){
+    const verified=localStorage.getItem("tcaes_verified_"+userRow);
+    if(verified){
+      document.getElementById("nameScreen").style.display="none";
+      initApp();
+      setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
+    } else {
+      document.getElementById("stepName").style.display="none";
+      document.getElementById("stepPin").style.display="block";
+      document.getElementById("nameInput").value=userName;
+      document.getElementById("pinInput").value="";
+      document.getElementById("pinError").style.display="none";
+      document.getElementById("pinInput").focus();
+    }
+  } else {
+    document.getElementById("nameScreen").style.display="flex";
+  }
+};
 
 function mondayOf(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));return dt;}
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
