@@ -156,7 +156,6 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 <div style="display:flex;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0">
   <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
   <button class="tab-btn" id="tab-todos" onclick="showTab('todos')">📅 Todos</button>
-  <button class="tab-btn" id="tab-resumen" onclick="showTab('resumen')">📊 Resumen</button>
 </div>
 
 <!-- MI TURNO VIEW -->
@@ -177,11 +176,6 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   </table>
 </div>
 </div><!-- end view-todos -->
-
-<!-- RESUMEN VIEW -->
-<div id="view-resumen" style="flex:1;overflow:auto;padding:14px 16px;display:none">
-  <div id="resumenContent"></div>
-</div>
 
 <!-- EDIT MODAL -->
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
