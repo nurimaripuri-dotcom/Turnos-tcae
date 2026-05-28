@@ -325,7 +325,9 @@ function checkPin(){
 
 function enterApp(){
   localStorage.setItem("tcaes_verified_"+userRow,"1");
-  showStep("pin");
+  document.getElementById("nameScreen").style.display="none";
+  initApp();
+  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
 }
 
 function changePin(){
