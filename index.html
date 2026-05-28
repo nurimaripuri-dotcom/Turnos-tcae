@@ -228,6 +228,21 @@ let editCtx=null,editTurn=null,editUnit=null;
 let changeLogData={},changeIcons={};
 window.dateOverrides={};
 let db=null;
+
+// Initialize Firebase early for PIN verification
+try{
+  const _fc={
+    apiKey:"AIzaSyADK5CA7AZotGERWaU3Bpjym4vYLZm9grU",
+    authDomain:"rotatorio-tcaes.firebaseapp.com",
+    databaseURL:"https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"rotatorio-tcaes",
+    storageBucket:"rotatorio-tcaes.firebasestorage.app",
+    messagingSenderId:"362053048865",
+    appId:"1:362053048865:web:e77a2ba4d053c4f7b6a160"
+  };
+  if(!firebase.apps.length) firebase.initializeApp(_fc,"tcaes_app");
+  db=firebase.database(firebase.app("tcaes_app"));
+}catch(e){console.log("Firebase early init error:",e);}
 let miMonth=new Date().getMonth(),miYear=new Date().getFullYear();
 
 function saveName(){
@@ -259,18 +274,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 function initApp(){
   try{
-    const fc={
-      apiKey:"AIzaSyADK5CA7AZotGERWaU3Bpjym4vYLZm9grU",
-      authDomain:"rotatorio-tcaes.firebaseapp.com",
-      databaseURL:"https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId:"rotatorio-tcaes",
-      storageBucket:"rotatorio-tcaes.firebasestorage.app",
-      messagingSenderId:"362053048865",
-      appId:"1:362053048865:web:e77a2ba4d053c4f7b6a160"
-    };
-    // Use separate app instance for enfermeras
-    const app=firebase.initializeApp(fc,"tcaes_app");
-    db=firebase.database(app);
+    // Firebase already initialized early - just set up listeners
     db.ref("rota_changes").on("value",snap=>{
       const raw=snap.val()||{};
       window.dateOverrides={};
