@@ -208,10 +208,10 @@ const ROTA = [
 ];
 const PEOPLE = [
   {name:"Montse",startRow:1},{name:"Manuela",startRow:2},{name:"Ana",startRow:3},
-  {name:"Alberto",startRow:4},{name:"Cristina",startRow:5},{name:"Diana",startRow:6},
-  {name:"Patricia",startRow:7},{name:"Loly",startRow:8},{name:"Josefa",startRow:9},
+  {name:"Alberto",startRow:4},{name:"Cristina",startRow:5},{name:"Pilina",startRow:6},
+  {name:"Lara",startRow:7},{name:"Loly",startRow:8},{name:"Josefa",startRow:9},
   {name:"Ana Irib.",startRow:10},{name:"Vanesa F.",startRow:11},{name:"Manuel",startRow:12},
-  {name:"Isabel",startRow:13},{name:"Adrián",startRow:14},{name:"Vanesa",startRow:15},
+  {name:"Isabel",startRow:13},{name:"Adrián",startRow:14},{name:"Laura",startRow:15},
 ];
 
 const MONTHS_ES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -625,10 +625,20 @@ function checkPin(){
 }
 
 function enterApp(){
+  const isFirstTime=!localStorage.getItem("tcaes_verified_"+userRow);
   localStorage.setItem("tcaes_verified_"+userRow,"1");
   document.getElementById("nameScreen").style.display="none";
   initApp();
-  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
+  setTimeout(()=>{
+    renderMiTurno();showTab("mi");
+    if(isFirstTime){
+      setTimeout(()=>{
+        if(confirm("👋 Bienvenido/a "+userName+"!\n\nTu PIN actual es 0000.\n¿Quieres cambiarlo ahora?")){
+          changePin();
+        }
+      },800);
+    }
+  },500);
 }
 
 function changePin(){
