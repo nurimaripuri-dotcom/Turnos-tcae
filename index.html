@@ -573,8 +573,8 @@ function showMiLog(e,day){
 
 const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
-function openEdit(ri,di,dk){
-  if(!miEditMode)return;
+function openEdit(ri,di,dk,forceOpen){
+  if(!miEditMode&&!forceOpen)return;
   editCtx={ri,di,dateKey:dk||""};
   const ovKey=dk||(userRow-1)+"_";
   const cell=window.dateOverrides[ovKey]||ROTA[ri][di];
@@ -729,11 +729,11 @@ function updatePropBadge(){
 }
 
 function openPropModal(dateKey, turno){
-  if(!db){ alert("Sin conexión"); return; }
   propFromDay = {dateKey, turno};
-  const date = dateKey.split("_")[1];
+  const parts = dateKey.split("_");
+  const date = parts[1];
   const yr = date.slice(0,4), mo = date.slice(4,6), dy = date.slice(6,8);
-  document.getElementById("propMyDay").textContent = `Tu turno: ${dy}/${mo}/${yr}`;
+  document.getElementById("propMyDay").textContent = `Tu turno del ${dy}/${mo}/${yr}: ${turno||""}`;
   document.getElementById("propMyTurn").textContent = turno;
   document.getElementById("propComment").value = "";
   // Fill person select
@@ -949,7 +949,7 @@ function closeDayAction(){
 function dayActionEdit(){
   if(!dayActionCtx) return;
   closeDayAction();
-  openEdit(dayActionCtx.ri, dayActionCtx.di, dayActionCtx.dk);
+  openEdit(dayActionCtx.ri, dayActionCtx.di, dayActionCtx.dk, true);
 }
 
 function dayActionPropose(){
