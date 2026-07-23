@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TCAES 3ºC">
+<meta name="theme-color" content="#c0392b">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>TCAES 3ºC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -90,6 +94,20 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 #nameScreen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center}
 .name-card{background:var(--s1);border-radius:16px;padding:28px;width:90%;max-width:340px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .name-card h2{font-family:"Syne",sans-serif;font-size:1.1rem;margin-bottom:8px}
+.proposal-badge{position:absolute;top:-5px;right:-5px;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:700}
+.prop-card{background:var(--s1);border:1.5px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.prop-card.pending{border-color:#ffc107;background:#fffde7}
+.prop-card.accepted{border-color:#4caf50;background:#f1f8e9}
+.prop-card.rejected{border-color:#ef5350;background:#fde8e8}
+.prop-btn{padding:8px 14px;border-radius:7px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;font-family:"DM Mono",monospace}
+.prop-btn.accept{background:#4caf50;color:#fff}
+.prop-btn.reject{background:#ef5350;color:#fff}
+.prop-btn.cancel{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
+.overlay-prop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay-prop.open{opacity:1;pointer-events:all}
+.modal-prop{background:var(--s1);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;transform:translateY(20px);transition:transform .2s}
+.overlay-prop.open .modal-prop{transform:translateY(0)}
+.pselect{width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:"DM Mono",monospace;font-size:.82rem;margin-top:4px}
 .log-popup{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:.75rem;z-index:500;max-width:320px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.3)}
 </style>
 </head>
@@ -139,12 +157,15 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 <div class="tabs">
   <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
   <button class="tab-btn" id="tab-todos" onclick="showTab('todos')">📅 Todos</button>
+  <button class="tab-btn" id="tab-props" onclick="showTab('props')" style="position:relative">
+    🔄 Cambios<span id="propBadge" style="display:none;position:absolute;top:4px;right:8px;background:#e53935;color:#fff;border-radius:50%;width:14px;height:14px;font-size:.55rem;align-items:center;justify-content:center;font-weight:700">0</span>
+  </button>
 </div>
 
 <div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
     <button onclick="changePin()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔑 PIN</button>
-    <button id="miEditBtn" onclick="toggleMiEdit()" style="padding:6px 14px;border-radius:8px;border:1px solid #dee2e6;background:#fff3cd;color:#856404;cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔒 Editar mi turno</button>
+    <button id="miEditBtn" style="display:none" onclick="toggleMiEdit()">🔒 Editar mi turno</button>
   </div>
   <div id="miTurnoContent"></div>
 </div>
@@ -419,8 +440,11 @@ function goToToday(){
 function showTab(tab){
   document.getElementById("view-mi").style.display=tab==="mi"?"block":"none";
   document.getElementById("view-todos").style.display=tab==="todos"?"block":"none";
+  document.getElementById("view-props").style.display=tab==="props"?"block":"none";
   document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
   document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
+  document.getElementById("tab-props").classList.toggle("active",tab==="props");
+  if(tab==="props") renderProposals();
   if(tab==="todos"){
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
@@ -507,6 +531,7 @@ function renderMiTurno(){
         html+=`<td data-ri="${rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))}" data-di="${dow}" data-day="${day}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
           <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}">${lbl}</div>
+
           ${iconMi?`<div onclick="showMiLog(event,${day})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
           (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
           :""}
@@ -520,11 +545,18 @@ function renderMiTurno(){
   html+=`</tbody></table>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   document.getElementById("miTurnoContent").onclick=function(e){
-    if(!miEditMode)return;
     const td=e.target.closest("td[data-ri]");
-    if(!td)return;
-    const dk=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+td.dataset.day.padStart(2,"0");
-    openEdit(parseInt(td.dataset.ri),parseInt(td.dataset.di),dk);
+    if(!td) return;
+    const day=parseInt(td.dataset.day);
+    const ri=parseInt(td.dataset.ri);
+    const di=parseInt(td.dataset.di);
+    const dk=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
+    // Get turn for this day
+    const ovKey=dk;
+    const baseCell=ROTA[ri][di];
+    const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:baseCell;
+    const t=cell?cell[0]:null;
+    openDayAction(day, ri, di, dk, t);
   };
 }
 
@@ -629,14 +661,25 @@ function enterApp(){
   localStorage.setItem("tcaes_verified_"+userRow,"1");
   document.getElementById("nameScreen").style.display="none";
   initApp();
+  setTimeout(()=>initProposals(), 1000);
   setTimeout(()=>{
     renderMiTurno();showTab("mi");
     if(isFirstTime){
       setTimeout(()=>{
-        if(confirm("👋 Bienvenido/a "+userName+"!\n\nTu PIN actual es 0000.\n¿Quieres cambiarlo ahora?")){
+        if(confirm("👋 Benvido/a "+userName+"!\n\nO teu PIN actual é 0000.\n¿Queres cambialo agora?")){
           changePin();
         }
       },800);
+    } else {
+      // Show new feature announcement max 2 times
+      const annoKey="tcaes_ann_proposals_v1";
+      const shown=parseInt(localStorage.getItem(annoKey)||"0");
+      if(shown < 2){
+        localStorage.setItem(annoKey, String(shown+1));
+        setTimeout(()=>{
+          alert("🆕 NOVA FUNCIÓN: Propostas de cambio\n\nAgora podes propoñerlle un cambio de quenda a unha compañeira directamente dende a app.\n\n• En 'Mi turno', toca o icono 🔄 nun día traballado\n• Escolle a compañeira e o día que queres\n• Ela recibirá a proposta e poderá aceptar ou rexeitar\n• Se acepta, o cambio aplícase automaticamente\n\nVai á pestaña 🔄 Cambios para ver as túas propostas.");
+        },1000);
+      }
     }
   },500);
 }
@@ -657,9 +700,344 @@ function changePin(){
   }
 }
 
+
+// ===== PROPOSALS SYSTEM =====
+let proposals = {};
+let currentPropKey = null;
+let propFromDay = null; // {dateKey, turno}
+
+// Load proposals from Firebase
+function initProposals(){
+  if(!db) return;
+  db.ref("tcaes_proposals").on("value", snap => {
+    proposals = snap.val() || {};
+    updatePropBadge();
+    const propsTab = document.getElementById("view-props");
+    if(propsTab && propsTab.style.display !== "none") renderProposals();
+  });
+}
+
+function updatePropBadge(){
+  const pending = Object.values(proposals).filter(p =>
+    p.to === userRow && p.status === "pending"
+  ).length;
+  const badge = document.getElementById("propBadge");
+  if(badge){
+    badge.textContent = pending;
+    badge.style.display = pending > 0 ? "flex" : "none";
+  }
+}
+
+function openPropModal(dateKey, turno){
+  if(!db){ alert("Sin conexión"); return; }
+  propFromDay = {dateKey, turno};
+  const date = dateKey.split("_")[1];
+  const yr = date.slice(0,4), mo = date.slice(4,6), dy = date.slice(6,8);
+  document.getElementById("propMyDay").textContent = `Tu turno: ${dy}/${mo}/${yr}`;
+  document.getElementById("propMyTurn").textContent = turno;
+  document.getElementById("propComment").value = "";
+  // Fill person select
+  const sel = document.getElementById("propPerson");
+  sel.innerHTML = '<option value="">Selecciona...</option>';
+  PEOPLE.forEach((p,i) => {
+    if(i+1 !== userRow) sel.innerHTML += `<option value="${i+1}">${p.name}</option>`;
+  });
+  document.getElementById("propTheirDay").innerHTML = '<option value="">Primero selecciona la persona</option>';
+  document.getElementById("overlayProp").classList.add("open");
+}
+
+function loadPersonDays(){
+  const pi = parseInt(document.getElementById("propPerson").value);
+  if(!pi) return;
+  const sel = document.getElementById("propTheirDay");
+  sel.innerHTML = '<option value="">Cargando...</option>';
+  const person = PEOPLE[pi-1];
+  const today = new Date();
+  const options = [];
+  let d = new Date(today);
+  d.setDate(d.getDate()+1);
+  while(d.getFullYear() === today.getFullYear()){
+    const dow = (d.getDay()+6)%7;
+    const mon = mondayOf(d);
+    const ri = rowFor(person.startRow, mon);
+    const ds = d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+    const ovKey = (pi-1)+"_"+ds;
+    const cell = window.dateOverrides[ovKey] !== undefined ? window.dateOverrides[ovKey] : ROTA[ri][dow];
+    const t = cell ? cell[0] : null;
+    if(t && t !== "L" && t !== "/" && t !== "V" && t !== "LD"){
+      const dk = (pi-1)+"_"+ds;
+      options.push({dk, t, label:`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")} (${t})`});
+    }
+    d.setDate(d.getDate()+1);
+  }
+  sel.innerHTML = '<option value="">Selecciona día...</option>';
+  options.forEach(o => {
+    sel.innerHTML += `<option value="${o.dk}">${o.label}</option>`;
+  });
+}
+
+function sendProposal(){
+  const toPi = parseInt(document.getElementById("propPerson").value);
+  const theirDay = document.getElementById("propTheirDay").value;
+  const comment = document.getElementById("propComment").value.trim();
+  if(!toPi || !theirDay){ alert("Selecciona la compañera y el día"); return; }
+  if(!propFromDay){ return; }
+  const prop = {
+    from: userRow,
+    fromName: userName,
+    fromDay: propFromDay.dateKey,
+    fromTurn: propFromDay.turno,
+    to: toPi,
+    toName: PEOPLE[toPi-1].name,
+    toDay: theirDay,
+    toTurn: null, // will be resolved
+    status: "pending",
+    commentFrom: comment,
+    commentTo: "",
+    createdAt: new Date().toLocaleString("es-ES")
+  };
+  // Get their turn
+  const parts = theirDay.split("_");
+  const ds = parts[1];
+  const cell = window.dateOverrides[theirDay] !== undefined ? window.dateOverrides[theirDay] : null;
+  // Just store and let the other person see their turn
+  db.ref("tcaes_proposals").push(prop).then(() => {
+    closePropModal();
+    alert("✅ Propuesta enviada a " + PEOPLE[toPi-1].name);
+  }).catch(() => alert("Error al enviar"));
+}
+
+function closePropModal(e){
+  if(e && e.target.id !== "overlayProp") return;
+  document.getElementById("overlayProp").classList.remove("open");
+  propFromDay = null;
+}
+
+function closeRespondModal(e){
+  if(e && e.target.id !== "overlayRespond") return;
+  document.getElementById("overlayRespond").classList.remove("open");
+  currentPropKey = null;
+}
+
+function openRespondModal(key){
+  currentPropKey = key;
+  const p = proposals[key];
+  if(!p) return;
+  const fromParts = p.fromDay.split("_");
+  const fromDs = fromParts[1];
+  const toDs = p.toDay.split("_")[1];
+  const fmt = ds => `${ds.slice(6,8)}/${ds.slice(4,6)}/${ds.slice(0,4)}`;
+  document.getElementById("respondContent").innerHTML = `
+    <div class="prop-card pending" style="margin-bottom:12px">
+      <p style="font-size:.82rem"><b>${p.fromName}</b> te propone:</p>
+      <p style="font-size:.78rem;color:var(--mu);margin:6px 0">
+        🔄 Te da su <b>${p.fromTurn}</b> del <b>${fmt(fromDs)}</b><br>
+        A cambio quiere tu turno del <b>${fmt(toDs)}</b>
+      </p>
+      ${p.commentFrom ? `<p style="font-size:.75rem;font-style:italic;color:#555">💬 "${p.commentFrom}"</p>` : ""}
+    </div>`;
+  document.getElementById("respondComment").value = "";
+  document.getElementById("overlayRespond").classList.add("open");
+}
+
+function respondProposal(decision){
+  if(!currentPropKey) return;
+  const p = proposals[currentPropKey];
+  const comment = document.getElementById("respondComment").value.trim();
+  if(decision === "accepted"){
+    // Swap the turns in Firebase
+    const fromKey = p.fromDay;
+    const toKey = p.toDay;
+    // Get current values
+    const fromPi = p.from - 1;
+    const toPi = p.to - 1;
+    const fromDs = fromKey.split("_")[1];
+    const toDs = toKey.split("_")[1];
+    // Get turns from overrides or base rota
+    const fromOv = window.dateOverrides[fromKey];
+    const toOv = window.dateOverrides[toKey];
+    // Swap: from person gets to's turn, to person gets from's turn
+    db.ref("rota_changes/"+fromKey).set(toOv !== undefined ? toOv : null);
+    db.ref("rota_changes/"+toKey).set(fromOv !== undefined ? fromOv : null);
+  }
+  db.ref("tcaes_proposals/"+currentPropKey).update({
+    status: decision,
+    commentTo: comment,
+    respondedAt: new Date().toLocaleString("es-ES")
+  }).then(() => {
+    closeRespondModal();
+    renderProposals();
+    if(decision === "accepted"){
+      alert("✅ Cambio aceptado y aplicado");
+      render();
+    } else {
+      alert("❌ Propuesta rechazada");
+    }
+  });
+}
+
+function cancelProposal(key){
+  if(!confirm("¿Cancelar esta propuesta?")) return;
+  db.ref("tcaes_proposals/"+key).update({status:"cancelled"});
+}
+
+function renderProposals(){
+  const div = document.getElementById("propsContent");
+  if(!div) return;
+  const mine = Object.entries(proposals).filter(([k,p]) =>
+    p.from === userRow || p.to === userRow
+  ).sort((a,b) => {
+    const order = {pending:0, accepted:1, rejected:2, cancelled:3};
+    return (order[a[1].status]||3) - (order[b[1].status]||3);
+  });
+
+  if(mine.length === 0){
+    div.innerHTML = '<p style="color:var(--mu);font-size:.82rem">No tienes propuestas de cambio.</p>';
+    return;
+  }
+
+  const fmt = ds => `${ds.slice(6,8)}/${ds.slice(4,6)}`;
+  let html = "";
+  mine.forEach(([key, p]) => {
+    const isFrom = p.from === userRow;
+    const statusLabel = {pending:"⏳ Pendiente", accepted:"✅ Aceptado", rejected:"❌ Rechazado", cancelled:"🚫 Cancelado"}[p.status] || p.status;
+    const fromDs = p.fromDay.split("_")[1];
+    const toDs = p.toDay.split("_")[1];
+    html += `<div class="prop-card ${p.status === 'pending' ? 'pending' : p.status === 'accepted' ? 'accepted' : 'rejected'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:.75rem;font-weight:700">${statusLabel}</span>
+        <span style="font-size:.7rem;color:var(--mu)">${p.createdAt||""}</span>
+      </div>
+      <p style="font-size:.82rem">
+        ${isFrom ? `Propuesta a <b>${p.toName}</b>` : `Propuesta de <b>${p.fromName}</b>`}
+      </p>
+      <p style="font-size:.78rem;color:var(--mu);margin:6px 0">
+        🔄 <b>${p.fromName}</b> da su <b>${p.fromTurn||"?"}</b> del ${fmt(fromDs)}<br>
+        🔄 <b>${p.toName}</b> da su turno del ${fmt(toDs)}
+      </p>
+      ${p.commentFrom ? `<p style="font-size:.75rem;color:#555">💬 ${p.fromName}: "${p.commentFrom}"</p>` : ""}
+      ${p.commentTo ? `<p style="font-size:.75rem;color:#555">💬 ${p.toName}: "${p.commentTo}"</p>` : ""}
+      ${p.status === "pending" && !isFrom ? `<div style="display:flex;gap:8px;margin-top:10px">
+        <button class="prop-btn reject" onclick="respondProposal('rejected')" style="flex:1" data-key="${key}" onclick="openRespondModal('${key}')">Ver y responder</button>
+      </div>` : ""}
+      ${p.status === "pending" && !isFrom ? `<button class="prop-btn cancel" style="width:100%;margin-top:6px" onclick="openRespondModal('${key}')">Ver y responder</button>` : ""}
+      ${p.status === "pending" && isFrom ? `<button class="prop-btn cancel" style="width:100%;margin-top:8px" onclick="cancelProposal('${key}')">Cancelar propuesta</button>` : ""}
+    </div>`;
+  });
+  div.innerHTML = html;
+}
+
+
+let dayActionCtx = null;
+
+function openDayAction(day, ri, di, dk, turno){
+  dayActionCtx = {day, ri, di, dk, turno};
+  const date = new Date(miYear, miMonth, day);
+  const DAYS_LABEL = ["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"];
+  const dow = (date.getDay()+6)%7;
+  document.getElementById("dayActionTitle").textContent = `${DAYS_LABEL[dow]} ${day}/${miMonth+1}/${miYear}`;
+  const cls = turno && turno!=="L" && turno!=="/" ? turno : "neu";
+  document.getElementById("dayActionTurn").textContent = turno || "Libre";
+  document.getElementById("overlayDayAction").classList.add("open");
+}
+
+function closeDayAction(){
+  document.getElementById("overlayDayAction").classList.remove("open");
+  dayActionCtx = null;
+}
+
+function dayActionEdit(){
+  if(!dayActionCtx) return;
+  closeDayAction();
+  openEdit(dayActionCtx.ri, dayActionCtx.di, dayActionCtx.dk);
+}
+
+function dayActionPropose(){
+  if(!dayActionCtx) return;
+  closeDayAction();
+  openPropModal(dayActionCtx.dk, dayActionCtx.turno);
+}
+
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
 window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeout(goToToday,300);}};
+</script>
+<!-- DAY ACTION MODAL -->
+<div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
+  <div class="modal">
+    <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
+    <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:20px;text-align:center"></div>
+    <button onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
+    <button onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
+    <button onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
+  </div>
+</div>
+
+<!-- PROPOSAL MODAL -->
+<div class="overlay-prop" id="overlayProp" onclick="closePropModal(event)">
+  <div class="modal-prop">
+    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Proponer cambio</h2>
+    <p id="propMyDay" style="font-size:.78rem;color:var(--mu);margin-bottom:12px"></p>
+    <div class="slabel">Compañera/o:</div>
+    <select class="pselect" id="propPerson" onchange="loadPersonDays()">
+      <option value="">Selecciona...</option>
+    </select>
+    <div class="slabel" style="margin-top:10px">Día de ella/él que quieres:</div>
+    <select class="pselect" id="propTheirDay">
+      <option value="">Primero selecciona la persona</option>
+    </select>
+    <div class="slabel" style="margin-top:10px">Comentario:</div>
+    <input type="text" id="propComment" placeholder="Explica el motivo...">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="prop-btn cancel" onclick="closePropModal()" style="flex:1">← Volver</button>
+      <button class="prop-btn accept" onclick="sendProposal()" style="flex:1">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESPOND MODAL -->
+<div class="overlay-prop" id="overlayRespond" onclick="closeRespondModal(event)">
+  <div class="modal-prop">
+    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px">🔄 Responder propuesta</h2>
+    <div id="respondContent"></div>
+    <div class="slabel">Tu comentario (opcional):</div>
+    <input type="text" id="respondComment" placeholder="Tu respuesta...">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="prop-btn cancel" onclick="closeRespondModal()" style="flex:1">← Volver</button>
+      <button class="prop-btn reject" onclick="respondProposal('rejected')" style="flex:1">Rechazar</button>
+      <button class="prop-btn accept" onclick="respondProposal('accepted')" style="flex:1">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+
+// Handle Android back button
+window.addEventListener("popstate", function(){
+  // Close any open modal in reverse order
+  if(document.getElementById("overlayRespond")?.classList.contains("open")){
+    closeRespondModal(); history.pushState(null,"","");
+  } else if(document.getElementById("overlayProp")?.classList.contains("open")){
+    closePropModal(); history.pushState(null,"","");
+  } else if(document.getElementById("overlayDayAction")?.classList.contains("open")){
+    closeDayAction(); history.pushState(null,"","");
+  } else if(document.getElementById("overlay")?.classList.contains("open")){
+    closeModal(); history.pushState(null,"","");
+  }
+});
+
+// Push initial state so back button works
+history.pushState(null,"","");
+
+// Push state whenever a modal opens
+const _origAdd = DOMTokenList.prototype.add;
+DOMTokenList.prototype.add = function(...args){
+  _origAdd.apply(this, args);
+  if(args.includes("open")) history.pushState(null,"","");
+};
 </script>
 </body>
 </html>
