@@ -947,15 +947,20 @@ function closeDayAction(){
 }
 
 function dayActionEdit(){
-  if(!dayActionCtx) return;
+  if(!dayActionCtx){ alert("No ctx"); return; }
+  const ctx = {...dayActionCtx};
   closeDayAction();
-  openEdit(dayActionCtx.ri, dayActionCtx.di, dayActionCtx.dk, true);
+  setTimeout(()=>{
+    openEdit(ctx.ri, ctx.di, ctx.dk, true);
+  }, 300);
 }
 
 function dayActionPropose(){
-  if(!dayActionCtx) return;
+  if(!dayActionCtx){ alert("No ctx"); return; }
   closeDayAction();
-  openPropModal(dayActionCtx.dk, dayActionCtx.turno);
+  setTimeout(()=>{
+    openPropModal(dayActionCtx ? dayActionCtx.dk : "?", dayActionCtx ? dayActionCtx.turno : "?");
+  }, 300);
 }
 
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
