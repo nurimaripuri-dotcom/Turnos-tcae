@@ -62,6 +62,7 @@ td.today-col{background:var(--today-bg)!important}
 #view-mi{flex:1;overflow:auto;padding:14px 16px}
 .mi-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
 .mi-month-nav button{font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0}
+.lc.T,.mi-chip.T,.chip.T{background:#ff9800;color:#fff;border-color:#e65100}
 .mi-chip{padding:5px 14px;border-radius:7px;font-size:.85rem;font-weight:700;border:1.5px solid transparent}
 .mi-chip.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
 .mi-chip.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
@@ -145,6 +146,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   <div class="lc N2">⚫ 354/337-339</div>
   <div class="lc A">🔵 340-345</div>
   <div class="lc neu">L · /</div>
+  <div class="lc T">T</div>
   <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
   <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
   <span style="font-size:.65rem;color:var(--mu)">← desliza →</span>
@@ -449,16 +451,18 @@ function showTab(tab){
     if(el){el.style.color=tab===t?"var(--I)":"var(--mu)";el.style.borderBottom=tab===t?"3px solid var(--I)":"3px solid transparent";el.style.fontWeight=tab===t?"600":"normal";}
   });
   if(tab==="props")renderProposals();
-  document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
-  document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
-  if(tab==="todos"){
-    // Show new feature popup for first 5 times
+  if(tab==="mi"){
     const annKey="tcaes_ann_todos_v1";
     const shown=parseInt(localStorage.getItem(annKey)||"0");
     if(shown<5){
       localStorage.setItem(annKey,String(shown+1));
-      setTimeout(()=>document.getElementById("overlayNewFeature").classList.add("open"),300);
+      setTimeout(()=>{const o=document.getElementById("overlayNewFeature");if(o)o.classList.add("open");},400);
     }
+  }
+  document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
+  document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
+  if(tab==="todos"){
+
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
       const th=document.querySelector("th.today-hdr");
