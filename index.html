@@ -729,26 +729,31 @@ function updatePropBadge(){
 }
 
 function openPropModal(dateKey, turno){
-  propFromDay = {dateKey, turno};
-  const parts = dateKey.split("_");
-  const date = parts[1];
-  const yr = date.slice(0,4), mo = date.slice(4,6), dy = date.slice(6,8);
-  document.getElementById("propMyDay").textContent = `Tu turno del ${dy}/${mo}/${yr}: ${turno||""}`;
-  document.getElementById("propMyTurn").textContent = turno;
-  document.getElementById("propComment").value = "";
-  // Fill person select
-  const sel = document.getElementById("propPerson");
-  sel.innerHTML = '<option value="">Selecciona...</option>';
-  PEOPLE.forEach((p,i) => {
-    if(i+1 !== userRow) sel.innerHTML += `<option value="${i+1}">${p.name}</option>`;
-  });
-  document.getElementById("propTheirDay").innerHTML = '<option value="">Primero selecciona la persona</option>';
-  const op = document.getElementById("overlayProp");
-  op.style.opacity="1";
-  op.style.pointerEvents="all";
-  op.style.display="flex";
+  try{
+    propFromDay = {dateKey, turno};
+    const parts = dateKey.split("_");
+    const date = parts[1]||"";
+    const yr=date.slice(0,4),mo=date.slice(4,6),dy=date.slice(6,8);
+    const pd=document.getElementById("propMyDay");
+    if(pd) pd.textContent="Tu turno del "+dy+"/"+mo+"/"+yr+": "+(turno||"");
+    const pt=document.getElementById("propMyTurn");
+    if(pt) pt.textContent=turno||"";
+    const pc=document.getElementById("propComment");
+    if(pc) pc.value="";
+    const sel=document.getElementById("propPerson");
+    if(sel){
+      sel.innerHTML='<option value="">Selecciona...</option>';
+      PEOPLE.forEach((p,i)=>{
+        if(i+1!==userRow) sel.innerHTML+=`<option value="${i+1}">${p.name}</option>`;
+      });
+    }
+    const ptd=document.getElementById("propTheirDay");
+    if(ptd) ptd.innerHTML='<option value="">Primero selecciona la persona</option>';
+    const op=document.getElementById("overlayProp");
+    if(!op){alert("Error: modal no encontrado");return;}
+    op.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center;opacity:1;pointer-events:all;";
+  }catch(err){alert("Error: "+err.message);}
 }
-
 function loadPersonDays(){
   const pi = parseInt(document.getElementById("propPerson").value);
   if(!pi) return;
