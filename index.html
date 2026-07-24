@@ -489,7 +489,7 @@ function renderMiTurno(){
   const today=new Date();
   const last=new Date(miYear,miMonth+1,0).getDate();
   const firstDow=(new Date(miYear,miMonth,1).getDay()+6)%7;
-  let cD=0,cM=0,cN=0;
+  let cD=0,cM=0,cT=0,cN=0;
   for(let d=1;d<=last;d++){
     const date=new Date(miYear,miMonth,d);
     const dow=(date.getDay()+6)%7;
@@ -499,7 +499,7 @@ function renderMiTurno(){
     const ovKey=(userRow-1)+"_"+dateStr;
     const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
     const t=cell?cell[0]:null;
-    if(t==="D")cD++;else if(t==="M")cM++;else if(t==="N")cN++;
+    if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px">
@@ -508,8 +508,8 @@ function renderMiTurno(){
     <button onclick="miMonth++;if(miMonth>11){miMonth=0;miYear++;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">›</button>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
-    <span style="background:var(--Ab);color:var(--A);padding:3px 10px;border-radius:6px;font-weight:600">☀️ ${cD}D</span>
     <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
+    <span style="background:#fff3e0;color:#e65100;padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
     <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
   </div>`;
 
