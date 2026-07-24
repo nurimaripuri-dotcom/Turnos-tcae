@@ -441,9 +441,14 @@ function showTab(tab){
   document.getElementById("view-mi").style.display=tab==="mi"?"block":"none";
   document.getElementById("view-todos").style.display=tab==="todos"?"block":"none";
   document.getElementById("view-props").style.display=tab==="props"?"block":"none";
-  document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
-  document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
-  document.getElementById("tab-props").classList.toggle("active",tab==="props");
+  ["mi","todos","props"].forEach(t=>{
+    const el=document.getElementById("tab-"+t);
+    if(el){
+      el.style.color = tab===t ? "var(--I)" : "var(--mu)";
+      el.style.borderBottom = tab===t ? "3px solid var(--I)" : "3px solid transparent";
+      el.style.fontWeight = tab===t ? "600" : "normal";
+    }
+  });
   if(tab==="props") renderProposals();
   if(tab==="todos"){
     setTimeout(()=>{
@@ -927,10 +932,7 @@ function renderProposals(){
       </p>
       ${p.commentFrom ? `<p style="font-size:.75rem;color:#555">💬 ${p.fromName}: "${p.commentFrom}"</p>` : ""}
       ${p.commentTo ? `<p style="font-size:.75rem;color:#555">💬 ${p.toName}: "${p.commentTo}"</p>` : ""}
-      ${p.status === "pending" && !isFrom ? `<div style="display:flex;gap:8px;margin-top:10px">
-        <button class="prop-btn reject" onclick="respondProposal('rejected')" style="flex:1" data-key="${key}" onclick="openRespondModal('${key}')">Ver y responder</button>
-      </div>` : ""}
-      ${p.status === "pending" && !isFrom ? `<button class="prop-btn cancel" style="width:100%;margin-top:6px" onclick="openRespondModal('${key}')">Ver y responder</button>` : ""}
+      ${p.status === "pending" && !isFrom ? `<button class="prop-btn accept" style="width:100%;margin-top:10px" onclick="openRespondModal('${key}')">Ver y responder</button>` : ""}
       ${p.status === "pending" && isFrom ? `<button class="prop-btn cancel" style="width:100%;margin-top:8px" onclick="cancelProposal('${key}')">Cancelar propuesta</button>` : ""}
     </div>`;
   });
