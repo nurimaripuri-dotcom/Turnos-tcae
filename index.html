@@ -803,7 +803,10 @@ function changePin(){
 let proposals={}, currentPropKey=null, propFromDay=null, dayActionCtx=null;
 
 function initProposals(){
-  if(!db) return;
+  if(!db){
+    setTimeout(initProposals,1000); // retry if db not ready
+    return;
+  }
   db.ref("tcaes_proposals").on("value",snap=>{
     proposals=snap.val()||{};
     updatePropBadge();
@@ -971,6 +974,13 @@ function cancelProposal(key){
 function renderProposals(){
   const div=document.getElementById("propsContent");
   if(!div)return;
+  // Debug: show state
+  const totalProps=Object.keys(proposals).length;
+  console.log("renderProposals: userRow="+userRow+", total proposals="+totalProps+", db="+!!db);
+  if(totalProps===0 && !db){
+    div.innerHTML='<p style="color:#c62828;font-size:.82rem">⚠️ Sin conexión con Firebase. Recarga la página.</p>';
+    return;
+  }
   const keys=Object.keys(proposals).filter(k=>{
     const p=proposals[k];
     return Number(p.from)===Number(userRow)||Number(p.to)===Number(userRow);
