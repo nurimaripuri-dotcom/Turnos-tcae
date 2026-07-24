@@ -729,6 +729,7 @@ function updatePropBadge(){
 }
 
 function openPropModal(dateKey, turno){
+  alert("openPropModal: "+dateKey+" turno:"+turno);
   propFromDay = {dateKey, turno};
   const parts = dateKey.split("_");
   const date = parts[1];
