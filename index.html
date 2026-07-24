@@ -167,20 +167,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 
 <div id="view-todos" style="flex:1;overflow:auto;display:none">
 
-<!-- NEW FEATURE BANNER -->
-<div id="todosBanner" style="display:none;margin:12px 14px 0;padding:14px;background:#e8f5e9;border:1.5px solid #4caf50;border-radius:10px">
-  <p style="font-size:.82rem;font-weight:700;color:#2e7d32;margin-bottom:6px">🆕 Nova función: Propostas de cambio de quenda</p>
-  <p style="font-size:.76rem;color:#1b5e20;line-height:1.5">Agora podes propoñerlle un cambio de quenda a calquera compañeira/o directamente dende a app:</p>
-  <ol style="font-size:.76rem;color:#1b5e20;margin:6px 0 8px 16px;line-height:1.8">
-    <li>Vai á pestaña <b>👤 Mi turno</b></li>
-    <li>Toca calquera día traballado</li>
-    <li>Escolle <b>🔄 Proponer cambio con compañera/o</b></li>
-    <li>Selecciona a persoa e o día que queres</li>
-    <li>Engade un comentario e envía</li>
-  </ol>
-  <p style="font-size:.76rem;color:#1b5e20">A outra persoa recibirá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar.</p>
-  <p style="font-size:.75rem;color:#388e3c;margin-top:8px;text-align:right;cursor:pointer" onclick="document.getElementById('todosBanner').style.display='none';localStorage.setItem('tcaes_ann_todos_v1','99')">✕ Pechar e non volver mostrar</p>
-</div>
+
   <div class="wrap" id="wrap">
     <table id="tbl" style="border-collapse:collapse;width:max-content">
       <thead id="thead"></thead>
@@ -464,16 +451,12 @@ function showTab(tab){
   document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
   document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
   if(tab==="todos"){
-    // Show new feature banner for first 5 times
+    // Show new feature popup for first 5 times
     const annKey="tcaes_ann_todos_v1";
     const shown=parseInt(localStorage.getItem(annKey)||"0");
     if(shown<5){
       localStorage.setItem(annKey,String(shown+1));
-      const banner=document.getElementById("todosBanner");
-      if(banner)banner.style.display="block";
-    } else {
-      const banner=document.getElementById("todosBanner");
-      if(banner)banner.style.display="none";
+      setTimeout(()=>document.getElementById("overlayNewFeature").classList.add("open"),300);
     }
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
@@ -1030,6 +1013,10 @@ function renderProposals(){
 }
 
 
+function closeNewFeature(){
+  document.getElementById("overlayNewFeature").classList.remove("open");
+}
+
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
 window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeout(goToToday,300);}};
@@ -1085,6 +1072,27 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
       <button class="mbtn mbtn-del" onclick="respondProposal('rejected')" style="flex:1">Rechazar</button>
       <button class="mbtn mbtn-save" onclick="respondProposal('accepted')" style="flex:1">Aceptar</button>
     </div>
+  </div>
+</div>
+
+<!-- NEW FEATURE POPUP -->
+<div class="overlay" id="overlayNewFeature" onclick="if(event.target.id==='overlayNewFeature')closeNewFeature()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="font-family:Syne,sans-serif;font-size:.95rem;color:#2e7d32">🆕 Nova función</h2>
+      <span onclick="closeNewFeature()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <p style="font-size:.82rem;font-weight:700;margin-bottom:8px">Propostas de cambio de quenda</p>
+    <p style="font-size:.78rem;color:var(--mu);line-height:1.6;margin-bottom:10px">Agora podes propoñerlle un cambio a calquera compañeira/o directamente dende a app:</p>
+    <ol style="font-size:.78rem;color:var(--tx);margin:0 0 12px 18px;line-height:1.9">
+      <li>Vai á pestaña <b>👤 Mi turno</b></li>
+      <li>Toca calquera día traballado</li>
+      <li>Escolle <b>🔄 Proponer cambio con compañeira/o</b></li>
+      <li>Selecciona a persoa e o día que queres</li>
+      <li>Engade un comentario e envía</li>
+    </ol>
+    <p style="font-size:.78rem;color:var(--mu);line-height:1.6">A outra persoa verá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar. Se acepta, o cambio aplícase automaticamente.</p>
+    <button onclick="closeNewFeature()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;font-size:.88rem">Entendido ✓</button>
   </div>
 </div>
 
