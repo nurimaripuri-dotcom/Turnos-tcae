@@ -729,7 +729,6 @@ function updatePropBadge(){
 }
 
 function openPropModal(dateKey, turno){
-  alert("openPropModal: "+dateKey+" turno:"+turno);
   propFromDay = {dateKey, turno};
   const parts = dateKey.split("_");
   const date = parts[1];
@@ -744,7 +743,10 @@ function openPropModal(dateKey, turno){
     if(i+1 !== userRow) sel.innerHTML += `<option value="${i+1}">${p.name}</option>`;
   });
   document.getElementById("propTheirDay").innerHTML = '<option value="">Primero selecciona la persona</option>';
-  document.getElementById("overlayProp").classList.add("open");
+  const op = document.getElementById("overlayProp");
+  op.style.opacity="1";
+  op.style.pointerEvents="all";
+  op.style.display="flex";
 }
 
 function loadPersonDays(){
@@ -810,7 +812,9 @@ function sendProposal(){
 
 function closePropModal(e){
   if(e && e.target.id !== "overlayProp") return;
-  document.getElementById("overlayProp").classList.remove("open");
+  const op = document.getElementById("overlayProp");
+  op.style.opacity="0";
+  op.style.pointerEvents="none";
   propFromDay = null;
 }
 
