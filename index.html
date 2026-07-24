@@ -166,6 +166,21 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 </div>
 
 <div id="view-todos" style="flex:1;overflow:auto;display:none">
+
+<!-- NEW FEATURE BANNER -->
+<div id="todosBanner" style="display:none;margin:12px 14px 0;padding:14px;background:#e8f5e9;border:1.5px solid #4caf50;border-radius:10px">
+  <p style="font-size:.82rem;font-weight:700;color:#2e7d32;margin-bottom:6px">🆕 Nova función: Propostas de cambio de quenda</p>
+  <p style="font-size:.76rem;color:#1b5e20;line-height:1.5">Agora podes propoñerlle un cambio de quenda a calquera compañeira/o directamente dende a app:</p>
+  <ol style="font-size:.76rem;color:#1b5e20;margin:6px 0 8px 16px;line-height:1.8">
+    <li>Vai á pestaña <b>👤 Mi turno</b></li>
+    <li>Toca calquera día traballado</li>
+    <li>Escolle <b>🔄 Proponer cambio con compañera/o</b></li>
+    <li>Selecciona a persoa e o día que queres</li>
+    <li>Engade un comentario e envía</li>
+  </ol>
+  <p style="font-size:.76rem;color:#1b5e20">A outra persoa recibirá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar.</p>
+  <p style="font-size:.75rem;color:#388e3c;margin-top:8px;text-align:right;cursor:pointer" onclick="document.getElementById('todosBanner').style.display='none';localStorage.setItem('tcaes_ann_todos_v1','99')">✕ Pechar e non volver mostrar</p>
+</div>
   <div class="wrap" id="wrap">
     <table id="tbl" style="border-collapse:collapse;width:max-content">
       <thead id="thead"></thead>
@@ -449,6 +464,17 @@ function showTab(tab){
   document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
   document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
   if(tab==="todos"){
+    // Show new feature banner for first 5 times
+    const annKey="tcaes_ann_todos_v1";
+    const shown=parseInt(localStorage.getItem(annKey)||"0");
+    if(shown<5){
+      localStorage.setItem(annKey,String(shown+1));
+      const banner=document.getElementById("todosBanner");
+      if(banner)banner.style.display="block";
+    } else {
+      const banner=document.getElementById("todosBanner");
+      if(banner)banner.style.display="none";
+    }
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
       const th=document.querySelector("th.today-hdr");
@@ -878,18 +904,20 @@ function loadPersonDays(){
     d.setDate(d.getDate()+1);
   }
   sel.innerHTML='<option value="">Selecciona día...</option>';
-  opts.forEach(o=>sel.innerHTML+='<option value="'+o.dk+'">'+o.label+'</option>');
+  opts.forEach(o=>sel.innerHTML+='<option value="'+o.dk+'" data-turn="'+o.t+'">'+o.label+'</option>');
 }
 
 function sendProposal(){
   const toPi=parseInt(document.getElementById("propPerson").value);
-  const theirDay=document.getElementById("propTheirDay").value;
+  const theirDaySel=document.getElementById("propTheirDay");
+  const theirDay=theirDaySel.value;
+  const toTurn=theirDaySel.options[theirDaySel.selectedIndex]?theirDaySel.options[theirDaySel.selectedIndex].dataset.turn||"?":"?";
   const comment=(document.getElementById("propComment").value||"").trim();
   if(!toPi||!theirDay){alert("Selecciona la compañera y el día");return;}
   if(!propFromDay)return;
   if(!db){alert("Sin conexión");return;}
   const prop={from:userRow,fromName:userName,fromDay:propFromDay.dateKey,fromTurn:propFromDay.turno,
-    to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,status:"pending",
+    to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
     commentFrom:comment,commentTo:"",createdAt:new Date().toLocaleString("es-ES")};
   db.ref("tcaes_proposals").push(prop).then(()=>{
     closePropModal();
@@ -925,10 +953,24 @@ function respondProposal(decision){
   const p=proposals[currentPropKey];
   const comment=(document.getElementById("respondComment").value||"").trim();
   if(decision==="accepted"){
-    const fromOv=window.dateOverrides[p.fromDay];
-    const toOv=window.dateOverrides[p.toDay];
-    if(fromOv!==undefined)db.ref("rota_changes/"+p.fromDay).set(toOv||null);
-    if(toOv!==undefined)db.ref("rota_changes/"+p.toDay).set(fromOv||null);
+    // fromDay key: "{fromPi}_{fromDate}" e.g. "3_20260708"
+    // toDay key: "{toPi}_{toDate}" e.g. "13_20260731"
+    const fromPi=Number(p.from)-1;
+    const toPi=Number(p.to)-1;
+    const fromDate=(p.fromDay||"").split("_")[1]; // e.g. "20260708"
+    const toDate=(p.toDay||"").split("_")[1];     // e.g. "20260731"
+    // fromTurn = what "from" person had on fromDate
+    const fromTurn=p.fromTurn||"L";
+    // toTurn = what "to" person had on toDate
+    const toTurn=p.toTurn||"L";
+    // Swap: from person now has toTurn on toDate, to person now has fromTurn on fromDate
+    // Also free up original days
+    const updates={};
+    updates["rota_changes/"+fromPi+"_"+fromDate]="L"; // from person free on original day
+    updates["rota_changes/"+fromPi+"_"+toDate]=toTurn; // from person works to person's day
+    updates["rota_changes/"+toPi+"_"+toDate]="L"; // to person free on original day
+    updates["rota_changes/"+toPi+"_"+fromDate]=fromTurn; // to person works from person's day
+    db.ref().update(updates);
   }
   db.ref("tcaes_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
     closeRespondModal();
