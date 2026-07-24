@@ -945,29 +945,48 @@ function cancelProposal(key){
 function renderProposals(){
   const div=document.getElementById("propsContent");
   if(!div)return;
-  const keys=Object.keys(proposals).filter(k=>{const p=proposals[k];return p.from===userRow||p.to===userRow;});
-  if(keys.length===0){div.innerHTML='<p style="color:var(--mu);font-size:.82rem">No tienes propuestas de cambio.</p>';return;}
+  const keys=Object.keys(proposals).filter(k=>{
+    const p=proposals[k];
+    return Number(p.from)===Number(userRow)||Number(p.to)===Number(userRow);
+  });
+  if(keys.length===0){
+    div.innerHTML='<p style="color:var(--mu);font-size:.82rem">No tienes propuestas de cambio.</p>';
+    return;
+  }
   const fmt=ds=>ds?ds.slice(6,8)+"/"+ds.slice(4,6):"?";
   let html="";
-  keys.forEach(key=>{
+  keys.sort((a,b)=>{
+    const ord={pending:0,accepted:1,rejected:2,cancelled:3};
+    return (ord[proposals[a].status]||3)-(ord[proposals[b].status]||3);
+  }).forEach(key=>{
     const p=proposals[key];
-    const isFrom=p.from===userRow;
+    const isFrom=Number(p.from)===Number(userRow);
     const slabel=p.status==="pending"?"⏳ Pendiente":p.status==="accepted"?"✅ Aceptado":p.status==="rejected"?"❌ Rechazado":"🚫 Cancelado";
     const ccls=p.status==="accepted"?"accepted":p.status==="pending"?"pending":"rejected";
     const fromDs=(p.fromDay||"").split("_")[1];
     const toDs=(p.toDay||"").split("_")[1];
-    html+='<div class="prop-card '+ccls+'">';
-    html+='<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:.75rem;font-weight:700">'+slabel+'</span><span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
-    html+='<p style="font-size:.82rem">'+(isFrom?"Propuesta a <b>"+p.toName+"</b>":"Propuesta de <b>"+p.fromName+"</b>")+'</p>';
-    html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">🔄 <b>'+p.fromName+'</b> da su <b>'+(p.fromTurn||"?")+'</b> del '+fmt(fromDs)+'<br>🔄 <b>'+p.toName+'</b> da su turno del '+fmt(toDs)+'</p>';
-    if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
-    if(p.commentTo)html+='<p style="font-size:.75rem;color:#555">💬 '+p.toName+': "'+p.commentTo+'"</p>';
-    if(p.status==="pending"&&!isFrom)html+='<button class="prop-btn accept" style="width:100%;margin-top:10px" onclick="openRespondModal(\"'+key+'\")">Ver y responder</button>';
-    if(p.status==="pending"&&isFrom)html+='<button class="prop-btn cancel" style="width:100%;margin-top:8px" onclick="cancelProposal(\"'+key+'\")">Cancelar propuesta</button>';
+    html+='<div class="prop-card '+ccls+'" style="margin-bottom:12px">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html+='<span style="font-size:.75rem;font-weight:700">'+slabel+'</span>';
+    html+='<span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
+    html+='<p style="font-size:.82rem">'+(isFrom?"📤 Propuesta a <b>"+p.toName+"</b>":"📥 Propuesta de <b>"+p.fromName+"</b>")+'</p>';
+    html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
+    html+='🔄 <b>'+p.fromName+'</b> da su <b>'+(p.fromTurn||"?")+'</b> del '+fmt(fromDs)+'<br>';
+    html+='🔄 <b>'+p.toName+'</b> da su turno del '+fmt(toDs)+'</p>';
+    if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
+    if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.toName+': "'+p.commentTo+'"</p>';
+    if(p.status==="pending"){
+      if(!isFrom){
+        html+='<button onclick="openRespondModal(\'' +key+ '\')" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;background:#4caf50;color:#fff;border:none;cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">Ver y responder</button>';
+      } else {
+        html+='<button onclick="cancelProposal(\'' +key+ '\')" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:var(--s2);color:var(--tx);border:1px solid var(--bd);cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">Cancelar propuesta</button>';
+      }
+    }
     html+='</div>';
   });
   div.innerHTML=html;
 }
+
 
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
