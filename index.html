@@ -336,6 +336,7 @@ if(userName){
     // Device already verified, skip PIN
     document.getElementById("nameScreen").style.display="none";
     initApp();
+    setTimeout(()=>initProposals(),1000);
     setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
   } else {
     // Device not verified, show name screen with PIN
