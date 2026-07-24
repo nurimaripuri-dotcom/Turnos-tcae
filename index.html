@@ -957,9 +957,10 @@ function dayActionEdit(){
 
 function dayActionPropose(){
   if(!dayActionCtx){ alert("No ctx"); return; }
+  const ctx = {...dayActionCtx};
   closeDayAction();
   setTimeout(()=>{
-    openPropModal(dayActionCtx ? dayActionCtx.dk : "?", dayActionCtx ? dayActionCtx.turno : "?");
+    openPropModal(ctx.dk, ctx.turno);
   }, 300);
 }
 
