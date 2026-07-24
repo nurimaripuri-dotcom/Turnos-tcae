@@ -772,7 +772,7 @@ function loadPersonDays(){
     const ovKey = (pi-1)+"_"+ds;
     const cell = window.dateOverrides[ovKey] !== undefined ? window.dateOverrides[ovKey] : ROTA[ri][dow];
     const t = cell ? cell[0] : null;
-    if(t && t !== "L" && t !== "/" && t !== "V" && t !== "LD"){
+    if(t){
       const dk = (pi-1)+"_"+ds;
       options.push({dk, t, label:`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")} (${t})`});
     }
