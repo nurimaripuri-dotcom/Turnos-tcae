@@ -545,6 +545,7 @@ function renderMiTurno(){
         const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
         const cls=chipCls(t,u);
         const cls2=u2?chipCls(t,u2):null;
+        const isSplit=(t==="MT"||t==="TN")&&u2;
         const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
