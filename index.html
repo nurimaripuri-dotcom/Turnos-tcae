@@ -553,13 +553,9 @@ function renderMiTurno(){
         const miOnClick=miEditMode ? ("openEdit("+(rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))+","+dow+")")) : "";
         html+=`<td data-ri="${rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))}" data-di="${dow}" data-day="${day}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
-          ${isSplit ?
-            `<div style="display:flex;border-radius:9px;overflow:hidden;width:100%">
-              <div class="mi-chip ${cls}" style="flex:1;font-size:1.1rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;font-weight:800">${lbl[0]}</div>
-              <div class="mi-chip ${cls2}" style="flex:1;font-size:1.1rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;font-weight:800">${lbl[1]||lbl[0]}</div>
-            </div>` :
-            `<div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}">${lbl}</div>`
-          }
+          <div class="mi-chip ${isSplit ? '' : cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}${isSplit?"padding:0;overflow:hidden;":""}">
+            ${isSplit ? '<span class="mi-chip '+cls+'" style="flex:1;display:flex;align-items:center;justify-content:center;padding:8px 2px;border-radius:0">'+lbl[0]+'</span><span class="mi-chip '+(cls2||cls)+'" style="flex:1;display:flex;align-items:center;justify-content:center;padding:8px 2px;border-radius:0">'+lbl[1]+'</span>' : lbl}
+          </div>
           ${iconMi?`<div onclick="showMiLog(event,${day})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
           (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
           :""}
