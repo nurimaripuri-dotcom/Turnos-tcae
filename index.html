@@ -542,8 +542,9 @@ function renderMiTurno(){
         const dateStr=miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
         const ovKey=(userRow-1)+"_"+dateStr;
         const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
-        const t=cell?cell[0]:null,u=cell?cell[1]:null;
+        const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
         const cls=chipCls(t,u);
+        const cls2=u2?chipCls(t,u2):null;
         const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
