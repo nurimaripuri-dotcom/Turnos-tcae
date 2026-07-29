@@ -551,7 +551,7 @@ function renderMiTurno(){
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
         const isLorSlash=!t||t==="L"||t==="/";
         const bg2=isLorSlash&&!isToday?"#ffffff":bg;
-        const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr];
+        const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD";
         const miOnClick=miEditMode ? ("openEdit("+(rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))+","+dow+")")) : "";
         html+=`<td data-ri="${rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))}" data-di="${dow}" data-day="${day}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
