@@ -411,7 +411,7 @@ function render(){
       const isCombined=(t==="MT"||t==="TN")&&u2;
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?"#f3e5f5":bg;
-      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr];
+      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
