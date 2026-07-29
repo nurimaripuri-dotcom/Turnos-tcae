@@ -408,7 +408,7 @@ function render(){
       const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
       const cls=chipCls(t,u);
       const cls2=u2?chipCls(t,u2):null;
-      const isSplit=(t==="MT"||t==="TN")&&u2;
+      const isCombined=(t==="MT"||t==="TN")&&u2;
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?"#f3e5f5":bg;
       const iconData=changeIcons[pi]&&changeIcons[pi][dateStr];
@@ -545,7 +545,7 @@ function renderMiTurno(){
         const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
         const cls=chipCls(t,u);
         const cls2=u2?chipCls(t,u2):null;
-        const isSplit=(t==="MT"||t==="TN")&&u2;
+        const isCombined=(t==="MT"||t==="TN")&&u2;
         const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
         const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
@@ -555,8 +555,10 @@ function renderMiTurno(){
         const miOnClick=miEditMode ? ("openEdit("+(rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))+","+dow+")")) : "";
         html+=`<td data-ri="${rowFor(me.startRow,mondayOf(new Date(miYear,miMonth,day)))}" data-di="${dow}" data-day="${day}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
           <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${day}</div>
-          <div class="mi-chip ${isSplit ? 'neu' : cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}">
-            ${isSplit ? '<span class="chip '+cls+'" style="font-size:1.1rem;font-weight:800;padding:1px 3px;border-radius:4px">'+lbl[0]+'</span><span class="chip '+(cls2||cls)+'" style="font-size:1.1rem;font-weight:800;padding:1px 3px;border-radius:4px">'+lbl[1]+'</span>' : lbl}
+          <div class="mi-chip ${isCombined ? 'neu' : cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;${isLorSlash?'background:#fff;color:#333;border:2px solid #333;':''}">
+            ${isCombined && u2 ?
+              '<span class=\'chip '+cls+'\' style=\'padding:2px 4px;border-radius:4px;font-size:1.1rem\'>'+(t==='MT'?'M':'T')+'</span><span class=\'chip '+(cls2||cls)+'\' style=\'padding:2px 4px;border-radius:4px;font-size:1.1rem\'>'+(t==='MT'?'T':'N')+'</span>'
+              : lbl}
           </div>
           ${iconMi?`<div onclick="showMiLog(event,${day})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
           (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
@@ -1136,6 +1138,26 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
     <button onclick="closeNewFeature()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;font-size:.88rem">Entendido ✓</button>
   </div>
 </div>
+
+<script>
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+window.addEventListener("popstate",function(){
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlay"];
+  for(const id of modals){
+    const el=document.getElementById(id);
+    if(el&&el.classList.contains("open")){
+      el.classList.remove("open");
+      history.pushState(null,"","");
+      return;
+    }
+  }
+});
+history.pushState(null,"","");
+const _origAdd=DOMTokenList.prototype.add;
+DOMTokenList.prototype.add=function(...a){_origAdd.apply(this,a);if(a.includes("open"))history.pushState(null,"","");};
+</script>
 
 </body>
 </html>
