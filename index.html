@@ -149,7 +149,6 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   <div class="lc T">T</div>
   <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
   <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
-  <span style="font-size:.65rem;color:var(--mu)">← desliza →</span>
 </div>
 <div class="tabs">
   <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
@@ -564,10 +563,8 @@ function renderMiTurno(){
     if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px">
-    <button onclick="miMonth--;if(miMonth<0){miMonth=11;miYear--;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">‹</button>
-    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center;flex:1">${MONTHS_ES[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
-    <button onclick="miMonth++;if(miMonth>11){miMonth=0;miYear++;}renderMiTurno()" style="font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0">›</button>
+  let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px">
+    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center">${MONTHS_ES[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
     <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
@@ -622,6 +619,18 @@ function renderMiTurno(){
     const cell=ov!==undefined?ov:base;
     const t=cell?cell[0]:null;
     openDayAction(day,ri,di,dk,t);
+  };
+  const miEl=document.getElementById("miTurnoContent");
+  let miTouchX=0,miTouchY=0;
+  miEl.ontouchstart=function(e){miTouchX=e.changedTouches[0].screenX;miTouchY=e.changedTouches[0].screenY;};
+  miEl.ontouchend=function(e){
+    const dx=e.changedTouches[0].screenX-miTouchX;
+    const dy=e.changedTouches[0].screenY-miTouchY;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){
+      if(dx<0){miMonth++;if(miMonth>11){miMonth=0;miYear++;}}
+      else{miMonth--;if(miMonth<0){miMonth=11;miYear--;}}
+      renderMiTurno();
+    }
   };
 }
 
