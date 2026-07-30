@@ -410,6 +410,8 @@ function render(){
       const cls=chipCls(t,u);
       const cls2=u2?chipCls(t,u2):null;
       const isCombined=(t==="MT"||t==="TN")&&u2;
+      const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
+      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
       const lbl1=t==="MT"?"M":"T";
       const lbl2=t==="MT"?"T":"N";
@@ -418,7 +420,7 @@ function render(){
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
-          <div class="chip ${isCombined ? (cls||'neu') : cls}">${isCombined ? lbl1+'<small>+'+lbl2+'</small>' : lbl}</div>${t==="V"&&baseCell?'<div class="chip '+chipCls(baseCell[0],baseCell[1])+'" style="font-size:.65rem;padding:1px 4px;margin-top:2px;opacity:.85">'+( baseCell[0]||"·" )+'</div>':""}
+          <div class="chip ${isCombined ? (cls||'neu') : cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${isCombined ? lbl1+'<small>+'+lbl2+'</small>' : lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>
           ${dot}
         </div>
       </td>`;
@@ -549,7 +551,9 @@ function renderMiTurno(){
         const cls=chipCls(t,u);
         const cls2=u2?chipCls(t,u2):null;
         const isCombined=(t==="MT"||t==="TN")&&u2;
-        const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+        const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
+      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
+      const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
         const lbl1=t==="MT"?"M":"T";
         const lbl2=t==="MT"?"T":"N";
         const isLorSlash2=!t||t==="L"||t==="/";
