@@ -360,7 +360,7 @@ function weekOff(mon){return Math.round((mon-REF_MONDAY)/(7*86400000));}
 function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%15+15)%15;}
 
 function chipCls(t,u){
-  if(!t||t==="L"||t==="/"||t==="V"||t==="LD"||t==="MT"||t==="TN")return"neu";
+  if(!t||t==="L"||t==="/"||t==="V"||t==="LD")return"neu";
   return u||"neu";
 }
 
