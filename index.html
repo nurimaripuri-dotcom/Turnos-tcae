@@ -548,19 +548,19 @@ function renderMiTurno(){
         const ovKey=(userRow-1)+"_"+dateStr;
         const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
         const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
-        const cls=chipCls(t,u);
-        const cls2=u2?chipCls(t,u2):null;
         const isCombined=(t==="MT"||t==="TN")&&u2;
+        const lbl1=t==="MT"?"M":"T";
+        const lbl2=t==="MT"?"T":"N";
+        const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
+        const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
         const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
-        const lbl1=t==="MT"?"M":"T";
-        const lbl2=t==="MT"?"T":"N";
         const isLorSlash2=!t||t==="L"||t==="/";
         const chipHtml=isCombined
-          ?"<div class='mi-chip neu' style='font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:3px'>"
-            +"<span class='chip "+cls+"' style='padding:2px 5px;border-radius:4px;font-size:1.1rem'>"+lbl1+"</span>"
-            +"<span class='chip "+(cls2||cls)+"' style='padding:2px 5px;border-radius:4px;font-size:1.1rem'>"+lbl2+"</span>"
+          ?"<div class='mi-chip neu' style='font-size:1.3rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
+            +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl1+"</span>"
+            +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl2+"</span>"
             +"</div>"
           :"<div class='mi-chip "+cls+"' style='font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;"+(isLorSlash2?"background:#fff;color:#333;border:2px solid #333;":"")+"'>"+lbl+"</div>";
         const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
