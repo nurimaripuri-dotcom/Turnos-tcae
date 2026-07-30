@@ -404,7 +404,8 @@ function render(){
       const ri=rowFor(p.startRow,mon);
       const dateStr=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
       const ovKey=pi+"_"+dateStr;
-      const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dc.dow];
+      const baseCell=ROTA[ri][dc.dow];
+      const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:baseCell;
       const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
       const cls=chipCls(t,u);
       const cls2=u2?chipCls(t,u2):null;
@@ -417,7 +418,7 @@ function render(){
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
-          <div class="chip ${isCombined ? (cls||'neu') : cls}">${isCombined ? lbl1+'<small>+'+lbl2+'</small>' : lbl}</div>
+          <div class="chip ${isCombined ? (cls||'neu') : cls}">${isCombined ? lbl1+'<small>+'+lbl2+'</small>' : lbl}</div>${t==="V"&&baseCell?'<div class="chip '+chipCls(baseCell[0],baseCell[1])+'" style="font-size:.65rem;padding:1px 4px;margin-top:2px;opacity:.85">'+( baseCell[0]||"·" )+'</div>':""}
           ${dot}
         </div>
       </td>`;
