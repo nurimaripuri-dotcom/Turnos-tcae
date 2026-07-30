@@ -407,20 +407,26 @@ function render(){
       const baseCell=ROTA[ri][dc.dow];
       const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:baseCell;
       const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
-      const cls=chipCls(t,u);
-      const cls2=u2?chipCls(t,u2):null;
       const isCombined=(t==="MT"||t==="TN")&&u2;
+      const lbl1=t==="MT"?"M":"T";
+      const lbl2=t==="MT"?"T":"N";
+      const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
+      const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
       const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
-      const lbl1=t==="MT"?"M":"T";
-      const lbl2=t==="MT"?"T":"N";
       const cellBg=dc.isToday?"#81c784":dc.isSun?"#f3e5f5":bg;
       const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
+      const chipInner=isCombined
+        ?`<div style="display:flex;width:34px;height:34px;border-radius:6px;overflow:hidden;gap:1px">`
+          +`<span class="chip ${cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl1}</span>`
+          +`<span class="chip ${cls2||cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl2}</span>`
+          +`</div>`
+        :`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>`;
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
-          <div class="chip ${isCombined ? (cls||'neu') : cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${isCombined ? lbl1+'<small>+'+lbl2+'</small>' : lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>
+          ${chipInner}
           ${dot}
         </div>
       </td>`;
