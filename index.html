@@ -141,12 +141,11 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 </header>
 <div class="legend">
   <span style="color:var(--mu)">Unidad →</span>
-  <div class="lc I">🔴 Ictus</div>
-  <div class="lc V">🟢 351-353</div>
-  <div class="lc N2">⚫ 354/337-339</div>
-  <div class="lc A">🔵 340-345</div>
+  <div class="lc I" onclick="showUnitInfo('I')" style="cursor:pointer">🔴 Ictus</div>
+  <div class="lc V" onclick="showUnitInfo('V')" style="cursor:pointer">🟢 351-353</div>
+  <div class="lc N2" onclick="showUnitInfo('N2')" style="cursor:pointer">⚫ 354/337-339</div>
+  <div class="lc A" onclick="showUnitInfo('A')" style="cursor:pointer">🔵 340-345</div>
   <div class="lc neu">L · /</div>
-  <div class="lc T">T</div>
   <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
   <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
 </div>
@@ -686,6 +685,27 @@ function renderUnitBtns(){
       `<div class="ubtn ${k} ${editUnit2===k?"active":""}" onclick="selUnit2('${k}')">${l}</div>`).join("");
   }
 }
+const UNIT_INFO={
+  I:{icon:"🔴",name:"Ictus",color:"var(--I)",manana:"Reondrá y limpiará material de la unidad (farmacia, carro de material, etc.)"},
+  V:{icon:"🟢",name:"351-353",color:"var(--V)",manana:"Llevará las dietas y la colocación de farmacia."},
+  N2:{icon:"⚫",name:"354/337-339",color:"var(--N2)",manana:"Llevará el oficio sucio y la limpieza de carros."},
+  A:{icon:"🔵",name:"340-345",color:"var(--A)",manana:"Llevará el oficio de cocina y la sala de exploraciones."}
+};
+function showUnitInfo(key){
+  const info=UNIT_INFO[key];
+  if(!info)return;
+  document.getElementById("unitInfoContent").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="font-family:Syne,sans-serif;font-size:.95rem;color:${info.color}">${info.icon} ${info.name}</h2>
+      <span onclick="closeUnitInfo()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <p style="font-size:.78rem;font-weight:700;color:var(--mu);margin-bottom:6px">🌅 Mañana</p>
+    <p style="font-size:.85rem;color:var(--tx);line-height:1.6">${info.manana}</p>
+  `;
+  document.getElementById("overlayUnitInfo").classList.add("open");
+}
+function closeUnitInfo(){document.getElementById("overlayUnitInfo").classList.remove("open");}
+
 function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD"){editUnit=null;editUnit2=null;}if(t!=="MT"&&t!=="TN")editUnit2=null;renderTurnBtns();renderUnitBtns();}
 function selUnit(u){editUnit=u;renderUnitBtns();}
 function selUnit2(u){editUnit2=u;renderUnitBtns();}
@@ -1186,12 +1206,16 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
   </div>
 </div>
 
+<div class="overlay" id="overlayUnitInfo" onclick="if(event.target.id==='overlayUnitInfo')closeUnitInfo()">
+  <div class="modal" id="unitInfoContent"></div>
+</div>
+
 <script>
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
