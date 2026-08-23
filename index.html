@@ -588,12 +588,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 function initApp(){
   try{
-    // Firebase already initialized early
-    firebase.app("tcaes_app").auth().onAuthStateChanged(user=>{
-      if(!user)return; // esperamos a que signInAnonymously() complete
-      startDataListeners();
-    });
-  }catch(e){render();}
+    // Las reglas de la base de datos son abiertas, no hace falta esperar a la autenticación
+    // (intentamos igualmente el login anónimo por si acaso, pero no bloqueamos la carga de datos por él)
+    startDataListeners();
+  }catch(e){console.log("initApp error:",e);render();}
 }
 
 function startDataListeners(){
