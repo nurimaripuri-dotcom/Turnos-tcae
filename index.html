@@ -25,8 +25,12 @@
   --bd:#3a3a48; --bg:#121218; --s1:#1c1c26; --s2:#272733;
   --tx:#eceef2; --mu:#9d9dae;
   --today:#66bb6a; --today-bg:#2e7d32;
+  --I:#ff6b6b; --Ib:#3b1f22; --Ix:#e57373;
+  --V:#69db8f; --Vb:#1f3b2a; --Vx:#57c17f;
+  --N2:#b0bec5; --N2b:#2a2f36; --N2x:#8a97a3;
+  --A:#64b5f6; --Ab:#1f2f45; --Ax:#4fa3e3;
 }
-:root.dark .lc.neu,:root.dark .chip.neu,:root.dark .mi-chip.neu{background:#2a2a36;color:#e0e0e8;border-color:#7a7a8a}
+:root.dark .lc.neu,:root.dark .chip.neu,:root.dark .mi-chip.neu{background:#000;color:#fff;border-color:#555}
 :root.dark .prop-card.pending{background:#3a3420;border-color:#ffc107}
 :root.dark .prop-card.accepted{background:#1f3324;border-color:#4caf50}
 :root.dark .prop-card.rejected{background:#3a2222;border-color:#ef5350}
@@ -750,7 +754,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
       +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl1+"</span>"
       +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl2+"</span>"
       +"</div>"
-    :"<div class='mi-chip "+cls+"' style='font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;"+(isLorSlash2?"background:#fff;color:#333;border:2px solid #333;":"")+"'>"+lbl+"</div>";
+    :"<div class='mi-chip "+cls+"' style='font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
   if(!isCurrentMonth){
     const numColor2="#b9b9be";
     return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;height:90px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
