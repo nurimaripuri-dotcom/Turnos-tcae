@@ -231,12 +231,14 @@ setTimeout(function(){
   </div>
 </div>
 
-<div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
-  <div id="miTurnoContent"></div>
+<div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column">
+  <div id="miTurnoContent" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
 </div>
 
 <div id="view-todos" style="flex:1;overflow:auto;display:none">
-
+  <div style="display:flex;justify-content:flex-end;padding:8px 12px 0">
+    <button id="comparePeopleBtn" onclick="openComparePeople()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">👥 Comparar</button>
+  </div>
 
   <div class="wrap" id="wrap">
     <table id="tbl" style="border-collapse:collapse;width:max-content">
@@ -312,6 +314,39 @@ const PEOPLE = [
   {name:"Isabel",startRow:13},{name:"Adrián",startRow:14},{name:"Susana",startRow:15},
 ];
 
+let hiddenPeople=new Set(JSON.parse(localStorage.getItem("tcaes_hidden_people")||"[]"));
+function saveHiddenPeople(){localStorage.setItem("tcaes_hidden_people",JSON.stringify([...hiddenPeople]));}
+function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
+function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
+function renderPeopleCheckList(){
+  const div=document.getElementById("peopleCheckList");
+  if(!div)return;
+  div.innerHTML=PEOPLE.map((p,i)=>{
+    const checked=hiddenPeople.has(i)?"":"checked";
+    return `<label style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--s2)">
+      <input type="checkbox" onchange="togglePersonVisible(${i})" ${checked} style="width:18px;height:18px;flex-shrink:0">
+      <span style="font-size:.85rem;color:var(--tx)">${p.name}</span>
+    </label>`;
+  }).join("");
+}
+function togglePersonVisible(i){
+  if(hiddenPeople.has(i))hiddenPeople.delete(i);else hiddenPeople.add(i);
+  saveHiddenPeople();
+  render();
+}
+function selectAllPeople(){
+  hiddenPeople.clear();
+  saveHiddenPeople();
+  renderPeopleCheckList();
+  render();
+}
+function selectNonePeople(){
+  PEOPLE.forEach((p,i)=>hiddenPeople.add(i));
+  saveHiddenPeople();
+  renderPeopleCheckList();
+  render();
+}
+
 function MONTHS(){return I18N[lang].months.map(m=>m.charAt(0).toUpperCase()+m.slice(1));}
 const DAYS_ES=["L","M","X","J","V","S","D"];
 const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
@@ -364,6 +399,8 @@ const I18N={
     tePropone:"te propone:", teDaSu:"Te da su", aCambioQuiere:"A cambio quiere tu turno del",
     cambioAplicado:"✅ Cambio aceptado y aplicado", propuestaRechazada:"❌ Propuesta rechazada",
     confirmCancelar:"¿Cancelar esta propuesta?", filaNoEncontrada:"No se encontró tu fila.", propuestaEnviada:"✅ Propuesta enviada a", errorEnviar:"Error al enviar",
+    compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar turnos", comparePeopleSub:"Elige qué compañeras/os quieres ver en la tabla.",
+    selectAll:"Todas", selectNone:"Ninguna", cerrar:"Cerrar",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
     months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
   },
@@ -407,6 +444,8 @@ const I18N={
     tePropone:"proponche:", teDaSu:"Dáche a súa", aCambioQuiere:"A cambio quere a túa quenda do",
     cambioAplicado:"✅ Cambio aceptado e aplicado", propuestaRechazada:"❌ Proposta rexeitada",
     confirmCancelar:"¿Cancelar esta proposta?", filaNoEncontrada:"Non se atopou a túa fila.", propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Erro ao enviar",
+    compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar quendas", comparePeopleSub:"Escolle que compañeiras/os queres ver na táboa.",
+    selectAll:"Todas", selectNone:"Ningunha", cerrar:"Pechar",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
     months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"]
   }
@@ -486,6 +525,12 @@ function applyLangStatic(){
   document.getElementById("pinWarnTitle").textContent=t("pinWarnTitle");
   document.getElementById("pinWarnBody").innerHTML=t("pinWarnBody");
   document.getElementById("changeNowBtn").textContent=t("changeNow");
+  document.getElementById("comparePeopleBtn").textContent=t("compararBtn");
+  document.getElementById("comparePeopleTitle").textContent=t("comparePeopleTitle");
+  document.getElementById("comparePeopleSub").textContent=t("comparePeopleSub");
+  document.getElementById("selectAllPeopleBtn").textContent=t("selectAll");
+  document.getElementById("selectNonePeopleBtn").textContent=t("selectNone");
+  document.getElementById("closeComparePeopleBtn").textContent=t("cerrar");
   document.getElementById("notNowBtn").textContent=t("notNow");
 }
 
@@ -645,6 +690,7 @@ function render(){
 
   let body='';
   PEOPLE.forEach((p,pi)=>{
+    if(hiddenPeople.has(pi))return;
     const isMyRow=(userRow===pi+1);
     const bg=isDark()?"#000":(pi%2===0?"#fff":"#f8f9fa");
     body+=`<tr><td class="name-col" style="background:${bg};${isMyRow?"font-weight:700;color:var(--I)":"color:var(--tx)"}">${p.name}</td>`;
@@ -789,15 +835,15 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
   const isLorSlash2=!t||t==="L"||t==="/";
   const chipHtml=isCombined
-    ?"<div class='mi-chip neu' style='font-size:1.3rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
-      +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl1+"</span>"
-      +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:.95rem;line-height:1'>"+lbl2+"</span>"
+    ?"<div class='mi-chip neu' style='font-size:1.5rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
+      +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl1+"</span>"
+      +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl2+"</span>"
       +"</div>"
-    :"<div class='mi-chip "+cls+"' style='font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
+    :"<div class='mi-chip "+cls+"' style='font-size:1.5rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
   if(!isCurrentMonth){
     const numColor2="#b9b9be";
-    return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;height:90px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
-      <div style="font-size:1.1rem;font-weight:700;color:${numColor2};margin-bottom:6px">${d}</div>
+    return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;min-height:78px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
+      <div style="font-size:1.25rem;font-weight:700;color:${numColor2};margin-bottom:6px">${d}</div>
       ${chipHtml}
     </td>`;
   }
@@ -806,11 +852,11 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const isLorSlash=!t||t==="L"||t==="/";
   const bg2=isLorSlash&&!isToday?(isDark()?"#000000":"#ffffff"):bg;
   const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD";
-  return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
-    <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
+  return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;min-height:78px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
+    <div style="font-size:1.25rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
     ${chipHtml}
     ${iconMi?`<div onclick="showMiLog(event,${d})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
-    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:${isDark()?"#ccc":"#555"};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
+    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.6rem;color:${isDark()?"#ccc":"#555"};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
     :""}
   </td>`;
 }
@@ -834,19 +880,20 @@ function renderMiTurno(){
     if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px">
-    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
+  let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
+    <span style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
-    <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
-    <span class="stat-badge-t" style="padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
-    <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
+  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.78rem;flex-shrink:0">
+    <span style="background:var(--Vb);color:var(--V);padding:4px 11px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
+    <span class="stat-badge-t" style="padding:4px 11px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
+    <span style="background:var(--Ib);color:var(--I);padding:4px 11px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
   </div>`;
 
-  html+=`<table style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>`;
+  html+=`<div style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>`;
   ["L","M","X","J","V","S","D"].forEach((d,i)=>{
     const isWE=i>=5;
-    html+=`<th style="text-align:center;padding:8px 2px;font-size:.88rem;color:${isWE?"#6f42c1":"var(--mu)"};font-weight:700;border-bottom:2px solid var(--bd)">${d}</th>`;
+    html+=`<th style="text-align:center;padding:8px 2px;font-size:.95rem;color:${isWE?"#6f42c1":"var(--mu)"};font-weight:700;border-bottom:2px solid var(--bd)">${d}</th>`;
   });
   html+=`</tr></thead><tbody>`;
 
@@ -876,7 +923,8 @@ function renderMiTurno(){
     html+=`</tr>`;
     if(!started)started=true;
   }
-  html+=`</tbody></table>`;
+  html+=`</tbody></table>
+  </div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   document.getElementById("miTurnoContent").onclick=function(e){
     const td=e.target.closest("td[data-ri]");
@@ -1499,6 +1547,20 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
   </div>
 </div>
 
+<!-- COMPARE PEOPLE MODAL -->
+<div class="overlay" id="overlayComparePeople" onclick="if(event.target.id==='overlayComparePeople')closeComparePeople()">
+  <div class="modal">
+    <h2 id="comparePeopleTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">👥 Comparar turnos</h2>
+    <p id="comparePeopleSub" style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Elige qué compañeras/os quieres ver en la tabla.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="mbtn mbtn-ghost" id="selectAllPeopleBtn" onclick="selectAllPeople()" style="flex:1">Todas</button>
+      <button class="mbtn mbtn-ghost" id="selectNonePeopleBtn" onclick="selectNonePeople()" style="flex:1">Ninguna</button>
+    </div>
+    <div id="peopleCheckList" style="max-height:48vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <button class="mbtn mbtn-save" id="closeComparePeopleBtn" onclick="closeComparePeople()" style="width:100%;margin-top:14px">Cerrar</button>
+  </div>
+</div>
+
 <!-- NEW FEATURE POPUP -->
 <div class="overlay" id="overlayNewFeature" onclick="if(event.target.id==='overlayNewFeature')closeNewFeature()">
   <div class="modal">
@@ -1538,7 +1600,7 @@ if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
