@@ -420,6 +420,11 @@ function toggleTheme(){
   localStorage.setItem("tcaes_theme",isDark()?"dark":"light");
   const btn=document.getElementById("menuThemeBtn");
   if(btn)btn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
+  if(typeof render==="function")render();
+  if(typeof renderMiTurno==="function")renderMiTurno();
+  if(typeof renderProposals==="function")renderProposals();
+  const rv=document.getElementById("view-resumen");
+  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
 }
 function toggleLang(){
   lang=(lang==="es")?"gl":"es";
