@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TCAES 3ºC">
+<meta name="apple-mobile-web-app-title" content="TCE 3ºC">
 <meta name="theme-color" content="#c0392b">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>TCAES 3ºC</title>
+<title>TCE 3ºC</title>
+<script>(function(){try{if(localStorage.getItem("tcaes_theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}})();</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -20,6 +21,16 @@
   --tx:#1a1a2e; --mu:#6c757d;
   --today:#1b5e20; --today-bg:#81c784;
 }
+:root.dark {
+  --bd:#3a3a48; --bg:#121218; --s1:#1c1c26; --s2:#272733;
+  --tx:#eceef2; --mu:#9d9dae;
+  --today:#66bb6a; --today-bg:#2e7d32;
+}
+:root.dark .lc.neu,:root.dark .chip.neu,:root.dark .mi-chip.neu{background:#2a2a36;color:#e0e0e8;border-color:#7a7a8a}
+:root.dark .prop-card.pending{background:#3a3420;border-color:#ffc107}
+:root.dark .prop-card.accepted{background:#1f3324;border-color:#4caf50}
+:root.dark .prop-card.rejected{background:#3a2222;border-color:#ef5350}
+:root.dark .menu-dropdown{box-shadow:0 6px 20px rgba(0,0,0,.5)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--tx);font-family:"DM Mono",monospace;display:flex;flex-direction:column}
@@ -36,9 +47,21 @@ h1 em{color:var(--I);font-style:normal}
 .lc.N2{background:var(--N2b);color:var(--N2);border-color:var(--N2x)}
 .lc.A{background:var(--Ab);color:var(--A);border-color:var(--Ax)}
 .lc.neu{background:#fff;color:#333;border-color:#333}
-.tabs{display:flex;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0}
+.tabs{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--bd);background:var(--s1);flex-shrink:0;padding:0 6px}
 .tab-btn{flex:1;padding:10px;border:none;background:transparent;font-family:"DM Mono",monospace;font-size:.82rem;cursor:pointer;color:var(--mu);border-bottom:3px solid transparent}
 .tab-btn.active{color:var(--I);border-bottom-color:var(--I);font-weight:600}
+.topbar-title{font-family:"Syne",sans-serif;font-size:.88rem;font-weight:700;padding:10px 6px;color:var(--tx)}
+.menu-wrap{position:relative;flex-shrink:0}
+.menu-btn{background:transparent;border:none;font-size:1.35rem;line-height:1;padding:8px 12px;cursor:pointer;color:var(--tx);position:relative;border-radius:8px}
+.menu-btn:active{background:var(--s2)}
+.menu-badge{position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#e53935}
+.menu-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);min-width:190px;z-index:50;overflow:hidden}
+.menu-dropdown.open{display:block}
+.menu-item{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:11px 14px;border:none;background:transparent;font-family:"DM Mono",monospace;font-size:.82rem;color:var(--tx);cursor:pointer}
+.menu-item:active{background:var(--s2)}
+.menu-item.danger{color:#c0392b}
+.menu-sep{height:1px;background:var(--bd);margin:2px 0}
+.menu-item-badge{background:#e53935;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:.6rem;display:inline-flex;align-items:center;justify-content:center;font-weight:700;padding:0 3px}
 .wrap{flex:1;overflow:auto;min-height:0}
 table{border-collapse:collapse;width:max-content}
 thead th{padding:4px 2px;font-size:.65rem;font-weight:600;color:var(--mu);text-align:center;white-space:nowrap;background:var(--s1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:3}
@@ -111,36 +134,36 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 
 <div id="nameScreen">
   <div class="name-card">
-    <h2>🏥 TCAES <em>3ºC</em></h2>
-    <p style="font-size:.78rem;color:var(--mu);margin-bottom:18px">¿Cuál es tu nombre?</p>
+    <h2>🏥 TCE <em>3ºC</em></h2>
+    <p style="font-size:.78rem;color:var(--mu);margin-bottom:18px" id="askNameP">¿Cuál es tu nombre?</p>
     <!-- STEP 1: Name -->
     <div id="stepName">
       <input type="text" id="nameInput" placeholder="Escribe tu nombre..." autofocus>
       <div id="nameError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left"></div>
-      <button class="mbtn mbtn-save" onclick="saveName()" style="width:100%;margin-top:12px">Siguiente →</button>
+      <button class="mbtn mbtn-save" id="nextBtn" onclick="saveName()" style="width:100%;margin-top:12px">Siguiente →</button>
     </div>
-    <!-- STEP 2: PIN -->
+    <!-- STEP 2: código -->
     <div id="stepPin" style="display:none">
-      <p style="font-size:.78rem;color:var(--mu);margin-bottom:10px" id="pinLabel">Introduce tu PIN (por defecto 0000):</p>
+      <p style="font-size:.78rem;color:var(--mu);margin-bottom:10px" id="pinLabel">Introduce tu código (por defecto 0000):</p>
       <input type="password" id="pinInput" placeholder="····" maxlength="4" style="text-align:center;font-size:1.5rem;letter-spacing:8px">
       <div id="pinError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left"></div>
-      <button class="mbtn mbtn-save" onclick="checkPin()" style="width:100%;margin-top:12px">Entrar</button>
-      <button class="mbtn mbtn-ghost" onclick="document.getElementById('stepPin').style.display='none';document.getElementById('stepName').style.display='block'" style="width:100%;margin-top:8px">← Volver</button>
+      <button class="mbtn mbtn-save" id="enterBtn" onclick="checkPin()" style="width:100%;margin-top:12px">Entrar</button>
+      <button class="mbtn mbtn-ghost" id="pinBackBtn" onclick="document.getElementById('stepPin').style.display='none';document.getElementById('stepName').style.display='block'" style="width:100%;margin-top:8px">← Volver</button>
     </div>
   </div>
 </div>
 
 <header>
-  <h1>🏥 TCAES <em>3ºC</em></h1>
+  <h1>🏥 TCE <em>3ºC</em></h1>
   <div style="display:flex;gap:6px;align-items:center">
     <button class="hbtn" onclick="changeYear(-1)">‹</button>
     <span id="yearLabel" style="font-family:Syne,sans-serif;font-weight:700;min-width:46px;text-align:center"></span>
     <button class="hbtn" onclick="changeYear(1)">›</button>
-    <button class="hbtn primary" onclick="goToToday()">📍 Hoy</button>
+    <button class="hbtn primary" id="todayBtn" onclick="goToToday()">📍 Hoy</button>
   </div>
 </header>
 <div class="legend">
-  <span style="color:var(--mu)">Unidad →</span>
+  <span style="color:var(--mu)" id="unidadLegendLabel">Unidad →</span>
   <div class="lc I" onclick="showUnitInfo('I')" style="cursor:pointer">🔴 Ictus</div>
   <div class="lc V" onclick="showUnitInfo('V')" style="cursor:pointer">🟢 351-353</div>
   <div class="lc N2" onclick="showUnitInfo('N2')" style="cursor:pointer">⚫ 354/337-339</div>
@@ -149,19 +172,26 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
   <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
 </div>
+<div id="pinLockBanner" style="display:none;background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center;cursor:pointer" onclick="showPinWarn()">🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.</div>
 <div class="tabs">
-  <button class="tab-btn active" id="tab-mi" onclick="showTab('mi')">👤 Mi turno</button>
-  <button class="tab-btn" id="tab-todos" onclick="showTab('todos')">📅 Todos</button>
-  <button class="tab-btn" id="tab-props" onclick="showTab('props')" style="position:relative">
-    🔄 Cambios<span id="propBadge" style="display:none;position:absolute;top:4px;right:8px;background:#e53935;color:#fff;border-radius:50%;width:14px;height:14px;font-size:.55rem;align-items:center;justify-content:center;font-weight:700">0</span>
-  </button>
+  <div class="topbar-title" id="topbarTitle">👤 Mi turno</div>
+  <div class="menu-wrap">
+    <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)">⋮<span class="menu-badge" id="menuBadge" style="display:none"></span></button>
+    <div class="menu-dropdown" id="menuDropdown">
+      <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
+      <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <div class="menu-sep"></div>
+      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">🏠 Volver a Mi turno</button>
+      <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
+      <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
+      <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
+      <div class="menu-sep"></div>
+      <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
+    </div>
+  </div>
 </div>
 
 <div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
-  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px">
-    <button onclick="changePin()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">🔑 PIN</button>
-    
-  </div>
   <div id="miTurnoContent"></div>
 </div>
 
@@ -185,7 +215,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   <div class="modal">
     <h2 id="mTitle">Editar</h2>
     <div class="msub" id="mSub"></div>
-    <div class="slabel">Turno:</div>
+    <div class="slabel" id="mTurnoLabel">Turno:</div>
     <div class="turn-row" id="turnRow"></div>
     <div id="unitSection">
       <div class="slabel" id="unitLabel1">Unidad:</div>
@@ -195,17 +225,17 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
       <div class="slabel" id="unitLabel2">Segunda unidad:</div>
       <div class="unit-grid" id="unitGrid2"></div>
     </div>
-    <div class="slabel">Tu nombre:</div>
+    <div class="slabel" id="tuNombreLabel">Tu nombre:</div>
     <input type="text" id="inputWho" placeholder="Tu nombre...">
-    <div class="slabel">Cambio con:</div>
+    <div class="slabel" id="cambioConLabel">Cambio con:</div>
     <input type="text" id="inputWith" placeholder="Nombre de la compañera...">
-    <div class="slabel">Comentario (opcional):</div>
+    <div class="slabel" id="comentarioLabel">Comentario (opcional):</div>
     <input type="text" id="inputComment" placeholder="Notas...">
     <div class="mfooter">
-      <button class="mbtn mbtn-del" onclick="applyEdit(null,null)">✕ Borrar</button>
+      <button class="mbtn mbtn-del" id="borrarBtn" onclick="applyEdit(null,null)">✕ Borrar</button>
       <div style="display:flex;gap:8px">
-        <button class="mbtn mbtn-ghost" onclick="closeModal()">Cancelar</button>
-        <button class="mbtn mbtn-save" onclick="confirmEdit()">Guardar</button>
+        <button class="mbtn mbtn-ghost" id="cancelarBtn" onclick="closeModal()">Cancelar</button>
+        <button class="mbtn mbtn-save" id="guardarBtn" onclick="confirmEdit()">Guardar</button>
       </div>
     </div>
   </div>
@@ -215,6 +245,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const ROTA = [
   [["T","V"],["T","I"],["N","I"],["/",null],["L",null],["L",null],["M","I"]],
@@ -241,7 +272,7 @@ const PEOPLE = [
   {name:"Isabel",startRow:13},{name:"Adrián",startRow:14},{name:"Susana",startRow:15},
 ];
 
-const MONTHS_ES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+function MONTHS(){return I18N[lang].months.map(m=>m.charAt(0).toUpperCase()+m.slice(1));}
 const DAYS_ES=["L","M","X","J","V","S","D"];
 const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
 const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
@@ -249,6 +280,170 @@ const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","
 
 let currentYear=new Date().getFullYear();
 let editMode=false,miEditMode=false;
+let pinLocked=false;
+// ===== IDIOMA =====
+let lang=localStorage.getItem("tcaes_lang")||"es";
+const I18N={
+  es:{
+    askName:"¿Cuál es tu nombre?", namePh:"Escribe tu nombre...", next:"Siguiente →",
+    codeLabel:"Introduce tu código (por defecto 0000):", enter:"Entrar", back:"← Volver",
+    today:"📍 Hoy", unidadLegend:"Unidad →",
+    bannerCode:"🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.",
+    tabMi:"👤 Mi turno", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumen",
+    menuVolver:"🏠 Volver a Mi turno", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Cerrar sesión",
+    menuLangTo:"🌐 Cambiar a Galego",
+    menuThemeToDark:"🌙 Modo oscuro", menuThemeToLight:"☀️ Modo normal",
+    codeWrongLen:"❌ El código debe ser 4 números", codeWrong:"❌ Código incorrecto",
+    currentCodePrompt:"Código actual:", newCodePrompt:"Nuevo código (4 números):",
+    repeatCodePrompt:"Repite el nuevo código:", codesMismatch:"Los códigos no coinciden",
+    codeChangedOk:"✅ Código cambiado correctamente",
+    pinWarnTitle:"🔒 Cambia tu código",
+    pinWarnBody:"Sigues usando el código de por defecto (<b>0000</b>). Mientras no lo cambies por uno tuyo, puedes ver los turnos, pero <b>no podrás hacer cambios, proponer turnos ni ver comentarios</b> de nadie.",
+    changeNow:"Cambiar código ahora", notNow:"Ahora no",
+    commentLockedShort:"🔒 Cambia tu código para ver este comentario",
+    commentLockedLong:"🔒 Cambia tu código para ver los comentarios",
+    logoutConfirm:"¿Cerrar sesión? Tendrás que volver a introducir tu nombre y código en este dispositivo.",
+    editTitle:"Editar", turnoLabel:"Turno:", unidadLabel:"Unidad:", unidad2Label:"Segunda unidad:",
+    tuNombreLabel:"Tu nombre:", tuNombrePh:"Tu nombre...", cambioConLabel:"Cambio con:",
+    cambioConPh:"Nombre de la compañera...", comentarioLabel:"Comentario (opcional):", comentarioPh:"Notas...",
+    borrar:"✕ Borrar", cancelar:"Cancelar", guardar:"Guardar",
+    propsHeading:"🔄 Propuestas de cambio",
+    dayActionEdit:"✏️ Anotar cambio de turno", dayActionPropose:"🔄 Proponer cambio con compañera/o",
+    propModalTitle:"🔄 Proponer cambio", compLabel:"Compañera/o:", selecciona:"Selecciona...",
+    diaQuieresLabel:"Día que quieres de ella/él:", primeroSelecciona:"Primero selecciona la persona",
+    comentarioLabel2:"Comentario:", comentarioPh2:"Explica el motivo...", enviar:"Enviar",
+    respondModalTitle:"🔄 Responder propuesta", tuComentarioLabel:"Tu comentario (opcional):",
+    tuRespuestaPh:"Tu respuesta...", rechazar:"Rechazar", aceptar:"Aceptar",
+    libre:"Libre",
+    pendiente:"⏳ Pendiente", aceptado:"✅ Aceptado", rechazado:"❌ Rechazado", cancelado:"🚫 Cancelado",
+    propuestaA:"📤 Propuesta a", propuestaDe:"📥 Propuesta de",
+    daSu:"da su", delDia:"del", verYResponder:"Ver y responder", cancelarPropuesta:"Cancelar propuesta",
+    sinConexion:"⚠️ Sin conexión con Firebase. Recarga la página.", sinPropuestas:"No tienes propuestas de cambio.",
+    tuTurnoDel:"Tu turno del", cargando:"Cargando...", seleccionaDia:"Selecciona día...",
+    seleccionaCompYDia:"Selecciona la compañera y el día", sinConexionSimple:"Sin conexión",
+    tePropone:"te propone:", teDaSu:"Te da su", aCambioQuiere:"A cambio quiere tu turno del",
+    cambioAplicado:"✅ Cambio aceptado y aplicado", propuestaRechazada:"❌ Propuesta rechazada",
+    confirmCancelar:"¿Cancelar esta propuesta?", filaNoEncontrada:"No se encontró tu fila.", propuestaEnviada:"✅ Propuesta enviada a", errorEnviar:"Error al enviar",
+    days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
+    months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
+  },
+  gl:{
+    askName:"Cal é o teu nome?", namePh:"Escribe o teu nome...", next:"Seguinte →",
+    codeLabel:"Introduce o teu código (por defecto 0000):", enter:"Entrar", back:"← Voltar",
+    today:"📍 Hoxe", unidadLegend:"Unidade →",
+    bannerCode:"🔒 Código por defecto activo — só podes ver, non editar. Toca aquí para cambialo.",
+    tabMi:"👤 A miña quenda", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumo",
+    menuVolver:"🏠 Volver á miña quenda", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Pechar sesión",
+    menuLangTo:"🌐 Cambiar a Castellano",
+    menuThemeToDark:"🌙 Modo escuro", menuThemeToLight:"☀️ Modo normal",
+    codeWrongLen:"❌ O código debe ter 4 números", codeWrong:"❌ Código incorrecto",
+    currentCodePrompt:"Código actual:", newCodePrompt:"Novo código (4 números):",
+    repeatCodePrompt:"Repite o novo código:", codesMismatch:"Os códigos non coinciden",
+    codeChangedOk:"✅ Código cambiado correctamente",
+    pinWarnTitle:"🔒 Cambia o teu código",
+    pinWarnBody:"Segues a usar o código por defecto (<b>0000</b>). Mentres non o cambies por un teu, podes ver as quendas, pero <b>non poderás facer cambios, propoñer quendas nin ver comentarios</b> de ninguén.",
+    changeNow:"Cambiar código agora", notNow:"Agora non",
+    commentLockedShort:"🔒 Cambia o teu código para ver este comentario",
+    commentLockedLong:"🔒 Cambia o teu código para ver os comentarios",
+    logoutConfirm:"¿Pechar sesión? Terás que introducir de novo o teu nome e código neste dispositivo.",
+    editTitle:"Editar", turnoLabel:"Quenda:", unidadLabel:"Unidade:", unidad2Label:"Segunda unidade:",
+    tuNombreLabel:"O teu nome:", tuNombrePh:"O teu nome...", cambioConLabel:"Cambio con:",
+    cambioConPh:"Nome da compañeira...", comentarioLabel:"Comentario (opcional):", comentarioPh:"Notas...",
+    borrar:"✕ Borrar", cancelar:"Cancelar", guardar:"Gardar",
+    propsHeading:"🔄 Propostas de cambio",
+    dayActionEdit:"✏️ Anotar cambio de quenda", dayActionPropose:"🔄 Propoñer cambio con compañeira/o",
+    propModalTitle:"🔄 Propoñer cambio", compLabel:"Compañeira/o:", selecciona:"Selecciona...",
+    diaQuieresLabel:"Día que queres dela/del:", primeroSelecciona:"Primeiro selecciona a persoa",
+    comentarioLabel2:"Comentario:", comentarioPh2:"Explica o motivo...", enviar:"Enviar",
+    respondModalTitle:"🔄 Responder proposta", tuComentarioLabel:"O teu comentario (opcional):",
+    tuRespuestaPh:"A túa resposta...", rechazar:"Rexeitar", aceptar:"Aceptar",
+    libre:"Libre",
+    pendiente:"⏳ Pendente", aceptado:"✅ Aceptado", rechazado:"❌ Rexeitado", cancelado:"🚫 Cancelado",
+    propuestaA:"📤 Proposta a", propuestaDe:"📥 Proposta de",
+    daSu:"dá a súa", delDia:"do", verYResponder:"Ver e responder", cancelarPropuesta:"Cancelar proposta",
+    sinConexion:"⚠️ Sen conexión con Firebase. Recarga a páxina.", sinPropuestas:"Non tes propostas de cambio.",
+    tuTurnoDel:"A túa quenda do", cargando:"Cargando...", seleccionaDia:"Selecciona día...",
+    seleccionaCompYDia:"Selecciona a compañeira e o día", sinConexionSimple:"Sen conexión",
+    tePropone:"proponche:", teDaSu:"Dáche a súa", aCambioQuiere:"A cambio quere a túa quenda do",
+    cambioAplicado:"✅ Cambio aceptado e aplicado", propuestaRechazada:"❌ Proposta rexeitada",
+    confirmCancelar:"¿Cancelar esta proposta?", filaNoEncontrada:"Non se atopou a túa fila.", propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Erro ao enviar",
+    days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
+    months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"]
+  }
+};
+function t(key){return (I18N[lang]&&I18N[lang][key])!==undefined?I18N[lang][key]:key;}
+function isDark(){return document.documentElement.classList.contains("dark");}
+function toggleTheme(){
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("tcaes_theme",isDark()?"dark":"light");
+  const btn=document.getElementById("menuThemeBtn");
+  if(btn)btn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
+}
+function toggleLang(){
+  lang=(lang==="es")?"gl":"es";
+  localStorage.setItem("tcaes_lang",lang);
+  applyLangStatic();
+  if(document.getElementById("nameScreen").style.display!=="none"){/* login screen, already updated by applyLangStatic */}
+  if(typeof render==="function")render();
+  if(typeof renderMiTurno==="function")renderMiTurno();
+  if(typeof renderProposals==="function")renderProposals();
+  const rv=document.getElementById("view-resumen");
+  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
+}
+function tabTitles(){return {mi:t("tabMi"),todos:t("tabTodos"),props:t("tabCambios"),resumen:t("tabResumen")};}
+function applyLangStatic(){
+  document.getElementById("askNameP").textContent=t("askName");
+  document.getElementById("nameInput").placeholder=t("namePh");
+  document.getElementById("nextBtn").textContent=t("next");
+  document.getElementById("pinLabel").textContent=t("codeLabel");
+  document.getElementById("enterBtn").textContent=t("enter");
+  document.getElementById("pinBackBtn").textContent=t("back");
+  document.getElementById("todayBtn").textContent=t("today");
+  document.getElementById("unidadLegendLabel").textContent=t("unidadLegend");
+  document.getElementById("pinLockBanner").textContent=t("bannerCode");
+  const title=document.getElementById("topbarTitle");
+  if(title)title.textContent=tabTitles()[typeof currentTab!=="undefined"?currentTab:"mi"]||t("tabMi");
+  document.getElementById("tab-mi").textContent=t("menuVolver");
+  document.getElementById("menuChangeCodeBtn").textContent=t("menuChangeCode");
+  document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
+  document.getElementById("menuLangBtn").textContent=t("menuLangTo");
+  const themeBtn=document.getElementById("menuThemeBtn");
+  if(themeBtn)themeBtn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
+  document.getElementById("mTurnoLabel").textContent=t("turnoLabel");
+  document.getElementById("unitLabel1").textContent=t("unidadLabel");
+  document.getElementById("unitLabel2").textContent=t("unidad2Label");
+  document.getElementById("tuNombreLabel").textContent=t("tuNombreLabel");
+  document.getElementById("inputWho").placeholder=t("tuNombrePh");
+  document.getElementById("cambioConLabel").textContent=t("cambioConLabel");
+  document.getElementById("inputWith").placeholder=t("cambioConPh");
+  document.getElementById("comentarioLabel").textContent=t("comentarioLabel");
+  document.getElementById("inputComment").placeholder=t("comentarioPh");
+  document.getElementById("borrarBtn").textContent=t("borrar");
+  document.getElementById("cancelarBtn").textContent=t("cancelar");
+  document.getElementById("guardarBtn").textContent=t("guardar");
+  document.getElementById("propsHeading").textContent=t("propsHeading");
+  document.getElementById("dayActionEditBtn").textContent=t("dayActionEdit");
+  document.getElementById("dayActionProposeBtn").textContent=t("dayActionPropose");
+  document.getElementById("dayActionBackBtn").textContent=t("back");
+  document.getElementById("propModalTitle").textContent=t("propModalTitle");
+  document.getElementById("propPersonLabel").textContent=t("compLabel");
+  document.getElementById("propTheirDayLabel").textContent=t("diaQuieresLabel");
+  document.getElementById("propCommentLabel").textContent=t("comentarioLabel2");
+  document.getElementById("propComment").placeholder=t("comentarioPh2");
+  document.getElementById("propBackBtn").textContent=t("back");
+  document.getElementById("propSendBtn").textContent=t("enviar");
+  document.getElementById("respondModalTitle").textContent=t("respondModalTitle");
+  document.getElementById("respondCommentLabel").textContent=t("tuComentarioLabel");
+  document.getElementById("respondComment").placeholder=t("tuRespuestaPh");
+  document.getElementById("respondBackBtn").textContent=t("back");
+  document.getElementById("respondRejectBtn").textContent=t("rechazar");
+  document.getElementById("respondAcceptBtn").textContent=t("aceptar");
+  document.getElementById("pinWarnTitle").textContent=t("pinWarnTitle");
+  document.getElementById("pinWarnBody").innerHTML=t("pinWarnBody");
+  document.getElementById("changeNowBtn").textContent=t("changeNow");
+  document.getElementById("notNowBtn").textContent=t("notNow");
+}
+
 let userName=localStorage.getItem("tcaes_user")||"";
 let userRow=parseInt(localStorage.getItem("tcaes_row")||"0");
 let editCtx=null,editTurn=null,editUnit=null;
@@ -270,6 +465,7 @@ try{
   if(!firebase.apps.length) firebase.initializeApp(_fc,"tcaes_app");
   else if(!firebase.apps.find(a=>a.name==="tcaes_app")) firebase.initializeApp(_fc,"tcaes_app");
   db=firebase.database(firebase.app("tcaes_app"));
+  firebase.app("tcaes_app").auth().signInAnonymously().catch(e=>console.log("Auth anónima falló:",e));
 }catch(e){console.log("Firebase early init:",e);}
 let miMonth=new Date().getMonth(),miYear=new Date().getFullYear();
 
@@ -303,6 +499,15 @@ document.addEventListener("DOMContentLoaded",()=>{
 function initApp(){
   try{
     // Firebase already initialized early
+    firebase.app("tcaes_app").auth().onAuthStateChanged(user=>{
+      if(!user)return; // esperamos a que signInAnonymously() complete
+      startDataListeners();
+    });
+  }catch(e){render();}
+}
+
+function startDataListeners(){
+  try{
     db.ref("rota_changes").on("value",snap=>{
       const raw=snap.val()||{};
       window.dateOverrides={};
@@ -342,6 +547,7 @@ if(userName){
     initApp();
     setTimeout(()=>initProposals(),1000);
     setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
+    setTimeout(()=>checkPinLock(),700);
   } else {
     // Device not verified, show name screen with PIN
     document.getElementById("nameScreen").style.display="flex";
@@ -378,9 +584,9 @@ function render(){
   let h1='<tr><th class="name-col" rowspan="2" style="position:sticky;left:0;top:0;z-index:5">Nombre</th>';
   let prev=-1,span=0;
   dayCols.forEach((dc,i)=>{
-    if(dc.mn!==prev){if(span>0)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS_ES[dayCols[i-span].mn]}</th>`;span=0;prev=dc.mn;}
+    if(dc.mn!==prev){if(span>0)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dayCols[i-span].mn]}</th>`;span=0;prev=dc.mn;}
     span++;
-    if(i===dayCols.length-1)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS_ES[dc.mn]}</th>`;
+    if(i===dayCols.length-1)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dc.mn]}</th>`;
   });
   h1+='</tr>';
 
@@ -456,15 +662,39 @@ function goToToday(){
   },200);
 }
 
+let currentTab="mi";
+
+function toggleMenu(e){
+  if(e)e.stopPropagation();
+  document.getElementById("menuDropdown").classList.toggle("open");
+}
+function closeMenu(){
+  document.getElementById("menuDropdown").classList.remove("open");
+}
+document.addEventListener("click",function(e){
+  const wrap=document.querySelector(".menu-wrap");
+  if(wrap&&!wrap.contains(e.target))closeMenu();
+});
+function menuGoTab(tab){
+  closeMenu();
+  showTab(tab);
+}
+function logout(){
+  if(!confirm(t("logoutConfirm")))return;
+  localStorage.removeItem("tcaes_user");
+  localStorage.removeItem("tcaes_row");
+  if(userRow)localStorage.removeItem("tcaes_verified_"+userRow);
+  location.reload();
+}
+
 function showTab(tab){
+  currentTab=tab;
   document.getElementById("view-mi").style.display=tab==="mi"?"block":"none";
   document.getElementById("view-todos").style.display=tab==="todos"?"block":"none";
   const vp=document.getElementById("view-props");
   if(vp)vp.style.display=tab==="props"?"block":"none";
-  ["mi","todos","props"].forEach(t=>{
-    const el=document.getElementById("tab-"+t);
-    if(el){el.style.color=tab===t?"var(--I)":"var(--mu)";el.style.borderBottom=tab===t?"3px solid var(--I)":"3px solid transparent";el.style.fontWeight=tab===t?"600":"normal";}
-  });
+  const title=document.getElementById("topbarTitle");
+  if(title)title.textContent=tabTitles()[tab]||"";
   if(tab==="props")renderProposals();
   if(tab==="mi"){
     const annKey="tcaes_ann_todos_v1";
@@ -474,8 +704,6 @@ function showTab(tab){
       setTimeout(()=>{const o=document.getElementById("overlayNewFeature");if(o)o.classList.add("open");},400);
     }
   }
-  document.getElementById("tab-mi").classList.toggle("active",tab==="mi");
-  document.getElementById("tab-todos").classList.toggle("active",tab==="todos");
   if(tab==="todos"){
 
     setTimeout(()=>{
@@ -487,6 +715,7 @@ function showTab(tab){
 }
 
 function toggleMiEdit(){
+  if(pinLocked){showPinWarn();return;}
   miEditMode=!miEditMode;
   const btn=document.getElementById("miEditBtn");
   if(btn){
@@ -544,7 +773,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
 }
 
 function renderMiTurno(){
-  if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
+  if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
   const me=PEOPLE[userRow-1];
   const today=new Date();
   const last=new Date(miYear,miMonth+1,0).getDate();
@@ -563,7 +792,7 @@ function renderMiTurno(){
   }
 
   let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px">
-    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center">${MONTHS_ES[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
+    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
     <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
@@ -639,7 +868,11 @@ function showMiLog(e,day){
   const data=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr];
   if(!data)return;
   const popup=document.getElementById("logPopup");
-  popup.innerHTML=`👤 <b>${data.quien||"?"}</b> 🔄 Con: <b>${data.con||"—"}</b><br>${data.comentario?"💬 "+data.comentario+"<br>":""}📋 ${data.cambio||""}`;
+  if(pinLocked){
+    popup.innerHTML=t("commentLockedShort");
+  } else {
+    popup.innerHTML=`👤 <b>${data.quien||"?"}</b> 🔄 Con: <b>${data.con||"—"}</b><br>${data.comentario?"💬 "+data.comentario+"<br>":""}📋 ${data.cambio||""}`;
+  }
   popup.style.display="block";
   setTimeout(()=>popup.style.display="none",5000);
 }
@@ -648,6 +881,7 @@ const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️�
 
 function openEdit(ri,di,dk,force){
   if(!miEditMode&&!force)return;
+  if(pinLocked){showPinWarn();return;}
   editCtx={ri,di,dateKey:dk||""};
   const ovKey=dk||(userRow-1)+"_";
   const cell=window.dateOverrides[ovKey]||ROTA[ri][di];
@@ -736,7 +970,7 @@ function applyEdit(t,u,u2){
 
 
 function renderResumen(){
-  if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
+  if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
   // Debug: count overrides for this person
   const myKeys=Object.keys(window.dateOverrides||{}).filter(k=>k.startsWith((userRow-1)+"_"));
   const vacKeys=myKeys.filter(k=>{const v=window.dateOverrides[k];return v&&(Array.isArray(v)?v[0]:v&&v[0])==="V";});
@@ -844,7 +1078,7 @@ function renderResumen(){
 function checkPin(){
   const pin=document.getElementById("pinInput").value.trim();
   if(pin.length!==4||!/^[0-9]{4}$/.test(pin)){
-    document.getElementById("pinError").textContent="❌ El PIN debe ser 4 números";
+    document.getElementById("pinError").textContent=t("codeWrongLen");
     document.getElementById("pinError").style.display="block";
     return;
   }
@@ -854,7 +1088,7 @@ function checkPin(){
       if(pin===stored){
         enterApp();
       } else {
-        document.getElementById("pinError").textContent="❌ PIN incorrecto";
+        document.getElementById("pinError").textContent=t("codeWrong");
         document.getElementById("pinError").style.display="block";
         document.getElementById("pinInput").value="";
       }
@@ -863,7 +1097,7 @@ function checkPin(){
     const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
     if(pin===stored){enterApp();}
     else {
-      document.getElementById("pinError").textContent="❌ PIN incorrecto";
+      document.getElementById("pinError").textContent=t("codeWrong");
       document.getElementById("pinError").style.display="block";
       document.getElementById("pinInput").value="";
     }
@@ -876,20 +1110,49 @@ function enterApp(){
   initApp();
   setTimeout(()=>initProposals(),1000);
   setTimeout(()=>{renderMiTurno();showTab("mi");},500);
+  setTimeout(()=>checkPinLock(),700);
+}
+
+function checkPinLock(){
+  if(!db){pinLocked=false;return;}
+  db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
+    const stored=snap.val();
+    pinLocked=(!stored||stored==="0000");
+    const banner=document.getElementById("pinLockBanner");
+    if(banner)banner.style.display=pinLocked?"block":"none";
+    if(pinLocked)showPinWarn();
+    render();renderMiTurno();renderProposals();
+  }).catch(()=>{pinLocked=false;});
+}
+
+function showPinWarn(){
+  const ov=document.getElementById("overlayPinWarn");
+  if(ov)ov.classList.add("open");
+}
+function closePinWarn(){
+  const ov=document.getElementById("overlayPinWarn");
+  if(ov)ov.classList.remove("open");
+}
+function changePinFromWarn(){
+  closePinWarn();
+  changePin();
 }
 
 function changePin(){
-  const oldPin=prompt("PIN actual:");
+  const oldPin=prompt(t("currentCodePrompt"));
   if(!oldPin) return;
   if(db){
     db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
       const stored=snap.val()||"0000";
-      if(oldPin!==stored){alert("PIN incorrecto");return;}
-      const newPin=prompt("Nuevo PIN (4 números):");
-      if(!newPin||!/^[0-9]{4}$/.test(newPin)){alert("El PIN debe ser 4 números");return;}
-      const confirm2=prompt("Repite el nuevo PIN:");
-      if(newPin!==confirm2){alert("Los PINes no coinciden");return;}
-      db.ref("tcaes_pins/"+userRow).set(newPin).then(()=>alert("✅ PIN cambiado correctamente"));
+      if(oldPin!==stored){alert(t("codeWrong"));return;}
+      const newPin=prompt(t("newCodePrompt"));
+      if(!newPin||!/^[0-9]{4}$/.test(newPin)){alert(t("codeWrongLen"));return;}
+      const confirm2=prompt(t("repeatCodePrompt"));
+      if(newPin!==confirm2){alert(t("codesMismatch"));return;}
+      db.ref("tcaes_pins/"+userRow).set(newPin).then(()=>{
+        alert(t("codeChangedOk"));
+        checkPinLock();
+      });
     });
   }
 }
@@ -914,16 +1177,17 @@ function initProposals(){
 function updatePropBadge(){
   const n=Object.values(proposals).filter(p=>p.to===userRow&&p.status==="pending").length;
   const b=document.getElementById("propBadge");
-  if(b){b.textContent=n;b.style.display=n>0?"flex":"none";}
+  if(b){b.textContent=n;b.style.display=n>0?"inline-flex":"none";}
+  const mb=document.getElementById("menuBadge");
+  if(mb)mb.style.display=n>0?"block":"none";
 }
 
 function openDayAction(day,ri,di,dk,turno){
   dayActionCtx={day,ri,di,dk,turno};
   const date=new Date(miYear,miMonth,day);
-  const DL=["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"];
   const dow=(date.getDay()+6)%7;
-  document.getElementById("dayActionTitle").textContent=DL[dow]+" "+day+"/"+(miMonth+1)+"/"+miYear;
-  document.getElementById("dayActionTurn").textContent=turno||"Libre";
+  document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+day+"/"+(miMonth+1)+"/"+miYear;
+  document.getElementById("dayActionTurn").textContent=turno||t("libre");
   document.getElementById("overlayDayAction").classList.add("open");
 }
 function closeDayAction(){
@@ -938,6 +1202,7 @@ function dayActionEdit(){
 }
 function dayActionPropose(){
   if(!dayActionCtx)return;
+  if(pinLocked){closeDayAction();showPinWarn();return;}
   const ctx={...dayActionCtx};
   closeDayAction();
   setTimeout(()=>openPropModal(ctx.dk,ctx.turno),300);
@@ -948,14 +1213,14 @@ function openPropModal(dateKey,turno){
   const date=(dateKey.split("_")[1])||"";
   const dy=date.slice(6,8),mo=date.slice(4,6),yr=date.slice(0,4);
   const pd=document.getElementById("propMyDay");
-  if(pd)pd.textContent="Tu turno del "+dy+"/"+mo+"/"+yr+": "+(turno||"");
+  if(pd)pd.textContent=t("tuTurnoDel")+" "+dy+"/"+mo+"/"+yr+": "+(turno||"");
   const sel=document.getElementById("propPerson");
   if(sel){
-    sel.innerHTML='<option value="">Selecciona...</option>';
+    sel.innerHTML='<option value="" id="propPersonDefaultOpt">'+t("selecciona")+'</option>';
     PEOPLE.forEach((p,i)=>{if(i+1!==userRow)sel.innerHTML+='<option value="'+(i+1)+'">'+p.name+'</option>';});
   }
   const ptd=document.getElementById("propTheirDay");
-  if(ptd)ptd.innerHTML='<option value="">Primero selecciona la persona</option>';
+  if(ptd)ptd.innerHTML='<option value="" id="propTheirDayDefaultOpt">'+t("primeroSelecciona")+'</option>';
   const pc=document.getElementById("propComment");
   if(pc)pc.value="";
   document.getElementById("overlayProp").classList.add("open");
@@ -969,7 +1234,7 @@ function loadPersonDays(){
   const pi=parseInt(document.getElementById("propPerson").value);
   if(!pi)return;
   const sel=document.getElementById("propTheirDay");
-  sel.innerHTML='<option value="">Cargando...</option>';
+  sel.innerHTML='<option value="">'+t("cargando")+'</option>';
   const person=PEOPLE[pi-1];
   const today=new Date();
   const opts=[];
@@ -982,11 +1247,11 @@ function loadPersonDays(){
     const ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
     const ov=window.dateOverrides[(pi-1)+"_"+ds];
     const cell=ov!==undefined?ov:ROTA[ri][dow];
-    const t=cell?cell[0]:null;
-    if(t)opts.push({dk:(pi-1)+"_"+ds,t,label:String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+" ("+t+")"});
+    const tv=cell?cell[0]:null;
+    if(tv)opts.push({dk:(pi-1)+"_"+ds,t:tv,label:String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+" ("+tv+")"});
     d.setDate(d.getDate()+1);
   }
-  sel.innerHTML='<option value="">Selecciona día...</option>';
+  sel.innerHTML='<option value="">'+t("seleccionaDia")+'</option>';
   opts.forEach(o=>sel.innerHTML+='<option value="'+o.dk+'" data-turn="'+o.t+'">'+o.label+'</option>');
 }
 
@@ -996,16 +1261,16 @@ function sendProposal(){
   const theirDay=theirDaySel.value;
   const toTurn=theirDaySel.options[theirDaySel.selectedIndex]?theirDaySel.options[theirDaySel.selectedIndex].dataset.turn||"?":"?";
   const comment=(document.getElementById("propComment").value||"").trim();
-  if(!toPi||!theirDay){alert("Selecciona la compañera y el día");return;}
+  if(!toPi||!theirDay){alert(t("seleccionaCompYDia"));return;}
   if(!propFromDay)return;
-  if(!db){alert("Sin conexión");return;}
+  if(!db){alert(t("sinConexionSimple"));return;}
   const prop={from:userRow,fromName:userName,fromDay:propFromDay.dateKey,fromTurn:propFromDay.turno,
     to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
     commentFrom:comment,commentTo:"",createdAt:new Date().toLocaleString("es-ES")};
   db.ref("tcaes_proposals").push(prop).then(()=>{
     closePropModal();
-    alert("✅ Propuesta enviada a "+PEOPLE[toPi-1].name);
-  }).catch(()=>alert("Error al enviar"));
+    alert(t("propuestaEnviada")+" "+PEOPLE[toPi-1].name);
+  }).catch(()=>alert(t("errorEnviar")));
 }
 
 function openRespondModal(key){
@@ -1016,10 +1281,10 @@ function openRespondModal(key){
   const fromDs=(p.fromDay||"").split("_")[1];
   const toDs=(p.toDay||"").split("_")[1];
   let html='<div class="prop-card pending" style="margin-bottom:12px">';
-  html+='<p style="font-size:.82rem"><b>'+p.fromName+'</b> te propone:</p>';
+  html+='<p style="font-size:.82rem"><b>'+p.fromName+'</b> '+t("tePropone")+'</p>';
   html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
-  html+='🔄 Te da su <b>'+(p.fromTurn||"?")+'</b> del <b>'+fmt(fromDs)+'</b><br>';
-  html+='A cambio quiere tu turno del <b>'+fmt(toDs)+'</b></p>';
+  html+='🔄 '+t("teDaSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' <b>'+fmt(fromDs)+'</b><br>';
+  html+=t("aCambioQuiere")+' <b>'+fmt(toDs)+'</b></p>';
   if(p.commentFrom)html+='<p style="font-size:.75rem;font-style:italic;color:#555">💬 "'+p.commentFrom+'"</p>';
   html+='</div>';
   document.getElementById("respondContent").innerHTML=html;
@@ -1033,6 +1298,7 @@ function closeRespondModal(){
 
 function respondProposal(decision){
   if(!currentPropKey)return;
+  if(pinLocked){showPinWarn();return;}
   const p=proposals[currentPropKey];
   const comment=(document.getElementById("respondComment").value||"").trim();
   if(decision==="accepted"){
@@ -1057,13 +1323,14 @@ function respondProposal(decision){
   }
   db.ref("tcaes_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
     closeRespondModal();
-    if(decision==="accepted"){alert("✅ Cambio aceptado y aplicado");render();}
-    else alert("❌ Propuesta rechazada");
+    if(decision==="accepted"){alert(t("cambioAplicado"));render();}
+    else alert(t("propuestaRechazada"));
   });
 }
 
 function cancelProposal(key){
-  if(!confirm("¿Cancelar esta propuesta?"))return;
+  if(pinLocked){showPinWarn();return;}
+  if(!confirm(t("confirmCancelar")))return;
   db.ref("tcaes_proposals/"+key).update({status:"cancelled"});
 }
 
@@ -1074,7 +1341,7 @@ function renderProposals(){
   const totalProps=Object.keys(proposals).length;
   console.log("renderProposals: userRow="+userRow+", total proposals="+totalProps+", db="+!!db);
   if(totalProps===0 && !db){
-    div.innerHTML='<p style="color:#c62828;font-size:.82rem">⚠️ Sin conexión con Firebase. Recarga la página.</p>';
+    div.innerHTML='<p style="color:#c62828;font-size:.82rem">'+t("sinConexion")+'</p>';
     return;
   }
   const keys=Object.keys(proposals).filter(k=>{
@@ -1082,7 +1349,7 @@ function renderProposals(){
     return Number(p.from)===Number(userRow)||Number(p.to)===Number(userRow);
   });
   if(keys.length===0){
-    div.innerHTML='<p style="color:var(--mu);font-size:.82rem">No tienes propuestas de cambio.</p>';
+    div.innerHTML='<p style="color:var(--mu);font-size:.82rem">'+t("sinPropuestas")+'</p>';
     return;
   }
   const fmt=ds=>ds?ds.slice(6,8)+"/"+ds.slice(4,6):"?";
@@ -1096,7 +1363,7 @@ function renderProposals(){
   }).forEach(key=>{
     const p=proposals[key];
     const isFrom=Number(p.from)===Number(userRow);
-    const slabel=p.status==="pending"?"⏳ Pendiente":p.status==="accepted"?"✅ Aceptado":p.status==="rejected"?"❌ Rechazado":"🚫 Cancelado";
+    const slabel=p.status==="pending"?t("pendiente"):p.status==="accepted"?t("aceptado"):p.status==="rejected"?t("rechazado"):t("cancelado");
     const ccls=p.status==="accepted"?"accepted":p.status==="pending"?"pending":"rejected";
     const fromDs=(p.fromDay||"").split("_")[1];
     const toDs=(p.toDay||"").split("_")[1];
@@ -1104,17 +1371,21 @@ function renderProposals(){
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
     html+='<span style="font-size:.75rem;font-weight:700">'+slabel+'</span>';
     html+='<span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
-    html+='<p style="font-size:.82rem">'+(isFrom?"📤 Propuesta a <b>"+p.toName+"</b>":"📥 Propuesta de <b>"+p.fromName+"</b>")+'</p>';
+    html+='<p style="font-size:.82rem">'+(isFrom?t("propuestaA")+" <b>"+p.toName+"</b>":t("propuestaDe")+" <b>"+p.fromName+"</b>")+'</p>';
     html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
-    html+='🔄 <b>'+p.fromName+'</b> da su <b>'+(p.fromTurn||"?")+'</b> del '+fmt(fromDs)+'<br>';
-    html+='🔄 <b>'+p.toName+'</b> da su turno del '+fmt(toDs)+'</p>';
-    if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
-    if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.toName+': "'+p.commentTo+'"</p>';
-    if(p.status==="pending"){
+    html+='🔄 <b>'+p.fromName+'</b> '+t("daSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' '+fmt(fromDs)+'<br>';
+    html+='🔄 <b>'+p.toName+'</b> '+t("daSu")+' turno '+t("delDia")+' '+fmt(toDs)+'</p>';
+    if(pinLocked){
+      html+='<p style="font-size:.75rem;color:#c0392b;margin-top:4px">'+t("commentLockedLong")+'</p>';
+    } else {
+      if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
+      if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.toName+': "'+p.commentTo+'"</p>';
+    }
+    if(p.status==="pending"&&!pinLocked){
       if(!isFrom){
-        html+='<button onclick="openRespondModal(\'' +key+ '\')" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;background:#4caf50;color:#fff;border:none;cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">Ver y responder</button>';
+        html+='<button onclick="openRespondModal(\'' +key+ '\')" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;background:#4caf50;color:#fff;border:none;cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">'+t("verYResponder")+'</button>';
       } else {
-        html+='<button onclick="cancelProposal(\'' +key+ '\')" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:var(--s2);color:var(--tx);border:1px solid var(--bd);cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">Cancelar propuesta</button>';
+        html+='<button onclick="cancelProposal(\'' +key+ '\')" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:var(--s2);color:var(--tx);border:1px solid var(--bd);cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">'+t("cancelarPropuesta")+'</button>';
       }
     }
     html+='</div>';
@@ -1129,11 +1400,11 @@ function closeNewFeature(){
 
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
-window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeout(goToToday,300);}};
+window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showTab("mi");setTimeout(goToToday,300);}};
 </script>
 <!-- PROPOSALS VIEW -->
 <div id="view-props" style="flex:1;overflow:auto;padding:14px 16px;display:none">
-  <h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:14px">🔄 Propuestas de cambio</h2>
+  <h2 id="propsHeading" style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:14px">🔄 Propuestas de cambio</h2>
   <div id="propsContent"></div>
 </div>
 
@@ -1142,30 +1413,30 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
   <div class="modal">
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
     <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:20px;text-align:center"></div>
-    <button onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
-    <button onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
-    <button onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
+    <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
+    <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
+    <button id="dayActionBackBtn" onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
   </div>
 </div>
 
 <!-- PROPOSAL MODAL -->
 <div class="overlay" id="overlayProp" onclick="if(event.target.id==='overlayProp')closePropModal()">
   <div class="modal">
-    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Proponer cambio</h2>
+    <h2 id="propModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Proponer cambio</h2>
     <p id="propMyDay" style="font-size:.78rem;color:var(--mu);margin-bottom:12px"></p>
-    <div class="slabel">Compañera/o:</div>
+    <div class="slabel" id="propPersonLabel">Compañera/o:</div>
     <select id="propPerson" onchange="loadPersonDays()" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
-      <option value="">Selecciona...</option>
+      <option value="" id="propPersonDefaultOpt">Selecciona...</option>
     </select>
-    <div class="slabel" style="margin-top:10px">Día que quieres de ella/él:</div>
+    <div class="slabel" id="propTheirDayLabel" style="margin-top:10px">Día que quieres de ella/él:</div>
     <select id="propTheirDay" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
-      <option value="">Primero selecciona la persona</option>
+      <option value="" id="propTheirDayDefaultOpt">Primero selecciona la persona</option>
     </select>
-    <div class="slabel" style="margin-top:10px">Comentario:</div>
+    <div class="slabel" id="propCommentLabel" style="margin-top:10px">Comentario:</div>
     <input type="text" id="propComment" placeholder="Explica el motivo...">
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="mbtn mbtn-ghost" onclick="closePropModal()" style="flex:1">← Volver</button>
-      <button class="mbtn mbtn-save" onclick="sendProposal()" style="flex:1">Enviar</button>
+      <button class="mbtn mbtn-ghost" id="propBackBtn" onclick="closePropModal()" style="flex:1">← Volver</button>
+      <button class="mbtn mbtn-save" id="propSendBtn" onclick="sendProposal()" style="flex:1">Enviar</button>
     </div>
   </div>
 </div>
@@ -1173,14 +1444,14 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
 <!-- RESPOND MODAL -->
 <div class="overlay" id="overlayRespond" onclick="if(event.target.id==='overlayRespond')closeRespondModal()">
   <div class="modal">
-    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px">🔄 Responder propuesta</h2>
+    <h2 id="respondModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px">🔄 Responder propuesta</h2>
     <div id="respondContent"></div>
-    <div class="slabel">Tu comentario (opcional):</div>
+    <div class="slabel" id="respondCommentLabel">Tu comentario (opcional):</div>
     <input type="text" id="respondComment" placeholder="Tu respuesta...">
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="mbtn mbtn-ghost" onclick="closeRespondModal()" style="flex:1">← Volver</button>
-      <button class="mbtn mbtn-del" onclick="respondProposal('rejected')" style="flex:1">Rechazar</button>
-      <button class="mbtn mbtn-save" onclick="respondProposal('accepted')" style="flex:1">Aceptar</button>
+      <button class="mbtn mbtn-ghost" id="respondBackBtn" onclick="closeRespondModal()" style="flex:1">← Volver</button>
+      <button class="mbtn mbtn-del" id="respondRejectBtn" onclick="respondProposal('rejected')" style="flex:1">Rechazar</button>
+      <button class="mbtn mbtn-save" id="respondAcceptBtn" onclick="respondProposal('accepted')" style="flex:1">Aceptar</button>
     </div>
   </div>
 </div>
@@ -1206,6 +1477,15 @@ window.onload=()=>{if(userName){render();renderMiTurno();showTab("mi");setTimeou
   </div>
 </div>
 
+<div class="overlay" id="overlayPinWarn">
+  <div class="modal">
+    <h2 id="pinWarnTitle" style="font-family:Syne,sans-serif;font-size:1rem;color:#c0392b;margin-bottom:10px">🔒 Cambia tu código</h2>
+    <p id="pinWarnBody" style="font-size:.85rem;color:var(--tx);line-height:1.6;margin-bottom:14px">Sigues usando el código de por defecto (<b>0000</b>). Mientras no lo cambies por uno tuyo, puedes ver los turnos, pero <b>no podrás hacer cambios, proponer turnos ni ver comentarios</b> de nadie.</p>
+    <button id="changeNowBtn" onclick="changePinFromWarn()" style="width:100%;padding:12px;border-radius:8px;background:#c0392b;color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;margin-bottom:8px">Cambiar código ahora</button>
+    <button id="notNowBtn" onclick="closePinWarn()" style="width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Ahora no</button>
+  </div>
+</div>
+
 <div class="overlay" id="overlayUnitInfo" onclick="if(event.target.id==='overlayUnitInfo')closeUnitInfo()">
   <div class="modal" id="unitInfoContent"></div>
 </div>
@@ -1215,7 +1495,7 @@ if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
