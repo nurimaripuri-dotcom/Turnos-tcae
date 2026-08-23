@@ -33,10 +33,24 @@
   --A:#64b5f6; --Ab:#1f2f45; --Ax:#4fa3e3;
 }
 :root.dark .lc.neu,:root.dark .chip.neu,:root.dark .mi-chip.neu{background:#000;color:#fff;border-color:#555}
-:root.dark .prop-card.pending{background:#3a3420;border-color:#ffc107}
-:root.dark .prop-card.accepted{background:#1f3324;border-color:#4caf50}
-:root.dark .prop-card.rejected{background:#3a2222;border-color:#ef5350}
 :root.dark .menu-dropdown{box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.stat-badge-t{background:#fff3e0;color:#e65100}
+.mi-edit-btn{background:#fff3cd;color:#856404}
+.mi-edit-btn.editing-on{background:#d4edda;color:#155724;border-color:#28a745}
+.disclaimer-box{background:#fff3cd;color:#856404}
+:root.dark .stat-badge-t,
+:root.dark .mi-edit-btn,
+:root.dark .mi-edit-btn.editing-on,
+:root.dark .disclaimer-box,
+:root.dark .mbtn-del,
+:root.dark #legendVac,
+:root.dark #legendLD,
+:root.dark #pinLockBanner,
+:root.dark .prop-card.pending,
+:root.dark .prop-card.accepted,
+:root.dark .prop-card.rejected,
+:root.dark th.sun,
+:root.dark td.sun{background:#000!important;color:#fff!important;border-color:#555!important}
 /* SPLASH SCREEN */
 #splashScreen{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:linear-gradient(160deg,#16283d,#0a121d);transition:opacity .45s ease}
 #splashScreen.hide{opacity:0;pointer-events:none}
@@ -197,8 +211,8 @@ setTimeout(function(){
   <div class="lc N2" onclick="showUnitInfo('N2')" style="cursor:pointer">⚫ 354/337-339</div>
   <div class="lc A" onclick="showUnitInfo('A')" style="cursor:pointer">🔵 340-345</div>
   <div class="lc neu">L · /</div>
-  <div class="lc" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
-  <div class="lc" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
+  <div class="lc" id="legendVac" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
+  <div class="lc" id="legendLD" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
 </div>
 <div id="pinLockBanner" style="display:none;background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center;cursor:pointer" onclick="showPinWarn()">🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.</div>
 <div class="tabs">
@@ -748,9 +762,7 @@ function toggleMiEdit(){
   const btn=document.getElementById("miEditBtn");
   if(btn){
     btn.textContent=miEditMode?"✏️ Editando":"🔒 Editar mi turno";
-    btn.style.background=miEditMode?"#d4edda":"#fff3cd";
-    btn.style.color=miEditMode?"#155724":"#856404";
-    btn.style.borderColor=miEditMode?"#28a745":"var(--bd)";
+    btn.classList.toggle("editing-on",miEditMode);
   }
   renderMiTurno();
 }
@@ -824,7 +836,7 @@ function renderMiTurno(){
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
     <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
-    <span style="background:#fff3e0;color:#e65100;padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
+    <span class="stat-badge-t" style="padding:3px 10px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
     <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
   </div>`;
 
@@ -1098,7 +1110,7 @@ function renderResumen(){
   let html=`<h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:4px">📊 Resumen de <span style="color:var(--I)">${me.name}</span></h2>`;
   html+=buildTable(year);
   html+=buildTable(year+1);
-  html+=`<div style="margin-top:16px;padding:12px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:.72rem;color:#856404;line-height:1.5">
+  html+=`<div class="disclaimer-box" style="margin-top:16px;padding:12px;border:1px solid #ffc107;border-radius:8px;font-size:.72rem;line-height:1.5">
     ⚠️ <b>Cálculo orientativo.</b> Este resumen puede contener errores. Por favor, consulta con tu supervisor/a antes de tomar decisiones basadas en estos datos.
   </div>`;
   document.getElementById("resumenContent").innerHTML=html;
