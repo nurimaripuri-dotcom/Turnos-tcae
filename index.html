@@ -643,8 +643,8 @@ function render(){
   let body='';
   PEOPLE.forEach((p,pi)=>{
     const isMyRow=(userRow===pi+1);
-    const bg=pi%2===0?"#fff":"#f8f9fa";
-    body+=`<tr><td class="name-col" style="background:${bg};${isMyRow?"font-weight:700;color:var(--I)":""}">${p.name}</td>`;
+    const bg=isDark()?"#000":(pi%2===0?"#fff":"#f8f9fa");
+    body+=`<tr><td class="name-col" style="background:${bg};${isMyRow?"font-weight:700;color:var(--I)":"color:var(--tx)"}">${p.name}</td>`;
     dayCols.forEach(dc=>{
       const mon=mondayOf(new Date(dc.yr,dc.mn,dc.d));
       const ri=rowFor(p.startRow,mon);
@@ -661,7 +661,7 @@ function render(){
       const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
-      const cellBg=dc.isToday?"#81c784":dc.isSun?"#f3e5f5":bg;
+      const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
       const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       const chipInner=isCombined
@@ -798,16 +798,16 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
       ${chipHtml}
     </td>`;
   }
-  const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
-  const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
+  const bg=isToday?"#4caf50":isWE?(isDark()?"#000000":"#f3e5f5"):"var(--s1)";
+  const numColor=isToday?"#fff":isWE?(isDark()?"#fff":"#6f42c1"):"var(--tx)";
   const isLorSlash=!t||t==="L"||t==="/";
-  const bg2=isLorSlash&&!isToday?"#ffffff":bg;
+  const bg2=isLorSlash&&!isToday?(isDark()?"#000000":"#ffffff"):bg;
   const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD";
   return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
     <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
     ${chipHtml}
     ${iconMi?`<div onclick="showMiLog(event,${d})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
-    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
+    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:${isDark()?"#ccc":"#555"};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
     :""}
   </td>`;
 }
