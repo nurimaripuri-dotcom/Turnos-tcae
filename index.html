@@ -225,6 +225,7 @@ setTimeout(function(){
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
       <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
       <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
+      <button class="menu-item" id="menuLegalBtn" onclick="closeMenu();showLegalModal(false)">📜 Aviso legal</button>
       <div class="menu-sep"></div>
       <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
     </div>
@@ -401,6 +402,9 @@ const I18N={
     confirmCancelar:"¿Cancelar esta propuesta?", filaNoEncontrada:"No se encontró tu fila.", propuestaEnviada:"✅ Propuesta enviada a", errorEnviar:"Error al enviar",
     compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar turnos", comparePeopleSub:"Elige qué compañeras/os quieres ver en la tabla.",
     selectAll:"Todas", selectNone:"Ninguna", cerrar:"Cerrar",
+    menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
+    legalConfirm:"¿Estás seguro? Al aceptar, confirmas que usas la app de forma voluntaria y bajo tu propia responsabilidad.",
+    legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
     months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
   },
@@ -446,6 +450,9 @@ const I18N={
     confirmCancelar:"¿Cancelar esta proposta?", filaNoEncontrada:"Non se atopou a túa fila.", propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Erro ao enviar",
     compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar quendas", comparePeopleSub:"Escolle que compañeiras/os queres ver na táboa.",
     selectAll:"Todas", selectNone:"Ningunha", cerrar:"Pechar",
+    menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
+    legalConfirm:"¿Estás segura? Ao aceptar, confirmas que usas a app de forma voluntaria e baixo a túa propia responsabilidade.",
+    legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
     months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"]
   }
@@ -491,6 +498,9 @@ function applyLangStatic(){
   document.getElementById("menuChangeCodeBtn").textContent=t("menuChangeCode");
   document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
   document.getElementById("menuLangBtn").textContent=t("menuLangTo");
+  const mLegal=document.getElementById("menuLegalBtn"); if(mLegal)mLegal.textContent=t("menuLegal");
+  const lAccept=document.getElementById("legalAcceptBtn"); if(lAccept)lAccept.textContent=t("legalAccept");
+  const lClose=document.getElementById("legalCloseBtn"); if(lClose)lClose.textContent=t("cerrar");
   const themeBtn=document.getElementById("menuThemeBtn");
   if(themeBtn)themeBtn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
   document.getElementById("mTurnoLabel").textContent=t("turnoLabel");
@@ -636,6 +646,7 @@ if(userName){
     setTimeout(()=>initProposals(),1000);
     setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
     setTimeout(()=>checkPinLock(),700);
+    setTimeout(()=>checkLegalDisclaimer(),900);
   } else {
     // Device not verified, show name screen with PIN
     document.getElementById("nameScreen").style.display="flex";
@@ -1200,6 +1211,7 @@ function enterApp(){
   setTimeout(()=>initProposals(),1000);
   setTimeout(()=>{renderMiTurno();showTab("mi");},500);
   setTimeout(()=>checkPinLock(),700);
+  setTimeout(()=>checkLegalDisclaimer(),900);
 }
 
 function checkPinLock(){
@@ -1212,6 +1224,37 @@ function checkPinLock(){
     if(pinLocked)showPinWarn();
     render();renderMiTurno();renderProposals();
   }).catch(()=>{pinLocked=false;});
+}
+
+const LEGAL_VERSION="1";
+function legalKey(){return "tcaes_legal_v"+LEGAL_VERSION+"_"+userRow;}
+function checkLegalDisclaimer(){
+  if(!userRow)return;
+  if(!localStorage.getItem(legalKey())){
+    showLegalModal(true);
+  }
+}
+function showLegalModal(mandatory){
+  document.getElementById("legalTitle").textContent=t("legalTitle");
+  document.getElementById("legalBody").innerHTML=t("legalBody");
+  document.getElementById("legalAcceptBtn").style.display=mandatory?"block":"none";
+  document.getElementById("legalCloseBtn").style.display=mandatory?"none":"block";
+  document.getElementById("overlayLegal").classList.add("open");
+}
+function closeLegal(){
+  document.getElementById("overlayLegal").classList.remove("open");
+}
+function acceptLegal(){
+  if(!confirm(t("legalConfirm")))return;
+  localStorage.setItem(legalKey(),"1");
+  if(db){
+    db.ref("legal_acceptances/"+userRow).set({
+      name:userName,
+      version:LEGAL_VERSION,
+      date:new Date().toLocaleString("es-ES")
+    }).catch(()=>{});
+  }
+  closeLegal();
 }
 
 function showPinWarn(){
@@ -1591,6 +1634,15 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 
 <div class="overlay" id="overlayUnitInfo" onclick="if(event.target.id==='overlayUnitInfo')closeUnitInfo()">
   <div class="modal" id="unitInfoContent"></div>
+</div>
+
+<div class="overlay" id="overlayLegal">
+  <div class="modal">
+    <h2 id="legalTitle" style="font-family:Syne,sans-serif;font-size:1rem;color:var(--I);margin-bottom:10px">📜 Aviso legal</h2>
+    <div id="legalBody" style="font-size:.82rem;color:var(--tx);line-height:1.7;margin-bottom:16px"></div>
+    <button id="legalAcceptBtn" onclick="acceptLegal()" style="display:none;width:100%;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace">Acepto</button>
+    <button id="legalCloseBtn" onclick="closeLegal()" style="display:none;width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Cerrar</button>
+  </div>
 </div>
 
 <script>
