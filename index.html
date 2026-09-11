@@ -1236,9 +1236,10 @@ function computeDayInfo(dateObj){
   const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
   const isCombined=(t==="MT"||t==="TN")&&u2;
   const halves=isCombined?[[t==="MT"?"M":"T",u],[t==="MT"?"T":"N",u2]]:(t&&t!=="L"&&t!=="/"&&t!=="V"&&t!=="LD"?[[t,u]]:[]);
+  const turnosHoy=[...new Set(halves.map(([turno])=>turno))];
   const mates={};
-  halves.forEach(([turno,unit])=>{mates[turno+"_"+unit]=[];});
-  if(halves.length){
+  turnosHoy.forEach(turno=>{mates[turno]=[];});
+  if(turnosHoy.length){
     PEOPLE.forEach((p,pi)=>{
       if(pi===userRow-1)return;
       const pri=rowFor(p.startRow,mon);
@@ -1248,13 +1249,11 @@ function computeDayInfo(dateObj){
       const pIsCombined=(pt==="MT"||pt==="TN")&&pu2;
       const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"?[[pt,pu]]:[]);
       pHalves.forEach(([pTurno,pUnit])=>{
-        halves.forEach(([turno,unit])=>{
-          if(turno===pTurno&&unit===pUnit)mates[turno+"_"+unit].push(p.name);
-        });
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:p.name,unit:pUnit});
       });
     });
   }
-  if(userRow===4&&window.enfDateOverrides){
+  if(userRow===4&&window.enfDateOverrides&&turnosHoy.length){
     const enfDow=dow;
     PEOPLE_ENF.forEach((p,pi)=>{
       const pri=rowForEnf(p.startRow,mon);
@@ -1265,9 +1264,7 @@ function computeDayInfo(dateObj){
       if(pt==="D")pHalves=[["M",pu],["T",pu]];
       else if(pt==="M"||pt==="N")pHalves=[[pt,pu]];
       pHalves.forEach(([pTurno,pUnit])=>{
-        halves.forEach(([turno,unit])=>{
-          if(turno===pTurno&&unit===pUnit)mates[turno+"_"+unit].push("👩‍⚕️ "+p.name);
-        });
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:"👩‍⚕️ "+p.name,unit:pUnit});
       });
     });
   }
@@ -1284,8 +1281,12 @@ function dayCardHTML(dateObj,isToday){
   const blocks=info.halves.map(([turno,unit])=>{
     const unitInfo=UNITS.find(x=>x[0]===unit);
     const unitLabel=unitInfo?unitInfo[1]:(unit||"—");
-    const mateList=info.mates[turno+"_"+unit];
-    const mateTxt=mateList&&mateList.length?mateList.join(", "):"nadie más ese turno";
+    const mateList=info.mates[turno]||[];
+    const mateTxt=mateList.length?mateList.map(mt=>{
+      const mUnitInfo=UNITS.find(x=>x[0]===mt.unit);
+      const mUnitShort=mUnitInfo?mUnitInfo[1].replace(/^\S+\s/,""):(mt.unit||"—");
+      return `${mt.name} (${mUnitShort})`;
+    }).join(", "):"nadie más ese turno";
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px">
       <span class="chip ${chipCls(turno,unit)}" style="width:40px;height:40px;font-size:.95rem">${turno}</span>
       <div style="text-align:left">
