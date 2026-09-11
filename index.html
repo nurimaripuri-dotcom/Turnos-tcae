@@ -1085,8 +1085,7 @@ function renderResumen(){
   }
 
   function calcYear(yr){
-    const counts={D:0,M:0,N:0,V:0,LD:0};
-    const vacDeduct={D:0,M:0,N:0};
+    const counts={M:0,T:0,N:0,V:0,LD:0};
     let d=new Date(yr,0,1);
     while(d.getFullYear()===yr){
       const dow=(d.getDay()+6)%7;
@@ -1097,43 +1096,45 @@ function renderResumen(){
       const baseCell=ROTA[ri][dow];
       const baseT=baseCell&&Array.isArray(baseCell)?baseCell[0]:(baseCell?baseCell[0]:null);
       // Always count base rotation first
-      if(baseT==="D") counts.D++;
-      else if(baseT==="M") counts.M++;
+      if(baseT==="M") counts.M++;
+      else if(baseT==="T") counts.T++;
       else if(baseT==="N") counts.N++;
       // Then check override
       if(ov!==undefined){
         const t=ov&&Array.isArray(ov)?ov[0]:(ov?ov[0]:null);
         if(t==="V"){
           // Remove base shift and count as vacation
-          if(baseT==="D") counts.D--;
-          else if(baseT==="M") counts.M--;
+          if(baseT==="M") counts.M--;
+          else if(baseT==="T") counts.T--;
           else if(baseT==="N") counts.N--;
           counts.V++;
         } else if(t==="LD"){
           counts.LD++;
           // LD replaces base but counts as worked - keep base count
         } else if(t&&t!=="L"&&t!=="/"){
-          // Changed shift - remove base, add new
-          if(baseT==="D") counts.D--;
-          else if(baseT==="M") counts.M--;
+          // Changed shift - remove base, add new (MT/TN dobles suman ambas mitades)
+          if(baseT==="M") counts.M--;
+          else if(baseT==="T") counts.T--;
           else if(baseT==="N") counts.N--;
-          if(t==="D") counts.D++;
+          if(t==="MT"){ counts.M++; counts.T++; }
+          else if(t==="TN"){ counts.T++; counts.N++; }
           else if(t==="M") counts.M++;
+          else if(t==="T") counts.T++;
           else if(t==="N") counts.N++;
         }
       }
       d.setDate(d.getDate()+1);
     }
-    counts.D=Math.max(0,counts.D);
     counts.M=Math.max(0,counts.M);
+    counts.T=Math.max(0,counts.T);
     counts.N=Math.max(0,counts.N);
     return counts;
   }
 
   function buildTable(yr){
     const c=calcYear(yr);
-    // D=mañana+tarde (14h), M=7h mañana, N=10h noche
-    const horas=c.D*14+c.M*7+c.N*10;
+    // M=7h mañana, T=7h tarde, N=10h noche
+    const horas=c.M*7+c.T*7+c.N*10;
     const jornada=ccoo(c.N);
     const exceso=horas-jornada;
     const lds=(exceso/7).toFixed(1);
@@ -1142,8 +1143,8 @@ function renderResumen(){
     html+='<table style="width:100%;border-collapse:collapse;font-size:.78rem">';
     html+='<thead><tr style="background:var(--s2);border-bottom:2px solid var(--bd)">';
     html+='<th style="text-align:left;padding:6px">Año</th>';
-    html+='<th style="text-align:center;padding:6px;color:var(--I)">D</th>';
-    html+='<th style="text-align:center;padding:6px;color:var(--V)">M</th>';
+    html+='<th style="text-align:center;padding:6px;color:var(--I)">M</th>';
+    html+='<th style="text-align:center;padding:6px;color:var(--V)">T</th>';
     html+='<th style="text-align:center;padding:6px;color:var(--A)">N</th>';
     html+='<th style="text-align:center;padding:6px;color:#856404">🏖</th>';
     html+='<th style="text-align:center;padding:6px;color:#0c5460">LD</th>';
@@ -1153,8 +1154,8 @@ function renderResumen(){
     html+='</tr></thead><tbody>';
     html+=`<tr style="border-bottom:1px solid var(--bd)">`;
     html+=`<td style="padding:6px;font-weight:600">${yr}</td>`;
-    html+=`<td style="text-align:center;padding:6px">${c.D}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.M}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${c.T}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.N}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.V}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.LD}</td>`;
