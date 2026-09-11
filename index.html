@@ -724,14 +724,32 @@ function startDataListeners(){
           },err=>{console.log("Error leyendo enf_icons:",err);});
         };
         // Igual que hace la propia app de Enfermeras: esperamos a que la auth anónima
-        // esté lista antes de leer sus datos, por si sus reglas de Firebase la exigen.
+        // esté lista antes de leer sus datos, porque sus reglas de Firebase la exigen
+        // (.read: "auth != null" — confirmado en la consola). Nunca leemos sin usuario.
+        const authRef=firebase.app("tcaes_app").auth();
         try{
-          firebase.app("tcaes_app").auth().onAuthStateChanged(user=>{
+          authRef.onAuthStateChanged(user=>{
             if(user)startEnfListeners();
           });
-        }catch(e){startEnfListeners();}
-        // Red de seguridad: si la auth tarda o no llega, probamos igualmente a los 2s.
-        setTimeout(()=>{if(!window.enfDateOverrides||Object.keys(window.enfDateOverrides).length===0)startEnfListeners();},2000);
+        }catch(e){
+          console.log("Error esperando auth para Enfermeras:",e);
+          enfDataError=(e&&e.message)||String(e);
+          if(currentTab==="enf")renderEnfermeras();
+        }
+        const checkAuthRetry=(attempt)=>{
+          setTimeout(()=>{
+            if(window.enfFirebaseListenersAttached)return;
+            if(authRef.currentUser){startEnfListeners();return;}
+            if(attempt<3){
+              authRef.signInAnonymously().catch(e=>console.log("Reintento de auth anónima falló:",e));
+              checkAuthRetry(attempt+1);
+            } else {
+              enfDataError="no se pudo verificar la sesión anónima tras varios intentos (revisa si la autenticación anónima está activada en Firebase Console → Authentication → Sign-in method)";
+              if(currentTab==="enf")renderEnfermeras();
+            }
+          },4000);
+        };
+        checkAuthRetry(1);
       }
     }
   }catch(e){render();}
