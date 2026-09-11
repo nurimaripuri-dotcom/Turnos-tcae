@@ -218,10 +218,11 @@ setTimeout(function(){
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)">⋮<span class="menu-badge" id="menuBadge" style="display:none"></span></button>
     <div class="menu-dropdown" id="menuDropdown">
+      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">👤 Mi turno</button>
       <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
-      <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none">👥 Enfermeras</button>
       <div class="menu-sep"></div>
-      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">🏠 Volver a Mi turno</button>
+      <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
       <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
       <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
@@ -252,6 +253,16 @@ setTimeout(function(){
 <!-- RESUMEN VIEW -->
 <div id="view-resumen" style="flex:1;overflow:auto;padding:14px 16px;display:none">
   <div id="resumenContent"></div>
+</div>
+
+<!-- ENFERMERAS VIEW (solo consulta, solo Alberto) -->
+<div id="view-enf" style="flex:1;overflow:auto;display:none">
+  <div class="wrap" id="wrapEnf">
+    <table id="tblEnf" style="border-collapse:collapse;width:max-content">
+      <thead id="theadEnf"></thead>
+      <tbody id="tbodyEnf"></tbody>
+    </table>
+  </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
@@ -354,6 +365,53 @@ const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
 const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
 const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
+// --- Vista de solo consulta del cuadrante de Enfermeras (solo visible para Alberto, userRow===4) ---
+const PEOPLE_ENF = [
+  {name:"Alba",startRow:1},
+  {name:"Laura V.",startRow:2},
+  {name:"Maite",startRow:3},
+  {name:"Marta",startRow:4},
+  {name:"Estefanía",startRow:5},
+  {name:"Begoña",startRow:6},
+  {name:"Emma",startRow:7},
+  {name:"Sara",startRow:8},
+  {name:"Cris",startRow:9},
+  {name:"Rocío",startRow:10},
+  {name:"Luisa",startRow:11},
+  {name:"Aurora",startRow:12},
+  {name:"Jose",startRow:13},
+  {name:"Mercedes",startRow:14},
+  {name:"Ángeles",startRow:15},
+  {name:"Susana",startRow:16},
+  {name:"Olga",startRow:17},
+  {name:"Patricia R.",startRow:18},
+];
+const ROTA_ENF = [
+  [["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null]],
+  [["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","I"]],
+  [["N","I"],["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"]],
+  [["/",null],["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null]],
+  [["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null]],
+  [["M","N2"],["L",null],["D","N2"],["L",null],["L",null],["L",null],["L",null]],
+  [["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null],["D","V"]],
+  [["N","V"],["/",null],["L",null],["L",null],["D","V"],["N","V"],["/",null]],
+  [["L",null],["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null]],
+  [["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null],["L",null]],
+  [["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","V"],["N","V"]],
+  [["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"],["/",null]],
+  [["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null]],
+  [["D","V"],["N","V"],["/",null],["L",null],["L",null],["L",null],["D","A"]],
+  [["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null]],
+  [["L",null],["L",null],["L",null],["L",null],["L",null],["L",null],["L",null]],
+  [["D","A"],["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"]],
+  [["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null]],
+];
+const REF_MONDAY_ENF=new Date(2026,1,23); // 23 febrero 2026
+function weekOffEnf(mon){return Math.round((mon-REF_MONDAY_ENF)/(7*86400000));}
+function rowForEnf(sr,mon){const o=weekOffEnf(mon);return((sr-1+o)%18+18)%18;}
+window.enfDateOverrides={};
+let enfChangeIcons={},enfListenersStarted=false;
+
 let currentYear=new Date().getFullYear();
 let editMode=false,miEditMode=false;
 let pinLocked=false;
@@ -366,7 +424,7 @@ const I18N={
     today:"📍 Hoy", unidadLegend:"Unidad →",
     bannerCode:"🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.",
     tabMi:"👤 Mi turno", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumen",
-    menuVolver:"🏠 Volver a Mi turno", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Cerrar sesión",
+    menuVolver:"👤 Mi turno", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Cerrar sesión",
     menuLangTo:"🌐 Cambiar a Galego",
     menuThemeToDark:"🌙 Modo oscuro", menuThemeToLight:"☀️ Modo normal",
     codeWrongLen:"❌ El código debe ser 4 números", codeWrong:"❌ Código incorrecto",
@@ -414,7 +472,7 @@ const I18N={
     today:"📍 Hoxe", unidadLegend:"Unidade →",
     bannerCode:"🔒 Código por defecto activo — só podes ver, non editar. Toca aquí para cambialo.",
     tabMi:"👤 A miña quenda", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumo",
-    menuVolver:"🏠 Volver á miña quenda", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Pechar sesión",
+    menuVolver:"👤 A miña quenda", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Pechar sesión",
     menuLangTo:"🌐 Cambiar a Castellano",
     menuThemeToDark:"🌙 Modo escuro", menuThemeToLight:"☀️ Modo normal",
     codeWrongLen:"❌ O código debe ter 4 números", codeWrong:"❌ Código incorrecto",
@@ -481,7 +539,7 @@ function toggleLang(){
   const rv=document.getElementById("view-resumen");
   if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
 }
-function tabTitles(){return {mi:t("tabMi"),todos:t("tabTodos"),props:t("tabCambios"),resumen:t("tabResumen")};}
+function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:"👥 Enfermeras"};}
 function applyLangStatic(){
   document.getElementById("askNameP").textContent=t("askName");
   document.getElementById("nameInput").placeholder=t("namePh");
@@ -634,6 +692,30 @@ function startDataListeners(){
         }
       });
     });
+    if(userRow===4){
+      // Solo Alberto: pestaña extra de solo consulta con el cuadrante de Enfermeras
+      const tabEnfBtn=document.getElementById("tab-enf");
+      if(tabEnfBtn)tabEnfBtn.style.display="flex";
+      const tabTodosBtn=document.getElementById("tab-todos");
+      if(tabTodosBtn)tabTodosBtn.textContent="📋 TCE";
+      if(!enfListenersStarted){
+        enfListenersStarted=true;
+        db.ref("enf_changes").on("value",snap=>{
+          const raw=snap.val()||{};
+          window.enfDateOverrides={};
+          Object.entries(raw).forEach(([k,v])=>{
+            if(v===null){window.enfDateOverrides[k]=null;}
+            else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
+            else{window.enfDateOverrides[k]=v;}
+          });
+          if(currentTab==="enf")renderEnfermeras();
+        });
+        db.ref("enf_icons").on("value",snap=>{
+          enfChangeIcons=snap.val()||{};
+          if(currentTab==="enf")renderEnfermeras();
+        });
+      }
+    }
   }catch(e){render();}
 }
 
@@ -741,6 +823,77 @@ function render(){
   if(typeof renderMiTurno==="function")renderMiTurno();
 }
 
+function renderEnfermeras(){
+  if(userRow!==4)return; // solo consulta, solo Alberto
+  const theadEnf=document.getElementById("theadEnf"),tbodyEnf=document.getElementById("tbodyEnf");
+  if(!theadEnf||!tbodyEnf)return;
+  const today=new Date();
+  const dayCols=[];
+  for(let m=0;m<12;m++){
+    const last=new Date(currentYear,m+1,0).getDate();
+    for(let d=1;d<=last;d++){
+      const date=new Date(currentYear,m,d);
+      const dow=(date.getDay()+6)%7;
+      dayCols.push({yr:currentYear,mn:m,d,dow,isSun:dow===6,isWE:dow>=5,isToday:date.toDateString()===today.toDateString()});
+    }
+  }
+  let h1='<tr><th class="name-col" rowspan="2" style="position:sticky;left:0;top:0;z-index:5">Nombre</th>';
+  let prev=-1,span=0;
+  dayCols.forEach((dc,i)=>{
+    if(dc.mn!==prev){if(span>0)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dayCols[i-span].mn]}</th>`;span=0;prev=dc.mn;}
+    span++;
+    if(i===dayCols.length-1)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dc.mn]}</th>`;
+  });
+  h1+='</tr>';
+  let h2='<tr>';
+  dayCols.forEach(dc=>{
+    const cls=(dc.isToday?"today-hdr ":"")+(dc.isSun?"sun ":dc.isWE?"we ":"");
+    h2+=`<th class="${cls}" style="min-width:40px;width:40px">${dc.d}<br><span style="font-size:.56rem">${DAYS_ES[dc.dow]}</span></th>`;
+  });
+  h2+='</tr>';
+  theadEnf.innerHTML=h1+h2;
+
+  let body='';
+  PEOPLE_ENF.forEach((p,pi)=>{
+    const bg=isDark()?"#000":(pi%2===0?"#fff":"#f8f9fa");
+    body+=`<tr><td class="name-col" style="background:${bg};color:var(--tx)">${p.name}</td>`;
+    dayCols.forEach(dc=>{
+      const mon=mondayOf(new Date(dc.yr,dc.mn,dc.d));
+      const ri=rowForEnf(p.startRow,mon);
+      const dateStr=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
+      const ovKey=pi+"_"+dateStr;
+      const baseCell=ROTA_ENF[ri][dc.dow];
+      const cell=window.enfDateOverrides[ovKey]!==undefined?window.enfDateOverrides[ovKey]:baseCell;
+      const t=cell?cell[0]:null,u=cell?cell[1]:null;
+      const cls=chipCls(t,u);
+      const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
+      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
+      const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+      const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
+      const iconData=enfChangeIcons[pi]&&enfChangeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
+      const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLogEnf(event,${pi},'${dateStr}')">✎</span>`:"";
+      body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
+        <div style="position:relative;display:inline-block">
+          <div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>
+          ${dot}
+        </div>
+      </td>`;
+    });
+    body+='</tr>';
+  });
+  tbodyEnf.innerHTML=body;
+}
+
+function showLogEnf(e,pi_,dateStr){
+  e.stopPropagation();
+  const data=enfChangeIcons[pi_]&&enfChangeIcons[pi_][dateStr];
+  if(!data)return;
+  const popup=document.getElementById("logPopup");
+  popup.innerHTML=`✎ <b>${data.quien||"?"}</b> con <b>${data.con||"—"}</b><br>${data.cambio||""}`;
+  popup.style.display="block";
+  setTimeout(()=>popup.style.display="none",4000);
+}
+
 function showLog(e,pi_,dateStr){
   e.stopPropagation();
   const data=changeIcons[pi_]&&changeIcons[pi_][dateStr];
@@ -793,9 +946,12 @@ function showTab(tab){
   document.getElementById("view-todos").style.display=tab==="todos"?"block":"none";
   const vp=document.getElementById("view-props");
   if(vp)vp.style.display=tab==="props"?"block":"none";
+  const ve=document.getElementById("view-enf");
+  if(ve)ve.style.display=tab==="enf"?"block":"none";
   const title=document.getElementById("topbarTitle");
   if(title)title.textContent=tabTitles()[tab]||"";
   if(tab==="props")renderProposals();
+  if(tab==="enf")renderEnfermeras();
   if(tab==="mi"){
     const annKey="tcaes_ann_todos_v1";
     const shown=parseInt(localStorage.getItem(annKey)||"0");
