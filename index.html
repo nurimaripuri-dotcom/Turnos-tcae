@@ -410,7 +410,7 @@ const REF_MONDAY_ENF=new Date(2026,1,23); // 23 febrero 2026
 function weekOffEnf(mon){return Math.round((mon-REF_MONDAY_ENF)/(7*86400000));}
 function rowForEnf(sr,mon){const o=weekOffEnf(mon);return((sr-1+o)%18+18)%18;}
 window.enfDateOverrides={};
-let enfChangeIcons={},enfListenersStarted=false;
+let enfChangeIcons={},enfListenersStarted=false,enfDataError=null;
 
 let currentYear=new Date().getFullYear();
 let editMode=false,miEditMode=false;
@@ -700,20 +700,38 @@ function startDataListeners(){
       if(tabTodosBtn)tabTodosBtn.textContent="📋 TCE";
       if(!enfListenersStarted){
         enfListenersStarted=true;
-        db.ref("enf_changes").on("value",snap=>{
-          const raw=snap.val()||{};
-          window.enfDateOverrides={};
-          Object.entries(raw).forEach(([k,v])=>{
-            if(v===null){window.enfDateOverrides[k]=null;}
-            else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
-            else{window.enfDateOverrides[k]=v;}
+        const startEnfListeners=()=>{
+          if(window.enfFirebaseListenersAttached)return;
+          window.enfFirebaseListenersAttached=true;
+          db.ref("enf_changes").on("value",snap=>{
+            const raw=snap.val()||{};
+            window.enfDateOverrides={};
+            Object.entries(raw).forEach(([k,v])=>{
+              if(v===null){window.enfDateOverrides[k]=null;}
+              else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
+              else{window.enfDateOverrides[k]=v;}
+            });
+            enfDataError=null;
+            if(currentTab==="enf")renderEnfermeras();
+          },err=>{
+            console.log("Error leyendo enf_changes:",err);
+            enfDataError=(err&&err.message)||String(err);
+            if(currentTab==="enf")renderEnfermeras();
           });
-          if(currentTab==="enf")renderEnfermeras();
-        });
-        db.ref("enf_icons").on("value",snap=>{
-          enfChangeIcons=snap.val()||{};
-          if(currentTab==="enf")renderEnfermeras();
-        });
+          db.ref("enf_icons").on("value",snap=>{
+            enfChangeIcons=snap.val()||{};
+            if(currentTab==="enf")renderEnfermeras();
+          },err=>{console.log("Error leyendo enf_icons:",err);});
+        };
+        // Igual que hace la propia app de Enfermeras: esperamos a que la auth anónima
+        // esté lista antes de leer sus datos, por si sus reglas de Firebase la exigen.
+        try{
+          firebase.app("tcaes_app").auth().onAuthStateChanged(user=>{
+            if(user)startEnfListeners();
+          });
+        }catch(e){startEnfListeners();}
+        // Red de seguridad: si la auth tarda o no llega, probamos igualmente a los 2s.
+        setTimeout(()=>{if(!window.enfDateOverrides||Object.keys(window.enfDateOverrides).length===0)startEnfListeners();},2000);
       }
     }
   }catch(e){render();}
@@ -827,6 +845,20 @@ function renderEnfermeras(){
   if(userRow!==4)return; // solo consulta, solo Alberto
   const theadEnf=document.getElementById("theadEnf"),tbodyEnf=document.getElementById("tbodyEnf");
   if(!theadEnf||!tbodyEnf)return;
+  const wrapEnf=document.getElementById("wrapEnf");
+  let errBanner=document.getElementById("enfErrBanner");
+  if(enfDataError){
+    if(!errBanner){
+      errBanner=document.createElement("div");
+      errBanner.id="enfErrBanner";
+      errBanner.style="background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center";
+      wrapEnf.parentNode.insertBefore(errBanner,wrapEnf);
+    }
+    errBanner.textContent="⚠️ No se pudieron cargar los cambios de Enfermeras: "+enfDataError;
+    errBanner.style.display="block";
+  } else if(errBanner){
+    errBanner.style.display="none";
+  }
   const today=new Date();
   const dayCols=[];
   for(let m=0;m<12;m++){
