@@ -221,8 +221,10 @@ setTimeout(function(){
       <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">👤 Mi turno</button>
       <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
       <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none">👥 Enfermeras</button>
+      <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none">📬 Sugerencias <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
       <div class="menu-sep"></div>
       <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <button class="menu-item" id="menuSuggestBtn" onclick="closeMenu();openSuggestBox()">💡 Sugerir algo</button>
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
       <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
       <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
@@ -263,6 +265,11 @@ setTimeout(function(){
       <tbody id="tbodyEnf"></tbody>
     </table>
   </div>
+</div>
+
+<!-- SUGERENCIAS VIEW (solo Alberto) -->
+<div id="view-sugerencias" style="flex:1;overflow:auto;padding:14px 16px;display:none">
+  <div id="sugerenciasContent"></div>
 </div>
 
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
@@ -330,6 +337,32 @@ let hiddenPeople=new Set(JSON.parse(localStorage.getItem("tcaes_hidden_people")|
 function saveHiddenPeople(){localStorage.setItem("tcaes_hidden_people",JSON.stringify([...hiddenPeople]));}
 function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
 function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
+
+function openSuggestBox(){
+  document.getElementById("suggestText").value="";
+  document.getElementById("overlaySugerir").classList.add("open");
+}
+function closeSuggestBox(){document.getElementById("overlaySugerir").classList.remove("open");}
+function sendSuggestion(){
+  const txt=document.getElementById("suggestText").value.trim();
+  if(!txt)return;
+  const btn=document.getElementById("sendSuggestBtn");
+  if(btn){btn.disabled=true;btn.textContent="Enviando...";}
+  db.ref("app_suggestions").push({
+    from:userName||"?",
+    text:txt,
+    date:new Date().toLocaleString("es-ES"),
+    read:false
+  }).then(()=>{
+    closeSuggestBox();
+    alert("¡Gracias! Se ha enviado tu sugerencia.");
+  }).catch(e=>{
+    alert("No se pudo enviar, inténtalo de nuevo.");
+    console.log("Error enviando sugerencia:",e);
+  }).finally(()=>{
+    if(btn){btn.disabled=false;btn.textContent="Enviar";}
+  });
+}
 function renderPeopleCheckList(){
   const div=document.getElementById("peopleCheckList");
   if(!div)return;
@@ -363,6 +396,8 @@ function MONTHS(){return I18N[lang].months.map(m=>m.charAt(0).toUpperCase()+m.sl
 const DAYS_ES=["L","M","X","J","V","S","D"];
 const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
 const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
+const TURNO_NOMBRE={M:"Mañana",T:"Tarde",N:"Noche"};
+const STANCE_LBL={agree:"👍",disagree:"👎",neutral:"💬"};
 const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
 // --- Vista de solo consulta del cuadrante de Enfermeras (solo visible para Alberto, userRow===4) ---
@@ -411,6 +446,7 @@ function weekOffEnf(mon){return Math.round((mon-REF_MONDAY_ENF)/(7*86400000));}
 function rowForEnf(sr,mon){const o=weekOffEnf(mon);return((sr-1+o)%18+18)%18;}
 window.enfDateOverrides={};
 let enfChangeIcons={},enfListenersStarted=false,enfDataError=null;
+let suggestions=[],currentSugKey=null;
 
 let currentYear=new Date().getFullYear();
 let editMode=false,miEditMode=false;
@@ -539,7 +575,7 @@ function toggleLang(){
   const rv=document.getElementById("view-resumen");
   if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
 }
-function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:"👥 Enfermeras"};}
+function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:"👥 Enfermeras",sugerencias:"📬 Sugerencias"};}
 function applyLangStatic(){
   document.getElementById("askNameP").textContent=t("askName");
   document.getElementById("nameInput").placeholder=t("namePh");
@@ -698,6 +734,21 @@ function startDataListeners(){
       if(tabEnfBtn)tabEnfBtn.style.display="flex";
       const tabTodosBtn=document.getElementById("tab-todos");
       if(tabTodosBtn)tabTodosBtn.textContent="📋 TCE";
+      const tabSugBtn=document.getElementById("tab-sugerencias");
+      if(tabSugBtn)tabSugBtn.style.display="flex";
+      db.ref("app_suggestions").on("value",snap=>{
+        const raw=snap.val()||{};
+        suggestions=Object.entries(raw).map(([key,v])=>{
+          const repliesRaw=v.replies||{};
+          const replies=Object.entries(repliesRaw).map(([rkey,rv])=>({rkey,...rv})).sort((a,b)=>(a.rkey>b.rkey?1:-1));
+          return {key,from:v.from,text:v.text,date:v.date,read:v.read,replies};
+        }).sort((a,b)=>(b.key>a.key?1:-1));
+        const unread=suggestions.filter(s=>!s.read).length;
+        const badge=document.getElementById("sugBadge");
+        if(badge){badge.textContent=unread;badge.style.display=unread>0?"inline-block":"none";}
+        if(currentTab==="sugerencias")renderSugerencias();
+        if(currentSugKey)renderSugDetail();
+      },err=>console.log("Error leyendo app_suggestions:",err));
       if(!enfListenersStarted){
         enfListenersStarted=true;
         const startEnfListeners=()=>{
@@ -713,6 +764,7 @@ function startDataListeners(){
             });
             enfDataError=null;
             if(currentTab==="enf")renderEnfermeras();
+            if(currentTab==="mi")renderMiTurno();
           },err=>{
             console.log("Error leyendo enf_changes:",err);
             enfDataError=(err&&err.message)||String(err);
@@ -944,6 +996,80 @@ function showLogEnf(e,pi_,dateStr){
   setTimeout(()=>popup.style.display="none",4000);
 }
 
+function renderSugerencias(){
+  if(userRow!==4)return;
+  const cont=document.getElementById("sugerenciasContent");
+  if(!cont)return;
+  if(!suggestions.length){
+    cont.innerHTML='<p style="color:var(--mu);padding:20px;text-align:center">Todavía no hay sugerencias.</p>';
+    return;
+  }
+  cont.innerHTML=suggestions.map(s=>`
+    <div onclick="openSugDetail('${s.key}')" style="cursor:pointer;background:var(--s2);border-radius:10px;padding:12px 14px;margin-bottom:10px;${s.read?"":"border-left:3px solid var(--I)"}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+        <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
+      </div>
+      <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>
+      ${s.replies.length?`<div style="font-size:.7rem;color:var(--mu);margin-top:6px">💬 ${s.replies.length} respuesta${s.replies.length===1?"":"s"}</div>`:""}
+    </div>
+  `).join("");
+  // Al abrir la bandeja, se marcan como leídas
+  const unreadKeys=suggestions.filter(s=>!s.read).map(s=>s.key);
+  if(unreadKeys.length){
+    const updates={};
+    unreadKeys.forEach(k=>{updates["app_suggestions/"+k+"/read"]=true;});
+    db.ref().update(updates).catch(e=>console.log("Error marcando sugerencias como leídas:",e));
+  }
+}
+
+function openSugDetail(key){
+  currentSugKey=key;
+  document.getElementById("sugReplyText").value="";
+  renderSugDetail();
+  document.getElementById("overlaySugDetail").classList.add("open");
+}
+function closeSugDetail(){
+  document.getElementById("overlaySugDetail").classList.remove("open");
+  currentSugKey=null;
+}
+function renderSugDetail(){
+  const s=suggestions.find(x=>x.key===currentSugKey);
+  if(!s)return;
+  document.getElementById("sugDetailOriginal").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+      <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
+    </div>
+    <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>`;
+  const repliesDiv=document.getElementById("sugDetailReplies");
+  repliesDiv.innerHTML=s.replies.length?s.replies.map(r=>`
+    <div style="background:var(--s2);border-radius:8px;padding:8px 10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <span style="font-weight:600;font-size:.78rem">${STANCE_LBL[r.stance]||"💬"} ${r.from||"?"}</span>
+        <span style="font-size:.65rem;color:var(--mu)">${r.date||""}</span>
+      </div>
+      ${r.text?`<div style="font-size:.78rem;white-space:pre-wrap">${(r.text||"").replace(/</g,"&lt;")}</div>`:""}
+    </div>
+  `).join(""):'<p style="color:var(--mu);font-size:.78rem;text-align:center;padding:8px">Sin respuestas todavía.</p>';
+}
+function sendSugReply(stance){
+  if(!currentSugKey)return;
+  const txt=document.getElementById("sugReplyText").value.trim();
+  if(stance==="neutral"&&!txt){alert("Escribe tu comentario.");return;}
+  db.ref("app_suggestions/"+currentSugKey+"/replies").push({
+    from:userName||"?",
+    text:txt||(stance==="agree"?"De acuerdo":"No estoy de acuerdo"),
+    stance,
+    date:new Date().toLocaleString("es-ES")
+  }).then(()=>{
+    document.getElementById("sugReplyText").value="";
+  }).catch(e=>{
+    alert("No se pudo enviar la respuesta, inténtalo de nuevo.");
+    console.log("Error enviando respuesta:",e);
+  });
+}
+
 function showLog(e,pi_,dateStr){
   e.stopPropagation();
   const data=changeIcons[pi_]&&changeIcons[pi_][dateStr];
@@ -1010,10 +1136,13 @@ function showTab(tab){
   if(vp)vp.style.display=tab==="props"?"block":"none";
   const ve=document.getElementById("view-enf");
   if(ve)ve.style.display=tab==="enf"?"block":"none";
+  const vs=document.getElementById("view-sugerencias");
+  if(vs)vs.style.display=tab==="sugerencias"?"block":"none";
   const title=document.getElementById("topbarTitle");
   if(title)title.textContent=tabTitles()[tab]||"";
   if(tab==="props")renderProposals();
   if(tab==="enf")renderEnfermeras();
+  if(tab==="sugerencias")renderSugerencias();
   if(tab==="mi"){
     const annKey="tcaes_ann_todos_v1";
     const shown=parseInt(localStorage.getItem(annKey)||"0");
@@ -1095,6 +1224,80 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   </td>`;
 }
 
+function computeDayInfo(dateObj){
+  const me=PEOPLE[userRow-1];
+  const mon=mondayOf(dateObj);
+  const ri=rowFor(me.startRow,mon);
+  const dow=(dateObj.getDay()+6)%7;
+  const y=dateObj.getFullYear(),m=dateObj.getMonth(),d=dateObj.getDate();
+  const dateStr=y+String(m+1).padStart(2,"0")+String(d).padStart(2,"0");
+  const ovKey=(userRow-1)+"_"+dateStr;
+  const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
+  const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
+  const isCombined=(t==="MT"||t==="TN")&&u2;
+  const halves=isCombined?[[t==="MT"?"M":"T",u],[t==="MT"?"T":"N",u2]]:(t&&t!=="L"&&t!=="/"&&t!=="V"&&t!=="LD"?[[t,u]]:[]);
+  const mates={};
+  halves.forEach(([turno,unit])=>{mates[turno+"_"+unit]=[];});
+  if(halves.length){
+    PEOPLE.forEach((p,pi)=>{
+      if(pi===userRow-1)return;
+      const pri=rowFor(p.startRow,mon);
+      const povKey=pi+"_"+dateStr;
+      const pcell=window.dateOverrides[povKey]!==undefined?window.dateOverrides[povKey]:ROTA[pri][dow];
+      const pt=pcell?pcell[0]:null,pu=pcell?pcell[1]:null,pu2=pcell&&pcell[2]?pcell[2]:null;
+      const pIsCombined=(pt==="MT"||pt==="TN")&&pu2;
+      const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"?[[pt,pu]]:[]);
+      pHalves.forEach(([pTurno,pUnit])=>{
+        halves.forEach(([turno,unit])=>{
+          if(turno===pTurno&&unit===pUnit)mates[turno+"_"+unit].push(p.name);
+        });
+      });
+    });
+  }
+  if(userRow===4&&window.enfDateOverrides){
+    const enfDow=dow;
+    PEOPLE_ENF.forEach((p,pi)=>{
+      const pri=rowForEnf(p.startRow,mon);
+      const povKey=pi+"_"+dateStr;
+      const pcell=window.enfDateOverrides[povKey]!==undefined?window.enfDateOverrides[povKey]:ROTA_ENF[pri][enfDow];
+      const pt=pcell?pcell[0]:null,pu=pcell?pcell[1]:null;
+      let pHalves=[];
+      if(pt==="D")pHalves=[["M",pu],["T",pu]];
+      else if(pt==="M"||pt==="N")pHalves=[[pt,pu]];
+      pHalves.forEach(([pTurno,pUnit])=>{
+        halves.forEach(([turno,unit])=>{
+          if(turno===pTurno&&unit===pUnit)mates[turno+"_"+unit].push("👩‍⚕️ "+p.name);
+        });
+      });
+    });
+  }
+  return {t,halves,mates};
+}
+function computeTodayInfo(){return computeDayInfo(new Date());}
+function dayCardHTML(dateObj,isToday){
+  const info=computeDayInfo(dateObj);
+  const prefix=isToday?"Hoy":"Ese día";
+  if(!info.halves.length){
+    const msg=info.t==="V"?`🏖 ${prefix} vacaciones`:info.t==="LD"?`📋 ${prefix} LD`:info.t==="/"?`↗️ ${prefix} sales`:`✅ ${prefix} libras`;
+    return `<div style="background:var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center;font-weight:700;font-size:.95rem;flex-shrink:0">${msg}</div>`;
+  }
+  const blocks=info.halves.map(([turno,unit])=>{
+    const unitInfo=UNITS.find(x=>x[0]===unit);
+    const unitLabel=unitInfo?unitInfo[1]:(unit||"—");
+    const mateList=info.mates[turno+"_"+unit];
+    const mateTxt=mateList&&mateList.length?mateList.join(", "):"nadie más ese turno";
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px">
+      <span class="chip ${chipCls(turno,unit)}" style="width:40px;height:40px;font-size:.95rem">${turno}</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:.88rem">${TURNO_NOMBRE[turno]||turno} · ${unitLabel}</div>
+        <div style="font-size:.74rem;color:var(--mu)">👥 ${mateTxt}</div>
+      </div>
+    </div>`;
+  }).join(info.halves.length>1?'<div style="height:1px;background:var(--bd);margin:2px 8px"></div>':"");
+  return `<div style="background:var(--s2);border-radius:12px;padding:6px 10px;margin-bottom:12px;flex-shrink:0">${blocks}</div>`;
+}
+function todayCardHTML(){return dayCardHTML(new Date(),true);}
+
 function renderMiTurno(){
   if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
   const me=PEOPLE[userRow-1];
@@ -1114,7 +1317,8 @@ function renderMiTurno(){
     if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
+  let html=userRow===4?todayCardHTML():"";
+  html+=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
     <span style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.78rem;flex-shrink:0">
@@ -1546,6 +1750,15 @@ function openDayAction(day,ri,di,dk,turno){
   const dow=(date.getDay()+6)%7;
   document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+day+"/"+(miMonth+1)+"/"+miYear;
   document.getElementById("dayActionTurn").textContent=turno||t("libre");
+  const cardDiv=document.getElementById("dayActionCard");
+  if(cardDiv){
+    if(userRow===4){
+      const isToday=date.toDateString()===new Date().toDateString();
+      cardDiv.innerHTML=dayCardHTML(date,isToday);
+    } else {
+      cardDiv.innerHTML="";
+    }
+  }
   document.getElementById("overlayDayAction").classList.add("open");
 }
 function closeDayAction(){
@@ -1770,7 +1983,8 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
   <div class="modal">
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
-    <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:20px;text-align:center"></div>
+    <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
+    <div id="dayActionCard"></div>
     <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
     <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
     <button id="dayActionBackBtn" onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
@@ -1828,6 +2042,37 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
   </div>
 </div>
 
+<!-- DETALLE DE SUGERENCIA (hilo de respuestas) -->
+<div class="overlay" id="overlaySugDetail" onclick="if(event.target.id==='overlaySugDetail')closeSugDetail()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <h2 style="font-family:Syne,sans-serif;font-size:.95rem">💡 Sugerencia</h2>
+      <span onclick="closeSugDetail()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <div id="sugDetailOriginal" style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px"></div>
+    <div id="sugDetailReplies" style="max-height:32vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <textarea id="sugReplyText" rows="2" style="width:100%;padding:9px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe por qué (opcional en de acuerdo/en contra)..."></textarea>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="mbtn mbtn-ghost" style="flex:1;font-size:.78rem" onclick="sendSugReply('agree')">👍 De acuerdo</button>
+      <button class="mbtn mbtn-ghost" style="flex:1;font-size:.78rem" onclick="sendSugReply('disagree')">👎 En contra</button>
+      <button class="mbtn mbtn-save" style="flex:1;font-size:.78rem" onclick="sendSugReply('neutral')">💬 Comentar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUGERIR ALGO -->
+<div class="overlay" id="overlaySugerir" onclick="if(event.target.id==='overlaySugerir')closeSuggestBox()">
+  <div class="modal">
+    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">💡 Sugerir algo</h2>
+    <p style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.</p>
+    <textarea id="suggestText" rows="5" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.85rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe aquí tu sugerencia..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="mbtn mbtn-ghost" onclick="closeSuggestBox()" style="flex:1">Cancelar</button>
+      <button class="mbtn mbtn-save" id="sendSuggestBtn" onclick="sendSuggestion()" style="flex:1">Enviar</button>
+    </div>
+  </div>
+</div>
+
 <!-- NEW FEATURE POPUP -->
 <div class="overlay" id="overlayNewFeature" onclick="if(event.target.id==='overlayNewFeature')closeNewFeature()">
   <div class="modal">
@@ -1876,7 +2121,7 @@ if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlaySugerir","overlaySugDetail","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
