@@ -220,8 +220,8 @@ setTimeout(function(){
     <div class="menu-dropdown" id="menuDropdown">
       <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">👤 Mi turno</button>
       <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
-      <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none">👥 Enfermeras</button>
-      <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none">📬 Sugerencias <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none"><span id="tab-enf-label">👥 Enfermeras</span></button>
+      <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none"><span id="tab-sugerencias-label">📬 Sugerencias</span> <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
       <div class="menu-sep"></div>
       <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
       <button class="menu-item" id="menuSuggestBtn" onclick="closeMenu();openSuggestBox()">💡 Sugerir algo</button>
@@ -340,6 +340,11 @@ function closeComparePeople(){document.getElementById("overlayComparePeople").cl
 
 function openSuggestBox(){
   document.getElementById("suggestText").value="";
+  document.getElementById("suggestText").placeholder=t("sugerirPh");
+  document.getElementById("sugerirTitleEl").textContent=t("sugerirTitle");
+  document.getElementById("sugerirSubEl").textContent=t("sugerirSub");
+  document.getElementById("sugerirCancelBtn").textContent=t("cancelar");
+  document.getElementById("sendSuggestBtn").textContent=t("enviar");
   document.getElementById("overlaySugerir").classList.add("open");
 }
 function closeSuggestBox(){document.getElementById("overlaySugerir").classList.remove("open");}
@@ -347,7 +352,7 @@ function sendSuggestion(){
   const txt=document.getElementById("suggestText").value.trim();
   if(!txt)return;
   const btn=document.getElementById("sendSuggestBtn");
-  if(btn){btn.disabled=true;btn.textContent="Enviando...";}
+  if(btn){btn.disabled=true;btn.textContent=t("enviando");}
   db.ref("app_suggestions").push({
     from:userName||"?",
     text:txt,
@@ -355,12 +360,12 @@ function sendSuggestion(){
     read:false
   }).then(()=>{
     closeSuggestBox();
-    alert("¡Gracias! Se ha enviado tu sugerencia.");
+    alert(t("sugerenciaEnviada"));
   }).catch(e=>{
-    alert("No se pudo enviar, inténtalo de nuevo.");
+    alert(t("sugerenciaErrorEnvio"));
     console.log("Error enviando sugerencia:",e);
   }).finally(()=>{
-    if(btn){btn.disabled=false;btn.textContent="Enviar";}
+    if(btn){btn.disabled=false;btn.textContent=t("enviar");}
   });
 }
 function renderPeopleCheckList(){
@@ -396,7 +401,8 @@ function MONTHS(){return I18N[lang].months.map(m=>m.charAt(0).toUpperCase()+m.sl
 const DAYS_ES=["L","M","X","J","V","S","D"];
 const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
 const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
-const TURNO_NOMBRE={M:"Mañana",T:"Tarde",N:"Noche"};
+const UNITS_ENF=[["I","🔴 Ictus"],["A","🔵 338/345"],["V","🟢 351-354/337"],["N2","⚫ 354/337-339"]];
+function turnoNombre(turno){return {M:t("turnoM"),T:t("turnoT"),N:t("turnoN")}[turno]||turno;}
 const STANCE_LBL={agree:"👍",disagree:"👎",neutral:"💬"};
 const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
@@ -500,7 +506,28 @@ const I18N={
     legalConfirm:"¿Estás seguro? Al aceptar, confirmas que usas la app de forma voluntaria y bajo tu propia responsabilidad.",
     legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
-    months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
+    months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],
+    tabEnf:"👥 Enfermeras", tabSugerencias:"📬 Sugerencias",
+    menuSugerir:"💡 Sugerir algo", sugerirTitle:"💡 Sugerir algo",
+    sugerirSub:"Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.",
+    sugerirPh:"Escribe aquí tu sugerencia...",
+    sugerenciaEnviada:"¡Gracias! Se ha enviado tu sugerencia.",
+    sugerenciaErrorEnvio:"No se pudo enviar, inténtalo de nuevo.",
+    enviando:"Enviando...",
+    sinSugerencias:"Todavía no hay sugerencias.",
+    sugDetailTitle:"💡 Sugerencia",
+    sugReplyPh:"Escribe por qué (opcional en de acuerdo/en contra)...",
+    sugDeAcuerdo:"👍 De acuerdo", sugEnContra:"👎 En contra", sugComentar:"💬 Comentar",
+    sinRespuestas:"Sin respuestas todavía.",
+    sugEscribeComentario:"Escribe tu comentario.",
+    sugErrorRespuesta:"No se pudo enviar la respuesta, inténtalo de nuevo.",
+    sugDeAcuerdoDefault:"De acuerdo", sugEnContraDefault:"No estoy de acuerdo",
+    respuestaSing:"respuesta", respuestaPlur:"respuestas",
+    hoyPrefix:"Hoy", eseDiaPrefix:"Ese día",
+    diaVacaciones:"vacaciones", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    nadieMasTurno:"nadie más ese turno",
+    turnoM:"Mañana", turnoT:"Tarde", turnoN:"Noche",
+    enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: "
   },
   gl:{
     askName:"Cal é o teu nome?", namePh:"Escribe o teu nome...", next:"Seguinte →",
@@ -548,7 +575,28 @@ const I18N={
     legalConfirm:"¿Estás segura? Ao aceptar, confirmas que usas a app de forma voluntaria e baixo a túa propia responsabilidade.",
     legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
-    months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"]
+    months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"],
+    tabEnf:"👥 Enfermeiras", tabSugerencias:"📬 Suxestións",
+    menuSugerir:"💡 Suxerir algo", sugerirTitle:"💡 Suxerir algo",
+    sugerirSub:"Ideas, fallos ou melloras para a app. Chégalle directamente a Alberto.",
+    sugerirPh:"Escribe aquí a túa suxestión...",
+    sugerenciaEnviada:"Grazas! Enviouse a túa suxestión.",
+    sugerenciaErrorEnvio:"Non se puido enviar, inténtao de novo.",
+    enviando:"Enviando...",
+    sinSugerencias:"Aínda non hai suxestións.",
+    sugDetailTitle:"💡 Suxestión",
+    sugReplyPh:"Escribe por que (opcional en de acordo/en contra)...",
+    sugDeAcuerdo:"👍 De acordo", sugEnContra:"👎 En contra", sugComentar:"💬 Comentar",
+    sinRespuestas:"Sen respostas aínda.",
+    sugEscribeComentario:"Escribe o teu comentario.",
+    sugErrorRespuesta:"Non se puido enviar a resposta, inténtao de novo.",
+    sugDeAcuerdoDefault:"De acordo", sugEnContraDefault:"Non estou de acordo",
+    respuestaSing:"resposta", respuestaPlur:"respostas",
+    hoyPrefix:"Hoxe", eseDiaPrefix:"Ese día",
+    diaVacaciones:"vacacións", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    nadieMasTurno:"ninguén máis nesa quenda",
+    turnoM:"Mañá", turnoT:"Tarde", turnoN:"Noite",
+    enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: "
   }
 };
 function t(key){return (I18N[lang]&&I18N[lang][key])!==undefined?I18N[lang][key]:key;}
@@ -575,7 +623,7 @@ function toggleLang(){
   const rv=document.getElementById("view-resumen");
   if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
 }
-function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:"👥 Enfermeras",sugerencias:"📬 Sugerencias"};}
+function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:t("tabEnf"),sugerencias:t("tabSugerencias")};}
 function applyLangStatic(){
   document.getElementById("askNameP").textContent=t("askName");
   document.getElementById("nameInput").placeholder=t("namePh");
@@ -593,6 +641,9 @@ function applyLangStatic(){
   document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
   document.getElementById("menuLangBtn").textContent=t("menuLangTo");
   const mLegal=document.getElementById("menuLegalBtn"); if(mLegal)mLegal.textContent=t("menuLegal");
+  const tabEnfLbl=document.getElementById("tab-enf-label"); if(tabEnfLbl)tabEnfLbl.textContent=t("tabEnf");
+  const tabSugLbl=document.getElementById("tab-sugerencias-label"); if(tabSugLbl)tabSugLbl.textContent=t("tabSugerencias");
+  const menuSugBtn=document.getElementById("menuSuggestBtn"); if(menuSugBtn)menuSugBtn.textContent=t("menuSugerir");
   const lAccept=document.getElementById("legalAcceptBtn"); if(lAccept)lAccept.textContent=t("legalAccept");
   const lClose=document.getElementById("legalCloseBtn"); if(lClose)lClose.textContent=t("cerrar");
   const themeBtn=document.getElementById("menuThemeBtn");
@@ -924,7 +975,7 @@ function renderEnfermeras(){
       errBanner.style="background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center";
       wrapEnf.parentNode.insertBefore(errBanner,wrapEnf);
     }
-    errBanner.textContent="⚠️ No se pudieron cargar los cambios de Enfermeras: "+enfDataError;
+    errBanner.textContent=t("enfDataErrorPrefix")+enfDataError;
     errBanner.style.display="block";
   } else if(errBanner){
     errBanner.style.display="none";
@@ -1001,7 +1052,7 @@ function renderSugerencias(){
   const cont=document.getElementById("sugerenciasContent");
   if(!cont)return;
   if(!suggestions.length){
-    cont.innerHTML='<p style="color:var(--mu);padding:20px;text-align:center">Todavía no hay sugerencias.</p>';
+    cont.innerHTML=`<p style="color:var(--mu);padding:20px;text-align:center">${t("sinSugerencias")}</p>`;
     return;
   }
   cont.innerHTML=suggestions.map(s=>`
@@ -1011,7 +1062,7 @@ function renderSugerencias(){
         <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
       </div>
       <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>
-      ${s.replies.length?`<div style="font-size:.7rem;color:var(--mu);margin-top:6px">💬 ${s.replies.length} respuesta${s.replies.length===1?"":"s"}</div>`:""}
+      ${s.replies.length?`<div style="font-size:.7rem;color:var(--mu);margin-top:6px">💬 ${s.replies.length} ${s.replies.length===1?t("respuestaSing"):t("respuestaPlur")}</div>`:""}
     </div>
   `).join("");
   // Al abrir la bandeja, se marcan como leídas
@@ -1026,6 +1077,11 @@ function renderSugerencias(){
 function openSugDetail(key){
   currentSugKey=key;
   document.getElementById("sugReplyText").value="";
+  document.getElementById("sugReplyText").placeholder=t("sugReplyPh");
+  document.getElementById("sugDetailTitleEl").textContent=t("sugDetailTitle");
+  document.getElementById("sugAgreeBtn").textContent=t("sugDeAcuerdo");
+  document.getElementById("sugDisagreeBtn").textContent=t("sugEnContra");
+  document.getElementById("sugCommentBtn").textContent=t("sugComentar");
   renderSugDetail();
   document.getElementById("overlaySugDetail").classList.add("open");
 }
@@ -1051,21 +1107,21 @@ function renderSugDetail(){
       </div>
       ${r.text?`<div style="font-size:.78rem;white-space:pre-wrap">${(r.text||"").replace(/</g,"&lt;")}</div>`:""}
     </div>
-  `).join(""):'<p style="color:var(--mu);font-size:.78rem;text-align:center;padding:8px">Sin respuestas todavía.</p>';
+  `).join(""):`<p style="color:var(--mu);font-size:.78rem;text-align:center;padding:8px">${t("sinRespuestas")}</p>`;
 }
 function sendSugReply(stance){
   if(!currentSugKey)return;
   const txt=document.getElementById("sugReplyText").value.trim();
-  if(stance==="neutral"&&!txt){alert("Escribe tu comentario.");return;}
+  if(stance==="neutral"&&!txt){alert(t("sugEscribeComentario"));return;}
   db.ref("app_suggestions/"+currentSugKey+"/replies").push({
     from:userName||"?",
-    text:txt||(stance==="agree"?"De acuerdo":"No estoy de acuerdo"),
+    text:txt||(stance==="agree"?t("sugDeAcuerdoDefault"):t("sugEnContraDefault")),
     stance,
     date:new Date().toLocaleString("es-ES")
   }).then(()=>{
     document.getElementById("sugReplyText").value="";
   }).catch(e=>{
-    alert("No se pudo enviar la respuesta, inténtalo de nuevo.");
+    alert(t("sugErrorRespuesta"));
     console.log("Error enviando respuesta:",e);
   });
 }
@@ -1249,7 +1305,7 @@ function computeDayInfo(dateObj){
       const pIsCombined=(pt==="MT"||pt==="TN")&&pu2;
       const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"?[[pt,pu]]:[]);
       pHalves.forEach(([pTurno,pUnit])=>{
-        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:p.name,unit:pUnit});
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:p.name,unit:pUnit,source:"tce"});
       });
     });
   }
@@ -1264,7 +1320,7 @@ function computeDayInfo(dateObj){
       if(pt==="D")pHalves=[["M",pu],["T",pu]];
       else if(pt==="M"||pt==="N")pHalves=[[pt,pu]];
       pHalves.forEach(([pTurno,pUnit])=>{
-        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:"👩‍⚕️ "+p.name,unit:pUnit});
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:"👩‍⚕️ "+p.name,unit:pUnit,source:"enf"});
       });
     });
   }
@@ -1273,9 +1329,9 @@ function computeDayInfo(dateObj){
 function computeTodayInfo(){return computeDayInfo(new Date());}
 function dayCardHTML(dateObj,isToday){
   const info=computeDayInfo(dateObj);
-  const prefix=isToday?"Hoy":"Ese día";
+  const prefix=isToday?t("hoyPrefix"):t("eseDiaPrefix");
   if(!info.halves.length){
-    const msg=info.t==="V"?`🏖 ${prefix} vacaciones`:info.t==="LD"?`📋 ${prefix} LD`:info.t==="/"?`↗️ ${prefix} sales`:`✅ ${prefix} libras`;
+    const msg=info.t==="V"?`🏖 ${prefix} ${t("diaVacaciones")}`:info.t==="LD"?`📋 ${prefix} ${t("diaLD")}`:info.t==="/"?`↗️ ${prefix} ${t("diaSales")}`:`✅ ${prefix} ${t("diaLibras")}`;
     return `<div style="background:var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center;font-weight:700;font-size:.95rem;flex-shrink:0">${msg}</div>`;
   }
   const blocks=info.halves.map(([turno,unit])=>{
@@ -1286,11 +1342,11 @@ function dayCardHTML(dateObj,isToday){
       const mUnitInfo=UNITS.find(x=>x[0]===mt.unit);
       const mUnitShort=mUnitInfo?mUnitInfo[1].replace(/^\S+\s/,""):(mt.unit||"—");
       return `${mt.name} (${mUnitShort})`;
-    }).join(", "):"nadie más ese turno";
+    }).join(", "):t("nadieMasTurno");
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px">
       <span class="chip ${chipCls(turno,unit)}" style="width:40px;height:40px;font-size:.95rem">${turno}</span>
       <div style="text-align:left">
-        <div style="font-weight:700;font-size:.88rem">${TURNO_NOMBRE[turno]||turno} · ${unitLabel}</div>
+        <div style="font-weight:700;font-size:.88rem">${turnoNombre(turno)} · ${unitLabel}</div>
         <div style="font-size:.74rem;color:var(--mu)">👥 ${mateTxt}</div>
       </div>
     </div>`;
@@ -2047,16 +2103,16 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div class="overlay" id="overlaySugDetail" onclick="if(event.target.id==='overlaySugDetail')closeSugDetail()">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-      <h2 style="font-family:Syne,sans-serif;font-size:.95rem">💡 Sugerencia</h2>
+      <h2 id="sugDetailTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem">💡 Sugerencia</h2>
       <span onclick="closeSugDetail()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
     </div>
     <div id="sugDetailOriginal" style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px"></div>
     <div id="sugDetailReplies" style="max-height:32vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
     <textarea id="sugReplyText" rows="2" style="width:100%;padding:9px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe por qué (opcional en de acuerdo/en contra)..."></textarea>
     <div style="display:flex;gap:6px;margin-top:10px">
-      <button class="mbtn mbtn-ghost" style="flex:1;font-size:.78rem" onclick="sendSugReply('agree')">👍 De acuerdo</button>
-      <button class="mbtn mbtn-ghost" style="flex:1;font-size:.78rem" onclick="sendSugReply('disagree')">👎 En contra</button>
-      <button class="mbtn mbtn-save" style="flex:1;font-size:.78rem" onclick="sendSugReply('neutral')">💬 Comentar</button>
+      <button class="mbtn mbtn-ghost" id="sugAgreeBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('agree')">👍 De acuerdo</button>
+      <button class="mbtn mbtn-ghost" id="sugDisagreeBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('disagree')">👎 En contra</button>
+      <button class="mbtn mbtn-save" id="sugCommentBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('neutral')">💬 Comentar</button>
     </div>
   </div>
 </div>
@@ -2064,11 +2120,11 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <!-- SUGERIR ALGO -->
 <div class="overlay" id="overlaySugerir" onclick="if(event.target.id==='overlaySugerir')closeSuggestBox()">
   <div class="modal">
-    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">💡 Sugerir algo</h2>
-    <p style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.</p>
+    <h2 id="sugerirTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">💡 Sugerir algo</h2>
+    <p id="sugerirSubEl" style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.</p>
     <textarea id="suggestText" rows="5" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.85rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe aquí tu sugerencia..."></textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="mbtn mbtn-ghost" onclick="closeSuggestBox()" style="flex:1">Cancelar</button>
+      <button class="mbtn mbtn-ghost" id="sugerirCancelBtn" onclick="closeSuggestBox()" style="flex:1">Cancelar</button>
       <button class="mbtn mbtn-save" id="sendSuggestBtn" onclick="sendSuggestion()" style="flex:1">Enviar</button>
     </div>
   </div>
