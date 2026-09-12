@@ -7,11 +7,11 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Enfermeras 3ºC">
-<meta name="theme-color" content="#1565c0">
+<meta name="apple-mobile-web-app-title" content="TCE 3ºC">
+<meta name="theme-color" content="#c0392b">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Enfermeras 3ºC</title>
-<script>(function(){try{if(localStorage.getItem("enf_theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}})();</script>
+<title>TCE 3ºC</title>
+<script>(function(){try{if(localStorage.getItem("tcaes_theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}})();</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -34,20 +34,23 @@
 }
 :root.dark .lc.neu,:root.dark .chip.neu,:root.dark .mi-chip.neu{background:#000;color:#fff;border-color:#555}
 :root.dark .menu-dropdown{box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.stat-badge-t{background:#fff3e0;color:#e65100}
 .mi-edit-btn{background:#fff3cd;color:#856404}
 .mi-edit-btn.editing-on{background:#d4edda;color:#155724;border-color:#28a745}
 .disclaimer-box{background:#fff3cd;color:#856404}
+:root.dark .stat-badge-t,
 :root.dark .mi-edit-btn,
 :root.dark .mi-edit-btn.editing-on,
 :root.dark .disclaimer-box,
 :root.dark .mbtn-del,
+:root.dark #legendVac,
+:root.dark #legendLD,
 :root.dark #pinLockBanner,
 :root.dark .prop-card.pending,
 :root.dark .prop-card.accepted,
 :root.dark .prop-card.rejected,
 :root.dark th.sun,
 :root.dark td.sun{background:#000!important;color:#fff!important;border-color:#555!important}
-*{box-sizing:border-box;margin:0;padding:0}
 /* SPLASH SCREEN */
 #splashScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a121d;transition:opacity .45s ease;overflow:hidden}
 #splashScreen.hide{opacity:0;pointer-events:none}
@@ -55,6 +58,7 @@
 .splash-photo-frame img{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block}
 .splash-loading-text{position:absolute;bottom:8%;left:0;right:0;text-align:center;z-index:2;color:#eef2f6;font-family:"DM Mono",monospace;font-size:.78rem;letter-spacing:3px;opacity:.85;text-shadow:0 2px 8px rgba(0,0,0,.6)}
 @keyframes splashPhotoIn{0%{transform:scale(1.06);opacity:.85}50%{transform:scale(1);opacity:1}100%{transform:scale(1.06);opacity:.85}}
+*{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--tx);font-family:"DM Mono",monospace;display:flex;flex-direction:column}
 header{background:var(--s1);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0}
@@ -78,7 +82,7 @@ h1 em{color:var(--I);font-style:normal}
 .menu-btn{background:transparent;border:none;font-size:1.35rem;line-height:1;padding:8px 12px;cursor:pointer;color:var(--tx);position:relative;border-radius:8px}
 .menu-btn:active{background:var(--s2)}
 .menu-badge{position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#e53935}
-.menu-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);min-width:200px;z-index:50;overflow:hidden}
+.menu-dropdown{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);min-width:190px;z-index:50;overflow:hidden}
 .menu-dropdown.open{display:block}
 .menu-item{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;padding:11px 14px;border:none;background:transparent;font-family:"DM Mono",monospace;font-size:.82rem;color:var(--tx);cursor:pointer}
 .menu-item:active{background:var(--s2)}
@@ -108,6 +112,7 @@ td.today-col{background:var(--today-bg)!important}
 #view-mi{flex:1;overflow:auto;padding:14px 16px}
 .mi-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
 .mi-month-nav button{font-size:1.4rem;padding:6px 18px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;flex-shrink:0}
+.lc.T,.mi-chip.T,.chip.T{background:#ff9800;color:#fff;border-color:#e65100}
 .mi-chip{padding:5px 14px;border-radius:7px;font-size:.85rem;font-weight:700;border:1.5px solid transparent}
 .mi-chip.I{background:var(--Ib);color:var(--I);border-color:var(--Ix)}
 .mi-chip.V{background:var(--Vb);color:var(--V);border-color:var(--Vx)}
@@ -140,10 +145,15 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 #nameScreen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center}
 .name-card{background:var(--s1);border-radius:16px;padding:28px;width:90%;max-width:340px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .name-card h2{font-family:"Syne",sans-serif;font-size:1.1rem;margin-bottom:8px}
+.proposal-badge{position:absolute;top:-5px;right:-5px;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:700}
 .prop-card{background:var(--s1);border:1.5px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
 .prop-card.pending{border-color:#ffc107;background:#fffde7}
 .prop-card.accepted{border-color:#4caf50;background:#f1f8e9}
 .prop-card.rejected{border-color:#ef5350;background:#fde8e8}
+.prop-btn{padding:8px 14px;border-radius:7px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;font-family:"DM Mono",monospace}
+.prop-btn.accept{background:#4caf50;color:#fff}
+.prop-btn.reject{background:#ef5350;color:#fff}
+.prop-btn.cancel{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
 .log-popup{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:.75rem;z-index:500;max-width:320px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.3)}
 @keyframes videoPulse{
   0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.45)}
@@ -172,7 +182,7 @@ setTimeout(function(){
 
 <div id="nameScreen">
   <div class="name-card">
-    <h2>🏥 Enfermeras <em>3ºC</em></h2>
+    <h2>🏥 TCE <em>3ºC</em></h2>
     <p style="font-size:.78rem;color:var(--mu);margin-bottom:18px" id="askNameP">¿Cuál es tu nombre?</p>
     <!-- STEP 1: Name -->
     <div id="stepName">
@@ -180,9 +190,9 @@ setTimeout(function(){
       <div id="nameError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left"></div>
       <button class="mbtn mbtn-save" id="nextBtn" onclick="saveName()" style="width:100%;margin-top:12px">Siguiente →</button>
     </div>
-    <!-- STEP 2: PIN -->
+    <!-- STEP 2: código -->
     <div id="stepPin" style="display:none">
-      <p style="font-size:.78rem;color:var(--mu);margin-bottom:10px" id="pinLabel">Introduce tu PIN (por defecto 0000):</p>
+      <p style="font-size:.78rem;color:var(--mu);margin-bottom:10px" id="pinLabel">Introduce tu código (por defecto 0000):</p>
       <input type="password" id="pinInput" placeholder="····" maxlength="4" style="text-align:center;font-size:1.5rem;letter-spacing:8px">
       <div id="pinError" style="display:none;color:var(--I);font-size:.72rem;margin-top:8px;text-align:left"></div>
       <button class="mbtn mbtn-save" id="enterBtn" onclick="checkPin()" style="width:100%;margin-top:12px">Entrar</button>
@@ -192,7 +202,7 @@ setTimeout(function(){
 </div>
 
 <header>
-  <h1>🏥 Enfermeras <em>3ºC</em></h1>
+  <h1>🏥 TCE <em>3ºC</em></h1>
   <div style="display:flex;gap:6px;align-items:center">
     <button class="hbtn" onclick="changeYear(-1)">‹</button>
     <span id="yearLabel" style="font-family:Syne,sans-serif;font-weight:700;min-width:46px;text-align:center"></span>
@@ -202,42 +212,47 @@ setTimeout(function(){
 </header>
 <div class="legend">
   <span style="color:var(--mu)" id="unidadLegendLabel">Unidad →</span>
-  <div class="lc I">🔴 Ictus</div>
-  <div class="lc A">🔵 338/345</div>
-  <div class="lc V">🟢 351-354/337</div>
-  <div class="lc N2">⚫ L/X: 354+337/339</div>
+  <div class="lc I" onclick="showUnitInfo('I')" style="cursor:pointer">🔴 Ictus</div>
+  <div class="lc V" onclick="showUnitInfo('V')" style="cursor:pointer">🟢 351-353</div>
+  <div class="lc N2" onclick="showUnitInfo('N2')" style="cursor:pointer">⚫ 354/337-339</div>
+  <div class="lc A" onclick="showUnitInfo('A')" style="cursor:pointer">🔵 340-345</div>
   <div class="lc neu">L · /</div>
+  <div class="lc" id="legendVac" style="background:#fff3cd;color:#856404;border-color:#ffc107">🏖 Vac</div>
+  <div class="lc" id="legendLD" style="background:#d1ecf1;color:#0c5460;border-color:#bee5eb">📋 LD</div>
 </div>
-<div id="pinLockBanner" style="display:none;background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center;cursor:pointer" onclick="showPinWarn()">🔒 PIN por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.</div>
+<div id="pinLockBanner" style="display:none;background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center;cursor:pointer" onclick="showPinWarn()">🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.</div>
 <div class="tabs">
-  <div class="topbar-title" id="topbarTitle">👤 A miña quenda</div>
+  <div class="topbar-title" id="topbarTitle">👤 Mi turno</div>
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)">⋮<span class="menu-badge" id="menuBadge" style="display:none"></span></button>
     <div class="menu-dropdown" id="menuDropdown">
+      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">👤 Mi turno</button>
       <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
-      <button class="menu-item" id="tab-resumen" onclick="menuGoTab('resumen')">📊 Resumo</button>
-      <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none"><span id="tab-enf-label">👥 Enfermeras</span></button>
+      <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none"><span id="tab-sugerencias-label">📬 Sugerencias</span> <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
       <div class="menu-sep"></div>
-      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">🏠 Volver á miña quenda</button>
+      <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
+      <button class="menu-item" id="menuSuggestBtn" onclick="closeMenu();openSuggestBox()">💡 Sugerir algo</button>
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
-      <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Castellano</button>
-      <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo escuro</button>
-      <button class="menu-item" id="menuVideoBtn" onclick="closeMenu();openVideoHelp()">🎥 Vídeo de axuda</button>
+      <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
+      <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
+      <button class="menu-item" id="menuVideoBtn" onclick="closeMenu();openVideoHelp()">🎥 Vídeo de ayuda</button>
       <button class="menu-item" id="menuLegalBtn" onclick="closeMenu();showLegalModal(false)">📜 Aviso legal</button>
       <div class="menu-sep"></div>
-      <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Pechar sesión</button>
+      <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
     </div>
   </div>
 </div>
 
-<div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px">
-  <div id="miTurnoContent"></div>
+<div id="view-mi" style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column">
+  <div id="miTurnoContent" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
 </div>
 
-<div id="view-todos" style="flex:1;min-height:0;overflow:hidden;flex-direction:column;display:none">
-  <div style="display:flex;justify-content:flex-end;padding:8px 12px 0;flex-shrink:0">
+<div id="view-todos" style="flex:1;overflow:auto;display:none">
+  <div style="display:flex;justify-content:flex-end;padding:8px 12px 0">
     <button id="comparePeopleBtn" onclick="openComparePeople()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">👥 Comparar</button>
   </div>
+
   <div class="wrap" id="wrap">
     <table id="tbl" style="border-collapse:collapse;width:max-content">
       <thead id="thead"></thead>
@@ -251,6 +266,21 @@ setTimeout(function(){
   <div id="resumenContent"></div>
 </div>
 
+<!-- ENFERMERAS VIEW (solo consulta, solo Alberto) -->
+<div id="view-enf" style="flex:1;overflow:auto;display:none">
+  <div class="wrap" id="wrapEnf">
+    <table id="tblEnf" style="border-collapse:collapse;width:max-content">
+      <thead id="theadEnf"></thead>
+      <tbody id="tbodyEnf"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SUGERENCIAS VIEW (solo Alberto) -->
+<div id="view-sugerencias" style="flex:1;overflow:auto;padding:14px 16px;display:none">
+  <div id="sugerenciasContent"></div>
+</div>
+
 <div class="overlay" id="overlay" onclick="outsideClose(event)">
   <div class="modal">
     <h2 id="mTitle">Editar</h2>
@@ -260,6 +290,10 @@ setTimeout(function(){
     <div id="unitSection">
       <div class="slabel" id="unitLabel1">Unidad:</div>
       <div class="unit-grid" id="unitGrid1"></div>
+    </div>
+    <div id="unitSection2" style="display:none;margin-top:8px">
+      <div class="slabel" id="unitLabel2">Segunda unidad:</div>
+      <div class="unit-grid" id="unitGrid2"></div>
     </div>
     <div class="slabel" id="tuNombreLabel">Tu nombre:</div>
     <input type="text" id="inputWho" placeholder="Tu nombre...">
@@ -279,39 +313,120 @@ setTimeout(function(){
 
 <div class="log-popup" id="logPopup" style="display:none"></div>
 
-<div class="overlay" id="overlayPinWarn">
-  <div class="modal">
-    <h2 id="pinWarnTitle" style="font-family:Syne,sans-serif;font-size:1rem;color:#c0392b;margin-bottom:10px">🔒 Cambia tu código</h2>
-    <p id="pinWarnBody" style="font-size:.85rem;color:var(--tx);line-height:1.6;margin-bottom:14px">Sigues usando el código de por defecto (<b>0000</b>). Mientras no lo cambies por uno tuyo, puedes ver los turnos, pero <b>no podrás hacer cambios, proponer turnos ni ver comentarios</b> de nadie.</p>
-    <button id="changeNowBtn" onclick="changePinFromWarn()" style="width:100%;padding:12px;border-radius:8px;background:#c0392b;color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;margin-bottom:8px">Cambiar código ahora</button>
-    <button id="notNowBtn" onclick="closePinWarn()" style="width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Ahora no</button>
-  </div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-const ROTA_ENF = [
-  [["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null]],
-  [["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","I"]],
-  [["N","I"],["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"]],
-  [["/",null],["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null]],
-  [["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null]],
-  [["M","N2"],["L",null],["D","N2"],["L",null],["L",null],["L",null],["L",null]],
-  [["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null],["D","V"]],
-  [["N","V"],["/",null],["L",null],["L",null],["D","V"],["N","V"],["/",null]],
-  [["L",null],["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null]],
-  [["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null],["L",null]],
-  [["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","V"],["N","V"]],
-  [["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"],["/",null]],
-  [["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null]],
-  [["D","V"],["N","V"],["/",null],["L",null],["L",null],["L",null],["D","A"]],
-  [["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null]],
-  [["L",null],["L",null],["L",null],["L",null],["L",null],["L",null],["L",null]],
-  [["D","A"],["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"]],
-  [["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null]],
+const ROTA = [
+  [["T","V"],["T","I"],["N","I"],["/",null],["L",null],["L",null],["M","I"]],
+  [["M","N2"],["M","N2"],["T","A"],["N","N2"],["/",null],["L",null],["L",null]],
+  [["L",null],["M","A"],["M","A"],["T","A"],["N","N2"],["/",null],["L",null]],
+  [["L",null],["L",null],["T","I"],["N","I"],["/",null],["L",null],["L",null]],
+  [["M","I"],["M","I"],["M","I"],["T","I"],["N","I"],["/",null],["L",null]],
+  [["L",null],["M","V"],["M","V"],["T","V"],["T","V"],["N","N2"],["/",null]],
+  [["L",null],["L",null],["M","N2"],["M","V"],["T","I"],["T","I"],["N","N2"]],
+  [["/",null],["L",null],["L",null],["M","N2"],["M","N2"],["T","V"],["T","V"]],
+  [["N","I"],["/",null],["L",null],["M","I"],["M","I"],["M","I"],["T","I"]],
+  [["T","I"],["N","I"],["/",null],["L",null],["L",null],["M","N2"],["M","N2"]],
+  [["M","A"],["T","A"],["N","N2"],["/",null],["L",null],["L",null],["L",null]],
+  [["M","V"],["T","V"],["T","V"],["L",null],["M","A"],["M","A"],["M","A"]],
+  [["L",null],["L",null],["L",null],["M","A"],["T","A"],["T","A"],["T","A"]],
+  [["N","N2"],["/",null],["L",null],["L",null],["M","V"],["M","V"],["M","V"]],
+  [["T","A"],["N","N2"],["/",null],["L",null],["L",null],["L",null],["L",null]],
 ];
+const PEOPLE = [
+  {name:"Montse",startRow:1},{name:"Manuela",startRow:2},{name:"Ana",startRow:3},
+  {name:"Alberto",startRow:4},{name:"Cristina",startRow:5},{name:"Pilina",startRow:6},
+  {name:"Lara",startRow:7},{name:"Loly",startRow:8},{name:"Pepa",startRow:9},
+  {name:"Ana Irib.",startRow:10},{name:"Vanesa F.",startRow:11},{name:"Manuel",startRow:12},
+  {name:"Isabel",startRow:13},{name:"Adrián",startRow:14},{name:"Susana",startRow:15},
+];
+
+let hiddenPeople=new Set(JSON.parse(localStorage.getItem("tcaes_hidden_people")||"[]"));
+function saveHiddenPeople(){localStorage.setItem("tcaes_hidden_people",JSON.stringify([...hiddenPeople]));}
+function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
+function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
+
+const HELP_VIDEO_ID="f2ntwQXH-YA";
+function openVideoHelp(){
+  document.getElementById("videoTitleEl").textContent=t("videoTitle");
+  document.getElementById("helpVideoFrame").src="https://www.youtube.com/embed/"+HELP_VIDEO_ID+"?autoplay=1";
+  document.getElementById("overlayVideo").classList.add("open");
+}
+function closeVideoHelp(){
+  document.getElementById("overlayVideo").classList.remove("open");
+  document.getElementById("helpVideoFrame").src="";
+}
+
+function openSuggestBox(){
+  document.getElementById("suggestText").value="";
+  document.getElementById("suggestText").placeholder=t("sugerirPh");
+  document.getElementById("sugerirTitleEl").textContent=t("sugerirTitle");
+  document.getElementById("sugerirSubEl").textContent=t("sugerirSub");
+  document.getElementById("sugerirCancelBtn").textContent=t("cancelar");
+  document.getElementById("sendSuggestBtn").textContent=t("enviar");
+  document.getElementById("overlaySugerir").classList.add("open");
+}
+function closeSuggestBox(){document.getElementById("overlaySugerir").classList.remove("open");}
+function sendSuggestion(){
+  const txt=document.getElementById("suggestText").value.trim();
+  if(!txt)return;
+  const btn=document.getElementById("sendSuggestBtn");
+  if(btn){btn.disabled=true;btn.textContent=t("enviando");}
+  db.ref("app_suggestions").push({
+    from:userName||"?",
+    text:txt,
+    date:new Date().toLocaleString("es-ES"),
+    read:false
+  }).then(()=>{
+    closeSuggestBox();
+    alert(t("sugerenciaEnviada"));
+  }).catch(e=>{
+    alert(t("sugerenciaErrorEnvio"));
+    console.log("Error enviando sugerencia:",e);
+  }).finally(()=>{
+    if(btn){btn.disabled=false;btn.textContent=t("enviar");}
+  });
+}
+function renderPeopleCheckList(){
+  const div=document.getElementById("peopleCheckList");
+  if(!div)return;
+  div.innerHTML=PEOPLE.map((p,i)=>{
+    const checked=hiddenPeople.has(i)?"":"checked";
+    return `<label style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--s2)">
+      <input type="checkbox" onchange="togglePersonVisible(${i})" ${checked} style="width:18px;height:18px;flex-shrink:0">
+      <span style="font-size:.85rem;color:var(--tx)">${p.name}</span>
+    </label>`;
+  }).join("");
+}
+function togglePersonVisible(i){
+  if(hiddenPeople.has(i))hiddenPeople.delete(i);else hiddenPeople.add(i);
+  saveHiddenPeople();
+  render();
+}
+function selectAllPeople(){
+  hiddenPeople.clear();
+  saveHiddenPeople();
+  renderPeopleCheckList();
+  render();
+}
+function selectNonePeople(){
+  PEOPLE.forEach((p,i)=>hiddenPeople.add(i));
+  saveHiddenPeople();
+  renderPeopleCheckList();
+  render();
+}
+
+function MONTHS(){return I18N[lang].months.map(m=>m.charAt(0).toUpperCase()+m.slice(1));}
+const DAYS_ES=["L","M","X","J","V","S","D"];
+const REF_MONDAY=new Date(2026,3,6); // 6 abril 2026 // Feb 23 2026
+const UNITS=[["I","🔴 Ictus"],["V","🟢 351-353"],["N2","⚫ 354/337-339"],["A","🔵 340-345"]];
+const UNITS_ENF=[["I","🔴 Ictus"],["A","🔵 338/345"],["V","🟢 351-354/337"],["N2","⚫ 354/337-339"]];
+function turnoNombre(turno){return {M:t("turnoM"),T:t("turnoT"),N:t("turnoN")}[turno]||turno;}
+const STANCE_LBL={agree:"👍",disagree:"👎",neutral:"💬"};
+const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
+
+// --- Vista de solo consulta del cuadrante de Enfermeras (solo visible para Alberto, userRow===4) ---
 const PEOPLE_ENF = [
   {name:"Alba",startRow:1},
   {name:"Laura V.",startRow:2},
@@ -332,13 +447,38 @@ const PEOPLE_ENF = [
   {name:"Olga",startRow:17},
   {name:"Patricia R.",startRow:18},
 ];
+const ROTA_ENF = [
+  [["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null]],
+  [["L",null],["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","I"]],
+  [["N","I"],["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"]],
+  [["/",null],["L",null],["L",null],["D","I"],["N","I"],["/",null],["L",null]],
+  [["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null]],
+  [["M","N2"],["L",null],["D","N2"],["L",null],["L",null],["L",null],["L",null]],
+  [["L",null],["D","V"],["N","V"],["/",null],["L",null],["L",null],["D","V"]],
+  [["N","V"],["/",null],["L",null],["L",null],["D","V"],["N","V"],["/",null]],
+  [["L",null],["L",null],["L",null],["D","V"],["N","V"],["/",null],["L",null]],
+  [["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null],["L",null]],
+  [["D","I"],["N","I"],["/",null],["L",null],["L",null],["D","V"],["N","V"]],
+  [["/",null],["L",null],["L",null],["L",null],["D","I"],["N","I"],["/",null]],
+  [["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null],["L",null]],
+  [["D","V"],["N","V"],["/",null],["L",null],["L",null],["L",null],["D","A"]],
+  [["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null]],
+  [["L",null],["L",null],["L",null],["L",null],["L",null],["L",null],["L",null]],
+  [["D","A"],["N","A"],["/",null],["L",null],["L",null],["D","A"],["N","A"]],
+  [["/",null],["L",null],["L",null],["D","A"],["N","A"],["/",null],["L",null]],
+];
+const REF_MONDAY_ENF=new Date(2026,1,23); // 23 febrero 2026
+function weekOffEnf(mon){return Math.round((mon-REF_MONDAY_ENF)/(7*86400000));}
+function rowForEnf(sr,mon){const o=weekOffEnf(mon);return((sr-1+o)%18+18)%18;}
+window.enfDateOverrides={};
+let enfChangeIcons={},enfListenersStarted=false,enfDataError=null;
+let suggestions=[],currentSugKey=null;
 
-const MONTHS_ES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAYS_ES=["L","M","X","J","V","S","D"];
-const REF_MONDAY_ENF=new Date(2026,1,23); // Feb 23 2026
-const UNITS=[["I","🔴 Ictus"],["A","🔵 338/345"],["V","🟢 351-354/337"],["N2","⚫ 354/337-339"]];
-const TURNS=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
-
+let currentYear=new Date().getFullYear();
+let editMode=false,miEditMode=false;
+let pinLocked=false;
+// ===== IDIOMA =====
+let lang=localStorage.getItem("tcaes_lang")||"es";
 const I18N={
   es:{
     askName:"¿Cuál es tu nombre?", namePh:"Escribe tu nombre...", next:"Siguiente →",
@@ -346,7 +486,7 @@ const I18N={
     today:"📍 Hoy", unidadLegend:"Unidad →",
     bannerCode:"🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.",
     tabMi:"👤 Mi turno", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumen",
-    menuVolver:"🏠 Volver a Mi turno", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Cerrar sesión",
+    menuVolver:"👤 Mi turno", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Cerrar sesión",
     menuLangTo:"🌐 Cambiar a Galego",
     menuThemeToDark:"🌙 Modo oscuro", menuThemeToLight:"☀️ Modo normal",
     codeWrongLen:"❌ El código debe ser 4 números", codeWrong:"❌ Código incorrecto",
@@ -356,8 +496,10 @@ const I18N={
     pinWarnTitle:"🔒 Cambia tu código",
     pinWarnBody:"Sigues usando el código de por defecto (<b>0000</b>). Mientras no lo cambies por uno tuyo, puedes ver los turnos, pero <b>no podrás hacer cambios, proponer turnos ni ver comentarios</b> de nadie.",
     changeNow:"Cambiar código ahora", notNow:"Ahora no",
+    commentLockedShort:"🔒 Cambia tu código para ver este comentario",
+    commentLockedLong:"🔒 Cambia tu código para ver los comentarios",
     logoutConfirm:"¿Cerrar sesión? Tendrás que volver a introducir tu nombre y código en este dispositivo.",
-    editTitle:"Editar", turnoLabel:"Turno:", unidadLabel:"Unidad:",
+    editTitle:"Editar", turnoLabel:"Turno:", unidadLabel:"Unidad:", unidad2Label:"Segunda unidad:",
     tuNombreLabel:"Tu nombre:", tuNombrePh:"Tu nombre...", cambioConLabel:"Cambio con:",
     cambioConPh:"Nombre de la compañera...", comentarioLabel:"Comentario (opcional):", comentarioPh:"Notas...",
     borrar:"✕ Borrar", cancelar:"Cancelar", guardar:"Guardar",
@@ -369,19 +511,43 @@ const I18N={
     respondModalTitle:"🔄 Responder propuesta", tuComentarioLabel:"Tu comentario (opcional):",
     tuRespuestaPh:"Tu respuesta...", rechazar:"Rechazar", aceptar:"Aceptar",
     libre:"Libre",
-    daSu:"da su", delDia:"del", tePropone:"te propone:", teDaSu:"Te da su", aCambioQuiere:"A cambio quiere tu turno del",
-    sinConexion:"⚠️ Sin conexión con Firebase. Recarga la página.",
+    pendiente:"⏳ Pendiente", aceptado:"✅ Aceptado", rechazado:"❌ Rechazado", cancelado:"🚫 Cancelado",
+    propuestaA:"📤 Propuesta a", propuestaDe:"📥 Propuesta de",
+    daSu:"da su", delDia:"del", verYResponder:"Ver y responder", cancelarPropuesta:"Cancelar propuesta",
+    sinConexion:"⚠️ Sin conexión con Firebase. Recarga la página.", sinPropuestas:"No tienes propuestas de cambio.",
     tuTurnoDel:"Tu turno del", cargando:"Cargando...", seleccionaDia:"Selecciona día...",
     seleccionaCompYDia:"Selecciona la compañera y el día", sinConexionSimple:"Sin conexión",
-    propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Error al enviar",
+    tePropone:"te propone:", teDaSu:"Te da su", aCambioQuiere:"A cambio quiere tu turno del",
+    cambioAplicado:"✅ Cambio aceptado y aplicado", propuestaRechazada:"❌ Propuesta rechazada",
+    confirmCancelar:"¿Cancelar esta propuesta?", filaNoEncontrada:"No se encontró tu fila.", propuestaEnviada:"✅ Propuesta enviada a", errorEnviar:"Error al enviar",
     compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar turnos", comparePeopleSub:"Elige qué compañeras/os quieres ver en la tabla.",
     selectAll:"Todas", selectNone:"Ninguna", cerrar:"Cerrar",
     menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
-    legalConfirm:"¿Estás segura? Al aceptar, confirmas que usas la app de forma voluntaria y bajo tu propia responsabilidad.",
-    logoutConfirmTitle:"¿Cerrar sesión?",
+    legalConfirm:"¿Estás seguro? Al aceptar, confirmas que usas la app de forma voluntaria y bajo tu propia responsabilidad.",
     legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
-    months:["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+    months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],
+    tabEnf:"👥 Enfermeras", tabSugerencias:"📬 Sugerencias",
+    menuSugerir:"💡 Sugerir algo", sugerirTitle:"💡 Sugerir algo",
+    sugerirSub:"Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.",
+    sugerirPh:"Escribe aquí tu sugerencia...",
+    sugerenciaEnviada:"¡Gracias! Se ha enviado tu sugerencia.",
+    sugerenciaErrorEnvio:"No se pudo enviar, inténtalo de nuevo.",
+    enviando:"Enviando...",
+    sinSugerencias:"Todavía no hay sugerencias.",
+    sugDetailTitle:"💡 Sugerencia",
+    sugReplyPh:"Escribe por qué (opcional en de acuerdo/en contra)...",
+    sugDeAcuerdo:"👍 De acuerdo", sugEnContra:"👎 En contra", sugComentar:"💬 Comentar",
+    sinRespuestas:"Sin respuestas todavía.",
+    sugEscribeComentario:"Escribe tu comentario.",
+    sugErrorRespuesta:"No se pudo enviar la respuesta, inténtalo de nuevo.",
+    sugDeAcuerdoDefault:"De acuerdo", sugEnContraDefault:"No estoy de acuerdo",
+    respuestaSing:"respuesta", respuestaPlur:"respuestas",
+    hoyPrefix:"Hoy", eseDiaPrefix:"Ese día",
+    diaVacaciones:"vacaciones", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    nadieMasTurno:"nadie más ese turno",
+    turnoM:"Mañana", turnoT:"Tarde", turnoN:"Noche",
+    enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: ",
     menuVideo:"🎥 Vídeo de ayuda", videoTitle:"🎥 Vídeo de ayuda",
     videoPromoBanner:"🎥 Nuevo: vídeo de ayuda de la app — toca para verlo"
   },
@@ -391,7 +557,7 @@ const I18N={
     today:"📍 Hoxe", unidadLegend:"Unidade →",
     bannerCode:"🔒 Código por defecto activo — só podes ver, non editar. Toca aquí para cambialo.",
     tabMi:"👤 A miña quenda", tabTodos:"📅 Todos", tabCambios:"🔄 Cambios", tabResumen:"📊 Resumo",
-    menuVolver:"🏠 Volver á miña quenda", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Pechar sesión",
+    menuVolver:"👤 A miña quenda", menuChangeCode:"🔑 Cambiar código", menuLogout:"🚪 Pechar sesión",
     menuLangTo:"🌐 Cambiar a Castellano",
     menuThemeToDark:"🌙 Modo escuro", menuThemeToLight:"☀️ Modo normal",
     codeWrongLen:"❌ O código debe ter 4 números", codeWrong:"❌ Código incorrecto",
@@ -401,8 +567,10 @@ const I18N={
     pinWarnTitle:"🔒 Cambia o teu código",
     pinWarnBody:"Segues a usar o código por defecto (<b>0000</b>). Mentres non o cambies por un teu, podes ver as quendas, pero <b>non poderás facer cambios, propoñer quendas nin ver comentarios</b> de ninguén.",
     changeNow:"Cambiar código agora", notNow:"Agora non",
+    commentLockedShort:"🔒 Cambia o teu código para ver este comentario",
+    commentLockedLong:"🔒 Cambia o teu código para ver os comentarios",
     logoutConfirm:"¿Pechar sesión? Terás que introducir de novo o teu nome e código neste dispositivo.",
-    editTitle:"Editar", turnoLabel:"Quenda:", unidadLabel:"Unidade:",
+    editTitle:"Editar", turnoLabel:"Quenda:", unidadLabel:"Unidade:", unidad2Label:"Segunda unidade:",
     tuNombreLabel:"O teu nome:", tuNombrePh:"O teu nome...", cambioConLabel:"Cambio con:",
     cambioConPh:"Nome da compañeira...", comentarioLabel:"Comentario (opcional):", comentarioPh:"Notas...",
     borrar:"✕ Borrar", cancelar:"Cancelar", guardar:"Gardar",
@@ -414,52 +582,144 @@ const I18N={
     respondModalTitle:"🔄 Responder proposta", tuComentarioLabel:"O teu comentario (opcional):",
     tuRespuestaPh:"A túa resposta...", rechazar:"Rexeitar", aceptar:"Aceptar",
     libre:"Libre",
-    daSu:"dá a súa", delDia:"do", tePropone:"propóñeche:", teDaSu:"Dáche o seu", aCambioQuiere:"A cambio quere a túa quenda do",
-    sinConexion:"⚠️ Sen conexión con Firebase. Recarga a páxina.",
+    pendiente:"⏳ Pendente", aceptado:"✅ Aceptado", rechazado:"❌ Rexeitado", cancelado:"🚫 Cancelado",
+    propuestaA:"📤 Proposta a", propuestaDe:"📥 Proposta de",
+    daSu:"dá a súa", delDia:"do", verYResponder:"Ver e responder", cancelarPropuesta:"Cancelar proposta",
+    sinConexion:"⚠️ Sen conexión con Firebase. Recarga a páxina.", sinPropuestas:"Non tes propostas de cambio.",
     tuTurnoDel:"A túa quenda do", cargando:"Cargando...", seleccionaDia:"Selecciona día...",
     seleccionaCompYDia:"Selecciona a compañeira e o día", sinConexionSimple:"Sen conexión",
-    propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Erro ao enviar",
+    tePropone:"proponche:", teDaSu:"Dáche a súa", aCambioQuiere:"A cambio quere a túa quenda do",
+    cambioAplicado:"✅ Cambio aceptado e aplicado", propuestaRechazada:"❌ Proposta rexeitada",
+    confirmCancelar:"¿Cancelar esta proposta?", filaNoEncontrada:"Non se atopou a túa fila.", propuestaEnviada:"✅ Proposta enviada a", errorEnviar:"Erro ao enviar",
     compararBtn:"👥 Comparar", comparePeopleTitle:"👥 Comparar quendas", comparePeopleSub:"Escolle que compañeiras/os queres ver na táboa.",
     selectAll:"Todas", selectNone:"Ningunha", cerrar:"Pechar",
     menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
     legalConfirm:"¿Estás segura? Ao aceptar, confirmas que usas a app de forma voluntaria e baixo a túa propia responsabilidade.",
-    logoutConfirmTitle:"¿Pechar sesión?",
     legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
-    months:["Xaneiro","Febreiro","Marzo","Abril","Maio","Xuño","Xullo","Agosto","Setembro","Outubro","Novembro","Decembro"],
+    months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"],
+    tabEnf:"👥 Enfermeiras", tabSugerencias:"📬 Suxestións",
+    menuSugerir:"💡 Suxerir algo", sugerirTitle:"💡 Suxerir algo",
+    sugerirSub:"Ideas, fallos ou melloras para a app. Chégalle directamente a Alberto.",
+    sugerirPh:"Escribe aquí a túa suxestión...",
+    sugerenciaEnviada:"Grazas! Enviouse a túa suxestión.",
+    sugerenciaErrorEnvio:"Non se puido enviar, inténtao de novo.",
+    enviando:"Enviando...",
+    sinSugerencias:"Aínda non hai suxestións.",
+    sugDetailTitle:"💡 Suxestión",
+    sugReplyPh:"Escribe por que (opcional en de acordo/en contra)...",
+    sugDeAcuerdo:"👍 De acordo", sugEnContra:"👎 En contra", sugComentar:"💬 Comentar",
+    sinRespuestas:"Sen respostas aínda.",
+    sugEscribeComentario:"Escribe o teu comentario.",
+    sugErrorRespuesta:"Non se puido enviar a resposta, inténtao de novo.",
+    sugDeAcuerdoDefault:"De acordo", sugEnContraDefault:"Non estou de acordo",
+    respuestaSing:"resposta", respuestaPlur:"respostas",
+    hoyPrefix:"Hoxe", eseDiaPrefix:"Ese día",
+    diaVacaciones:"vacacións", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    nadieMasTurno:"ninguén máis nesa quenda",
+    turnoM:"Mañá", turnoT:"Tarde", turnoN:"Noite",
+    enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: ",
     menuVideo:"🎥 Vídeo de axuda", videoTitle:"🎥 Vídeo de axuda",
     videoPromoBanner:"🎥 Novo: vídeo de axuda da app — toca para velo"
   }
 };
-let lang=localStorage.getItem("enf_lang")||"gl";
 function t(key){return (I18N[lang]&&I18N[lang][key])!==undefined?I18N[lang][key]:key;}
-function MONTHS(){return I18N[lang].months;}
+function isDark(){return document.documentElement.classList.contains("dark");}
+function toggleTheme(){
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("tcaes_theme",isDark()?"dark":"light");
+  const btn=document.getElementById("menuThemeBtn");
+  if(btn)btn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
+  if(typeof render==="function")render();
+  if(typeof renderMiTurno==="function")renderMiTurno();
+  if(typeof renderProposals==="function")renderProposals();
+  const rv=document.getElementById("view-resumen");
+  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
+}
+function toggleLang(){
+  lang=(lang==="es")?"gl":"es";
+  localStorage.setItem("tcaes_lang",lang);
+  applyLangStatic();
+  if(document.getElementById("nameScreen").style.display!=="none"){/* login screen, already updated by applyLangStatic */}
+  if(typeof render==="function")render();
+  if(typeof renderMiTurno==="function")renderMiTurno();
+  if(typeof renderProposals==="function")renderProposals();
+  const rv=document.getElementById("view-resumen");
+  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
+}
+function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:t("tabEnf"),sugerencias:t("tabSugerencias")};}
+function applyLangStatic(){
+  document.getElementById("askNameP").textContent=t("askName");
+  document.getElementById("nameInput").placeholder=t("namePh");
+  document.getElementById("nextBtn").textContent=t("next");
+  document.getElementById("pinLabel").textContent=t("codeLabel");
+  document.getElementById("enterBtn").textContent=t("enter");
+  document.getElementById("pinBackBtn").textContent=t("back");
+  document.getElementById("todayBtn").textContent=t("today");
+  document.getElementById("unidadLegendLabel").textContent=t("unidadLegend");
+  document.getElementById("pinLockBanner").textContent=t("bannerCode");
+  const title=document.getElementById("topbarTitle");
+  if(title)title.textContent=tabTitles()[typeof currentTab!=="undefined"?currentTab:"mi"]||t("tabMi");
+  document.getElementById("tab-mi").textContent=t("menuVolver");
+  document.getElementById("menuChangeCodeBtn").textContent=t("menuChangeCode");
+  document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
+  document.getElementById("menuLangBtn").textContent=t("menuLangTo");
+  const mLegal=document.getElementById("menuLegalBtn"); if(mLegal)mLegal.textContent=t("menuLegal");
+  const tabEnfLbl=document.getElementById("tab-enf-label"); if(tabEnfLbl)tabEnfLbl.textContent=t("tabEnf");
+  const tabSugLbl=document.getElementById("tab-sugerencias-label"); if(tabSugLbl)tabSugLbl.textContent=t("tabSugerencias");
+  const menuSugBtn=document.getElementById("menuSuggestBtn"); if(menuSugBtn)menuSugBtn.textContent=t("menuSugerir");
+  const menuVidBtn=document.getElementById("menuVideoBtn"); if(menuVidBtn)menuVidBtn.textContent=t("menuVideo");
+  const lAccept=document.getElementById("legalAcceptBtn"); if(lAccept)lAccept.textContent=t("legalAccept");
+  const lClose=document.getElementById("legalCloseBtn"); if(lClose)lClose.textContent=t("cerrar");
+  const themeBtn=document.getElementById("menuThemeBtn");
+  if(themeBtn)themeBtn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
+  document.getElementById("mTurnoLabel").textContent=t("turnoLabel");
+  document.getElementById("unitLabel1").textContent=t("unidadLabel");
+  document.getElementById("unitLabel2").textContent=t("unidad2Label");
+  document.getElementById("tuNombreLabel").textContent=t("tuNombreLabel");
+  document.getElementById("inputWho").placeholder=t("tuNombrePh");
+  document.getElementById("cambioConLabel").textContent=t("cambioConLabel");
+  document.getElementById("inputWith").placeholder=t("cambioConPh");
+  document.getElementById("comentarioLabel").textContent=t("comentarioLabel");
+  document.getElementById("inputComment").placeholder=t("comentarioPh");
+  document.getElementById("borrarBtn").textContent=t("borrar");
+  document.getElementById("cancelarBtn").textContent=t("cancelar");
+  document.getElementById("guardarBtn").textContent=t("guardar");
+  document.getElementById("propsHeading").textContent=t("propsHeading");
+  document.getElementById("dayActionEditBtn").textContent=t("dayActionEdit");
+  document.getElementById("dayActionProposeBtn").textContent=t("dayActionPropose");
+  document.getElementById("dayActionBackBtn").textContent=t("back");
+  document.getElementById("propModalTitle").textContent=t("propModalTitle");
+  document.getElementById("propPersonLabel").textContent=t("compLabel");
+  document.getElementById("propTheirDayLabel").textContent=t("diaQuieresLabel");
+  document.getElementById("propCommentLabel").textContent=t("comentarioLabel2");
+  document.getElementById("propComment").placeholder=t("comentarioPh2");
+  document.getElementById("propBackBtn").textContent=t("back");
+  document.getElementById("propSendBtn").textContent=t("enviar");
+  document.getElementById("respondModalTitle").textContent=t("respondModalTitle");
+  document.getElementById("respondCommentLabel").textContent=t("tuComentarioLabel");
+  document.getElementById("respondComment").placeholder=t("tuRespuestaPh");
+  document.getElementById("respondBackBtn").textContent=t("back");
+  document.getElementById("respondRejectBtn").textContent=t("rechazar");
+  document.getElementById("respondAcceptBtn").textContent=t("aceptar");
+  document.getElementById("pinWarnTitle").textContent=t("pinWarnTitle");
+  document.getElementById("pinWarnBody").innerHTML=t("pinWarnBody");
+  document.getElementById("changeNowBtn").textContent=t("changeNow");
+  document.getElementById("comparePeopleBtn").textContent=t("compararBtn");
+  document.getElementById("comparePeopleTitle").textContent=t("comparePeopleTitle");
+  document.getElementById("comparePeopleSub").textContent=t("comparePeopleSub");
+  document.getElementById("selectAllPeopleBtn").textContent=t("selectAll");
+  document.getElementById("selectNonePeopleBtn").textContent=t("selectNone");
+  document.getElementById("closeComparePeopleBtn").textContent=t("cerrar");
+  document.getElementById("notNowBtn").textContent=t("notNow");
+}
 
-let currentYear=new Date().getFullYear();
-let editMode=false,miEditMode=false;
-let pinLocked=false;
-let userName=localStorage.getItem("enf_user")||"";
-let userRow=parseInt(localStorage.getItem("enf_row")||"0");
-// Acceso oculto de administración: no forma parte de PEOPLE_ENF, no aparece en listas ni en la tabla "Todos".
-const ADMIN_USER="berto";
-let isAdminLogin=(userRow===0 && localStorage.getItem("enf_admin")==="1");
+let userName=localStorage.getItem("tcaes_user")||"";
+let userRow=parseInt(localStorage.getItem("tcaes_row")||"0");
 let editCtx=null,editTurn=null,editUnit=null;
 let changeLogData={},changeIcons={};
 window.dateOverrides={};
 let db=null;
-
-// Vista por defecto personalizada por dispositivo (no afecta a otras usuarias).
-// Para activarla en un dispositivo, abrir una vez: index_enf.html?vertodos=1
-// Para desactivarla: index_enf.html?vertodos=0
-(function(){
-  const qp=new URLSearchParams(location.search).get("vertodos");
-  if(qp==="1") localStorage.setItem("enf_default_todos","1");
-  if(qp==="0") localStorage.removeItem("enf_default_todos");
-})();
-function getDefaultTab(){
-  if(localStorage.getItem("enf_admin")==="1") return "todos";
-  return localStorage.getItem("enf_default_todos")==="1" ? "todos" : "mi";
-}
 
 // Initialize Firebase early for PIN verification
 try{
@@ -472,10 +732,10 @@ try{
     messagingSenderId:"362053048865",
     appId:"1:362053048865:web:e77a2ba4d053c4f7b6a160"
   };
-  if(!firebase.apps.length) firebase.initializeApp(_fc,"enfermeras");
-  else if(!firebase.apps.find(a=>a.name==="enfermeras")) firebase.initializeApp(_fc,"enfermeras");
-  db=firebase.database(firebase.app("enfermeras"));
-  firebase.app("enfermeras").auth().signInAnonymously().catch(e=>console.log("Auth anónima falló:",e));
+  if(!firebase.apps.length) firebase.initializeApp(_fc,"tcaes_app");
+  else if(!firebase.apps.find(a=>a.name==="tcaes_app")) firebase.initializeApp(_fc,"tcaes_app");
+  db=firebase.database(firebase.app("tcaes_app"));
+  firebase.app("tcaes_app").auth().signInAnonymously().catch(e=>console.log("Auth anónima falló:",e));
 }catch(e){console.log("Firebase early init:",e);}
 let miMonth=new Date().getMonth(),miYear=new Date().getFullYear();
 
@@ -483,28 +743,16 @@ function saveName(){
   const n=document.getElementById("nameInput").value.trim();
   if(!n)return;
   const nl=n.toLowerCase();
-  if(nl===ADMIN_USER){
-    userName="Berto"; userRow=0; isAdminLogin=true;
-    localStorage.setItem("enf_user","Berto");
-    localStorage.setItem("enf_row","0");
-    document.getElementById("stepName").style.display="none";
-    document.getElementById("stepPin").style.display="block";
-    document.getElementById("pinInput").value="";
-    document.getElementById("pinError").style.display="none";
-    document.getElementById("pinInput").focus();
-    return;
-  }
-  isAdminLogin=false;
-  const idx=PEOPLE_ENF.findIndex(p=>p.name.toLowerCase()===nl);
+  const idx=PEOPLE.findIndex(p=>p.name.toLowerCase()===nl);
   if(idx<0){
-    const names=PEOPLE_ENF.map(p=>p.name).join(", ");
+    const names=PEOPLE.map(p=>p.name).join(", ");
     document.getElementById("nameError").textContent="❌ Nombre no encontrado. Válidos: "+names;
     document.getElementById("nameError").style.display="block";
     return;
   }
   userName=n; userRow=idx+1;
-  localStorage.setItem("enf_user",n);
-  localStorage.setItem("enf_row",String(userRow));
+  localStorage.setItem("tcaes_user",n);
+  localStorage.setItem("tcaes_row",String(userRow));
   // Go to PIN step
   document.getElementById("stepName").style.display="none";
   document.getElementById("stepPin").style.display="block";
@@ -520,17 +768,15 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 function initApp(){
   try{
-    // Firebase already initialized early
-    firebase.app("enfermeras").auth().onAuthStateChanged(user=>{
-      if(!user)return; // esperamos a que signInAnonymously() complete
-      startDataListeners();
-    });
-  }catch(e){render();}
+    // Las reglas de la base de datos son abiertas, no hace falta esperar a la autenticación
+    // (intentamos igualmente el login anónimo por si acaso, pero no bloqueamos la carga de datos por él)
+    startDataListeners();
+  }catch(e){console.log("initApp error:",e);render();}
 }
 
 function startDataListeners(){
   try{
-    db.ref("enf_changes").on("value",snap=>{
+    db.ref("rota_changes").on("value",snap=>{
       const raw=snap.val()||{};
       window.dateOverrides={};
       Object.entries(raw).forEach(([k,v])=>{
@@ -544,11 +790,11 @@ function startDataListeners(){
       const resTab=document.getElementById("view-resumen");
       if(resTab&&resTab.style.display!=="none") renderResumen();
     });
-    db.ref("enf_icons").on("value",snap=>{
+    db.ref("change_icons").on("value",snap=>{
       changeIcons=snap.val()||{};
       render();
     });
-    db.ref("enf_log").on("value",snap=>{
+    db.ref("change_log").on("value",snap=>{
       changeLogData={};
       const logs=snap.val();
       if(logs)Object.values(logs).forEach(e=>{
@@ -558,17 +804,93 @@ function startDataListeners(){
         }
       });
     });
+    if(userRow===4){
+      // Solo Alberto: pestaña extra de solo consulta con el cuadrante de Enfermeras
+      const tabEnfBtn=document.getElementById("tab-enf");
+      if(tabEnfBtn)tabEnfBtn.style.display="flex";
+      const tabTodosBtn=document.getElementById("tab-todos");
+      if(tabTodosBtn)tabTodosBtn.textContent="📋 TCE";
+      const tabSugBtn=document.getElementById("tab-sugerencias");
+      if(tabSugBtn)tabSugBtn.style.display="flex";
+      db.ref("app_suggestions").on("value",snap=>{
+        const raw=snap.val()||{};
+        suggestions=Object.entries(raw).map(([key,v])=>{
+          const repliesRaw=v.replies||{};
+          const replies=Object.entries(repliesRaw).map(([rkey,rv])=>({rkey,...rv})).sort((a,b)=>(a.rkey>b.rkey?1:-1));
+          return {key,from:v.from,text:v.text,date:v.date,read:v.read,replies};
+        }).sort((a,b)=>(b.key>a.key?1:-1));
+        const unread=suggestions.filter(s=>!s.read).length;
+        const badge=document.getElementById("sugBadge");
+        if(badge){badge.textContent=unread;badge.style.display=unread>0?"inline-block":"none";}
+        if(currentTab==="sugerencias")renderSugerencias();
+        if(currentSugKey)renderSugDetail();
+      },err=>console.log("Error leyendo app_suggestions:",err));
+      if(!enfListenersStarted){
+        enfListenersStarted=true;
+        const startEnfListeners=()=>{
+          if(window.enfFirebaseListenersAttached)return;
+          window.enfFirebaseListenersAttached=true;
+          db.ref("enf_changes").on("value",snap=>{
+            const raw=snap.val()||{};
+            window.enfDateOverrides={};
+            Object.entries(raw).forEach(([k,v])=>{
+              if(v===null){window.enfDateOverrides[k]=null;}
+              else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
+              else{window.enfDateOverrides[k]=v;}
+            });
+            enfDataError=null;
+            if(currentTab==="enf")renderEnfermeras();
+            if(currentTab==="mi")renderMiTurno();
+          },err=>{
+            console.log("Error leyendo enf_changes:",err);
+            enfDataError=(err&&err.message)||String(err);
+            if(currentTab==="enf")renderEnfermeras();
+          });
+          db.ref("enf_icons").on("value",snap=>{
+            enfChangeIcons=snap.val()||{};
+            if(currentTab==="enf")renderEnfermeras();
+          },err=>{console.log("Error leyendo enf_icons:",err);});
+        };
+        // Igual que hace la propia app de Enfermeras: esperamos a que la auth anónima
+        // esté lista antes de leer sus datos, porque sus reglas de Firebase la exigen
+        // (.read: "auth != null" — confirmado en la consola). Nunca leemos sin usuario.
+        const authRef=firebase.app("tcaes_app").auth();
+        try{
+          authRef.onAuthStateChanged(user=>{
+            if(user)startEnfListeners();
+          });
+        }catch(e){
+          console.log("Error esperando auth para Enfermeras:",e);
+          enfDataError=(e&&e.message)||String(e);
+          if(currentTab==="enf")renderEnfermeras();
+        }
+        const checkAuthRetry=(attempt)=>{
+          setTimeout(()=>{
+            if(window.enfFirebaseListenersAttached)return;
+            if(authRef.currentUser){startEnfListeners();return;}
+            if(attempt<3){
+              authRef.signInAnonymously().catch(e=>console.log("Reintento de auth anónima falló:",e));
+              checkAuthRetry(attempt+1);
+            } else {
+              enfDataError="no se pudo verificar la sesión anónima tras varios intentos (revisa si la autenticación anónima está activada en Firebase Console → Authentication → Sign-in method)";
+              if(currentTab==="enf")renderEnfermeras();
+            }
+          },4000);
+        };
+        checkAuthRetry(1);
+      }
+    }
   }catch(e){render();}
 }
 
 if(userName){
-  const verified=localStorage.getItem("enf_verified_"+userRow);
+  const verified=localStorage.getItem("tcaes_verified_"+userRow);
   if(verified){
     // Device already verified, skip PIN
     document.getElementById("nameScreen").style.display="none";
     initApp();
     setTimeout(()=>initProposals(),1000);
-    setTimeout(()=>{render();renderMiTurno();showTab(getDefaultTab());setTimeout(goToToday,400);},100);
+    setTimeout(()=>{render();renderMiTurno();showTab("mi");setTimeout(goToToday,400);},100);
     setTimeout(()=>checkPinLock(),700);
     setTimeout(()=>checkLegalDisclaimer(),900);
   } else {
@@ -583,8 +905,8 @@ if(userName){
 }
 
 function mondayOf(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()+(day===0?-6:1-day));return dt;}
-function weekOff(mon){return Math.round((mon-REF_MONDAY_ENF)/(7*86400000));}
-function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%18+18)%18;}
+function weekOff(mon){return Math.round((mon-REF_MONDAY)/(7*86400000));}
+function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%15+15)%15;}
 
 function chipCls(t,u){
   if(!t||t==="L"||t==="/"||t==="V"||t==="LD")return"neu";
@@ -622,7 +944,7 @@ function render(){
   document.getElementById("thead").innerHTML=h1+h2;
 
   let body='';
-  PEOPLE_ENF.forEach((p,pi)=>{
+  PEOPLE.forEach((p,pi)=>{
     if(hiddenPeople.has(pi))return;
     const isMyRow=(userRow===pi+1);
     const bg=isDark()?"#000":(pi%2===0?"#fff":"#f8f9fa");
@@ -632,16 +954,102 @@ function render(){
       const ri=rowFor(p.startRow,mon);
       const dateStr=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
       const ovKey=pi+"_"+dateStr;
-      const baseCell=ROTA_ENF[ri][dc.dow];
+      const baseCell=ROTA[ri][dc.dow];
       const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:baseCell;
+      const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
+      const isCombined=(t==="MT"||t==="TN")&&u2;
+      const lbl1=t==="MT"?"M":"T";
+      const lbl2=t==="MT"?"T":"N";
+      const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
+      const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
+      const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
+      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
+      const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+      const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
+      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
+      const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
+      const chipInner=isCombined
+        ?`<div style="display:flex;width:34px;height:34px;border-radius:6px;overflow:hidden;gap:1px">`
+          +`<span class="chip ${cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl1}</span>`
+          +`<span class="chip ${cls2||cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl2}</span>`
+          +`</div>`
+        :`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>`;
+      body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
+        <div style="position:relative;display:inline-block">
+          ${chipInner}
+          ${dot}
+        </div>
+      </td>`;
+    });
+    body+='</tr>';
+  });
+  document.getElementById("tbody").innerHTML=body;
+  if(typeof renderMiTurno==="function")renderMiTurno();
+}
+
+function renderEnfermeras(){
+  if(userRow!==4)return; // solo consulta, solo Alberto
+  const theadEnf=document.getElementById("theadEnf"),tbodyEnf=document.getElementById("tbodyEnf");
+  if(!theadEnf||!tbodyEnf)return;
+  const wrapEnf=document.getElementById("wrapEnf");
+  let errBanner=document.getElementById("enfErrBanner");
+  if(enfDataError){
+    if(!errBanner){
+      errBanner=document.createElement("div");
+      errBanner.id="enfErrBanner";
+      errBanner.style="background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center";
+      wrapEnf.parentNode.insertBefore(errBanner,wrapEnf);
+    }
+    errBanner.textContent=t("enfDataErrorPrefix")+enfDataError;
+    errBanner.style.display="block";
+  } else if(errBanner){
+    errBanner.style.display="none";
+  }
+  const today=new Date();
+  const dayCols=[];
+  for(let m=0;m<12;m++){
+    const last=new Date(currentYear,m+1,0).getDate();
+    for(let d=1;d<=last;d++){
+      const date=new Date(currentYear,m,d);
+      const dow=(date.getDay()+6)%7;
+      dayCols.push({yr:currentYear,mn:m,d,dow,isSun:dow===6,isWE:dow>=5,isToday:date.toDateString()===today.toDateString()});
+    }
+  }
+  let h1='<tr><th class="name-col" rowspan="2" style="position:sticky;left:0;top:0;z-index:5">Nombre</th>';
+  let prev=-1,span=0;
+  dayCols.forEach((dc,i)=>{
+    if(dc.mn!==prev){if(span>0)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dayCols[i-span].mn]}</th>`;span=0;prev=dc.mn;}
+    span++;
+    if(i===dayCols.length-1)h1+=`<th class="month-hdr" colspan="${span}">${MONTHS()[dc.mn]}</th>`;
+  });
+  h1+='</tr>';
+  let h2='<tr>';
+  dayCols.forEach(dc=>{
+    const cls=(dc.isToday?"today-hdr ":"")+(dc.isSun?"sun ":dc.isWE?"we ":"");
+    h2+=`<th class="${cls}" style="min-width:40px;width:40px">${dc.d}<br><span style="font-size:.56rem">${DAYS_ES[dc.dow]}</span></th>`;
+  });
+  h2+='</tr>';
+  theadEnf.innerHTML=h1+h2;
+
+  let body='';
+  PEOPLE_ENF.forEach((p,pi)=>{
+    const bg=isDark()?"#000":(pi%2===0?"#fff":"#f8f9fa");
+    body+=`<tr><td class="name-col" style="background:${bg};color:var(--tx)">${p.name}</td>`;
+    dayCols.forEach(dc=>{
+      const mon=mondayOf(new Date(dc.yr,dc.mn,dc.d));
+      const ri=rowForEnf(p.startRow,mon);
+      const dateStr=dc.yr+String(dc.mn+1).padStart(2,"0")+String(dc.d).padStart(2,"0");
+      const ovKey=pi+"_"+dateStr;
+      const baseCell=ROTA_ENF[ri][dc.dow];
+      const cell=window.enfDateOverrides[ovKey]!==undefined?window.enfDateOverrides[ovKey]:baseCell;
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
       const cls=chipCls(t,u);
       const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
       const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
-      const cellBg=dc.isToday?"#81c784":dc.isSun?"#f3e5f5":bg;
-      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
-      const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
+      const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
+      const iconData=enfChangeIcons[pi]&&enfChangeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
+      const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLogEnf(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
           <div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>
@@ -651,8 +1059,96 @@ function render(){
     });
     body+='</tr>';
   });
-  document.getElementById("tbody").innerHTML=body;
-  if(typeof renderMiTurno==="function")renderMiTurno();
+  tbodyEnf.innerHTML=body;
+}
+
+function showLogEnf(e,pi_,dateStr){
+  e.stopPropagation();
+  const data=enfChangeIcons[pi_]&&enfChangeIcons[pi_][dateStr];
+  if(!data)return;
+  const popup=document.getElementById("logPopup");
+  popup.innerHTML=`✎ <b>${data.quien||"?"}</b> con <b>${data.con||"—"}</b><br>${data.cambio||""}`;
+  popup.style.display="block";
+  setTimeout(()=>popup.style.display="none",4000);
+}
+
+function renderSugerencias(){
+  if(userRow!==4)return;
+  const cont=document.getElementById("sugerenciasContent");
+  if(!cont)return;
+  if(!suggestions.length){
+    cont.innerHTML=`<p style="color:var(--mu);padding:20px;text-align:center">${t("sinSugerencias")}</p>`;
+    return;
+  }
+  cont.innerHTML=suggestions.map(s=>`
+    <div onclick="openSugDetail('${s.key}')" style="cursor:pointer;background:var(--s2);border-radius:10px;padding:12px 14px;margin-bottom:10px;${s.read?"":"border-left:3px solid var(--I)"}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+        <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
+      </div>
+      <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>
+      ${s.replies.length?`<div style="font-size:.7rem;color:var(--mu);margin-top:6px">💬 ${s.replies.length} ${s.replies.length===1?t("respuestaSing"):t("respuestaPlur")}</div>`:""}
+    </div>
+  `).join("");
+  // Al abrir la bandeja, se marcan como leídas
+  const unreadKeys=suggestions.filter(s=>!s.read).map(s=>s.key);
+  if(unreadKeys.length){
+    const updates={};
+    unreadKeys.forEach(k=>{updates["app_suggestions/"+k+"/read"]=true;});
+    db.ref().update(updates).catch(e=>console.log("Error marcando sugerencias como leídas:",e));
+  }
+}
+
+function openSugDetail(key){
+  currentSugKey=key;
+  document.getElementById("sugReplyText").value="";
+  document.getElementById("sugReplyText").placeholder=t("sugReplyPh");
+  document.getElementById("sugDetailTitleEl").textContent=t("sugDetailTitle");
+  document.getElementById("sugAgreeBtn").textContent=t("sugDeAcuerdo");
+  document.getElementById("sugDisagreeBtn").textContent=t("sugEnContra");
+  document.getElementById("sugCommentBtn").textContent=t("sugComentar");
+  renderSugDetail();
+  document.getElementById("overlaySugDetail").classList.add("open");
+}
+function closeSugDetail(){
+  document.getElementById("overlaySugDetail").classList.remove("open");
+  currentSugKey=null;
+}
+function renderSugDetail(){
+  const s=suggestions.find(x=>x.key===currentSugKey);
+  if(!s)return;
+  document.getElementById("sugDetailOriginal").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+      <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
+    </div>
+    <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>`;
+  const repliesDiv=document.getElementById("sugDetailReplies");
+  repliesDiv.innerHTML=s.replies.length?s.replies.map(r=>`
+    <div style="background:var(--s2);border-radius:8px;padding:8px 10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <span style="font-weight:600;font-size:.78rem">${STANCE_LBL[r.stance]||"💬"} ${r.from||"?"}</span>
+        <span style="font-size:.65rem;color:var(--mu)">${r.date||""}</span>
+      </div>
+      ${r.text?`<div style="font-size:.78rem;white-space:pre-wrap">${(r.text||"").replace(/</g,"&lt;")}</div>`:""}
+    </div>
+  `).join(""):`<p style="color:var(--mu);font-size:.78rem;text-align:center;padding:8px">${t("sinRespuestas")}</p>`;
+}
+function sendSugReply(stance){
+  if(!currentSugKey)return;
+  const txt=document.getElementById("sugReplyText").value.trim();
+  if(stance==="neutral"&&!txt){alert(t("sugEscribeComentario"));return;}
+  db.ref("app_suggestions/"+currentSugKey+"/replies").push({
+    from:userName||"?",
+    text:txt||(stance==="agree"?t("sugDeAcuerdoDefault"):t("sugEnContraDefault")),
+    stance,
+    date:new Date().toLocaleString("es-ES")
+  }).then(()=>{
+    document.getElementById("sugReplyText").value="";
+  }).catch(e=>{
+    alert(t("sugErrorRespuesta"));
+    console.log("Error enviando respuesta:",e);
+  });
 }
 
 function showLog(e,pi_,dateStr){
@@ -665,6 +1161,30 @@ function showLog(e,pi_,dateStr){
   setTimeout(()=>popup.style.display="none",4000);
 }
 document.addEventListener("click",()=>document.getElementById("logPopup").style.display="none");
+
+function changeYear(d){
+  currentYear+=d;
+  render();
+  if(currentTab==="enf")renderEnfermeras();
+}
+function goToToday(){
+  currentYear=new Date().getFullYear();
+  render();
+  if(currentTab==="enf")renderEnfermeras();
+  setTimeout(()=>{
+    if(currentTab==="enf"){
+      const wrapEnf=document.getElementById("wrapEnf");
+      const th=document.querySelector("#theadEnf th.today-hdr");
+      if(wrapEnf&&th)wrapEnf.scrollLeft=th.offsetLeft-wrapEnf.clientWidth/2+th.offsetWidth/2;
+    } else {
+      const wrap=document.getElementById("wrap");
+      const th=document.querySelector("#thead th.today-hdr");
+      if(wrap&&th)wrap.scrollLeft=th.offsetLeft-wrap.clientWidth/2+th.offsetWidth/2;
+    }
+  },200);
+}
+
+let currentTab="mi";
 
 function toggleMenu(e){
   if(e)e.stopPropagation();
@@ -681,199 +1201,31 @@ function menuGoTab(tab){
   closeMenu();
   showTab(tab);
 }
-function isDark(){return document.documentElement.classList.contains("dark");}
-function toggleTheme(){
-  document.documentElement.classList.toggle("dark");
-  localStorage.setItem("enf_theme",isDark()?"dark":"light");
-  const btn=document.getElementById("menuThemeBtn");
-  if(btn)btn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
-  if(typeof render==="function")render();
-  if(typeof renderMiTurno==="function")renderMiTurno();
-  if(typeof renderProposals==="function")renderProposals();
-  const rv=document.getElementById("view-resumen");
-  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
-}
-function toggleLang(){
-  lang=(lang==="es")?"gl":"es";
-  localStorage.setItem("enf_lang",lang);
-  applyLangStatic();
-  if(typeof render==="function")render();
-  if(typeof renderMiTurno==="function")renderMiTurno();
-  if(typeof renderProposals==="function")renderProposals();
-  const rv=document.getElementById("view-resumen");
-  if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
-}
-function tabTitles(){return {mi:t("tabMi"),todos:t("tabTodos"),props:t("tabCambios"),resumen:t("tabResumen")};}
-function applyLangStatic(){
-  const set=(id,val,attr)=>{const el=document.getElementById(id);if(el){if(attr)el.setAttribute(attr,val);else el.textContent=val;}};
-  set("askNameP",t("askName"));
-  const ni=document.getElementById("nameInput");if(ni)ni.placeholder=t("namePh");
-  set("nextBtn",t("next"));
-  set("pinLabel",t("codeLabel"));
-  set("enterBtn",t("enter"));
-  set("pinBackBtn",t("back"));
-  set("todayBtn",t("today"));
-  set("unidadLegendLabel",t("unidadLegend"));
-  set("pinLockBanner",t("bannerCode"));
-  const title=document.getElementById("topbarTitle");
-  if(title)title.textContent=tabTitles()[typeof currentTab!=="undefined"?currentTab:"mi"]||t("tabMi");
-  set("tab-mi",t("menuVolver"));
-  set("menuChangeCodeBtn",t("menuChangeCode"));
-  set("menuLogoutBtn",t("menuLogout"));
-  set("menuLangBtn",t("menuLangTo"));
-  set("menuLegalBtn",t("menuLegal"));
-  set("menuVideoBtn",t("menuVideo"));
-  const themeBtn=document.getElementById("menuThemeBtn");
-  if(themeBtn)themeBtn.textContent=isDark()?t("menuThemeToLight"):t("menuThemeToDark");
-  set("mTurnoLabel",t("turnoLabel"));
-  set("unitLabel1",t("unidadLabel"));
-  set("tuNombreLabel",t("tuNombreLabel"));
-  const iw=document.getElementById("inputWho");if(iw)iw.placeholder=t("tuNombrePh");
-  set("cambioConLabel",t("cambioConLabel"));
-  const iwi=document.getElementById("inputWith");if(iwi)iwi.placeholder=t("cambioConPh");
-  set("comentarioLabel",t("comentarioLabel"));
-  const ic=document.getElementById("inputComment");if(ic)ic.placeholder=t("comentarioPh");
-  set("borrarBtn",t("borrar"));
-  set("cancelarBtn",t("cancelar"));
-  set("guardarBtn",t("guardar"));
-  set("propsHeading",t("propsHeading"));
-  set("dayActionEditBtn",t("dayActionEdit"));
-  set("dayActionProposeBtn",t("dayActionPropose"));
-  set("dayActionBackBtn",t("back"));
-  set("propModalTitle",t("propModalTitle"));
-  set("propPersonLabel",t("compLabel"));
-  set("propTheirDayLabel",t("diaQuieresLabel"));
-  set("propCommentLabel",t("comentarioLabel2"));
-  const pc=document.getElementById("propComment");if(pc)pc.placeholder=t("comentarioPh2");
-  set("propBackBtn",t("back"));
-  set("propSendBtn",t("enviar"));
-  set("respondModalTitle",t("respondModalTitle"));
-  set("respondCommentLabel",t("tuComentarioLabel"));
-  const rc=document.getElementById("respondComment");if(rc)rc.placeholder=t("tuRespuestaPh");
-  set("respondBackBtn",t("back"));
-  set("respondRejectBtn",t("rechazar"));
-  set("respondAcceptBtn",t("aceptar"));
-  set("pinWarnTitle",t("pinWarnTitle"));
-  const pwb=document.getElementById("pinWarnBody");if(pwb)pwb.innerHTML=t("pinWarnBody");
-  set("changeNowBtn",t("changeNow"));
-  set("notNowBtn",t("notNow"));
-  set("comparePeopleBtn",t("compararBtn"));
-  set("comparePeopleTitle",t("comparePeopleTitle"));
-  set("comparePeopleSub",t("comparePeopleSub"));
-  set("selectAllPeopleBtn",t("selectAll"));
-  set("selectNonePeopleBtn",t("selectNone"));
-  set("closeComparePeopleBtn",t("cerrar"));
-  set("legalTitle",t("legalTitle"));
-  const lAccept=document.getElementById("legalAcceptBtn");if(lAccept)lAccept.textContent=t("legalAccept");
-  const lClose=document.getElementById("legalCloseBtn");if(lClose)lClose.textContent=t("cerrar");
-}
 function logout(){
   if(!confirm(t("logoutConfirm")))return;
-  localStorage.removeItem("enf_user");
-  localStorage.removeItem("enf_row");
-  if(userRow)localStorage.removeItem("enf_verified_"+userRow);
+  localStorage.removeItem("tcaes_user");
+  localStorage.removeItem("tcaes_row");
+  if(userRow)localStorage.removeItem("tcaes_verified_"+userRow);
   location.reload();
 }
 
-const LEGAL_VERSION="1";
-function legalKey(){return "enf_legal_v"+LEGAL_VERSION+"_"+userRow;}
-function checkLegalDisclaimer(){
-  if(!userRow)return;
-  if(!localStorage.getItem(legalKey())){
-    showLegalModal(true);
-  }
-}
-function showLegalModal(mandatory){
-  document.getElementById("legalBody").innerHTML=t("legalBody");
-  document.getElementById("legalAcceptBtn").style.display=mandatory?"block":"none";
-  document.getElementById("legalCloseBtn").style.display=mandatory?"none":"block";
-  document.getElementById("overlayLegal").classList.add("open");
-}
-function closeLegal(){
-  document.getElementById("overlayLegal").classList.remove("open");
-}
-function acceptLegal(){
-  if(!confirm(t("legalConfirm")))return;
-  localStorage.setItem(legalKey(),"1");
-  if(db){
-    db.ref("legal_acceptances/"+userRow).set({
-      name:userName,
-      version:LEGAL_VERSION,
-      date:new Date().toLocaleString("es-ES")
-    }).catch(()=>{});
-  }
-  closeLegal();
-}
-
-let hiddenPeople=new Set(JSON.parse(localStorage.getItem("enf_hidden_people")||"[]"));
-function saveHiddenPeople(){localStorage.setItem("enf_hidden_people",JSON.stringify([...hiddenPeople]));}
-function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
-function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
-
-const HELP_VIDEO_ID="f2ntwQXH-YA";
-function openVideoHelp(){
-  document.getElementById("videoTitleEl").textContent=t("videoTitle");
-  document.getElementById("helpVideoFrame").src="https://www.youtube.com/embed/"+HELP_VIDEO_ID+"?autoplay=1";
-  document.getElementById("overlayVideo").classList.add("open");
-}
-function closeVideoHelp(){
-  document.getElementById("overlayVideo").classList.remove("open");
-  document.getElementById("helpVideoFrame").src="";
-}
-function renderPeopleCheckList(){
-  const div=document.getElementById("peopleCheckList");
-  if(!div)return;
-  div.innerHTML=PEOPLE_ENF.map((p,i)=>{
-    const checked=hiddenPeople.has(i)?"":"checked";
-    return `<label style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:var(--s2)">
-      <input type="checkbox" onchange="togglePersonVisible(${i})" ${checked} style="width:18px;height:18px;flex-shrink:0">
-      <span style="font-size:.85rem;color:var(--tx)">${p.name}</span>
-    </label>`;
-  }).join("");
-}
-function togglePersonVisible(i){
-  if(hiddenPeople.has(i))hiddenPeople.delete(i);else hiddenPeople.add(i);
-  saveHiddenPeople();
-  render();
-}
-function selectAllPeople(){
-  hiddenPeople.clear();
-  saveHiddenPeople();
-  renderPeopleCheckList();
-  render();
-}
-function selectNonePeople(){
-  PEOPLE_ENF.forEach((p,i)=>hiddenPeople.add(i));
-  saveHiddenPeople();
-  renderPeopleCheckList();
-  render();
-}
-
-function changeYear(d){currentYear+=d;render();}
-function goToToday(){
-  currentYear=new Date().getFullYear();render();
-  setTimeout(()=>{
-    const wrap=document.getElementById("wrap");
-    const th=document.querySelector("th.today-hdr");
-    if(th)wrap.scrollLeft=th.offsetLeft-wrap.clientWidth/2+th.offsetWidth/2;
-  },200);
-}
-
-const TAB_TITLES={mi:"👤 A miña quenda",todos:"📅 Todos",resumen:"📊 Resumo",props:"🔄 Cambios"};
-let currentTab="mi";
 function showTab(tab){
   currentTab=tab;
   document.getElementById("view-mi").style.display=tab==="mi"?"block":"none";
-  document.getElementById("view-todos").style.display=tab==="todos"?"flex":"none";
-  document.getElementById("view-resumen").style.display=tab==="resumen"?"block":"none";
+  document.getElementById("view-todos").style.display=tab==="todos"?"block":"none";
   const vp=document.getElementById("view-props");
   if(vp)vp.style.display=tab==="props"?"block":"none";
+  const ve=document.getElementById("view-enf");
+  if(ve)ve.style.display=tab==="enf"?"block":"none";
+  const vs=document.getElementById("view-sugerencias");
+  if(vs)vs.style.display=tab==="sugerencias"?"block":"none";
   const title=document.getElementById("topbarTitle");
-  if(title)title.textContent=tabTitles()[tab]||tabTitles().mi;
-  if(tab==="resumen")renderResumen();
+  if(title)title.textContent=tabTitles()[tab]||"";
   if(tab==="props")renderProposals();
+  if(tab==="enf")renderEnfermeras();
+  if(tab==="sugerencias")renderSugerencias();
   if(tab==="mi"){
-    const annKey="enf_ann_v1";
+    const annKey="tcaes_ann_todos_v1";
     const shown=parseInt(localStorage.getItem(annKey)||"0");
     if(shown<5){
       localStorage.setItem(annKey,String(shown+1));
@@ -881,10 +1233,18 @@ function showTab(tab){
     }
   }
   if(tab==="todos"){
+
     setTimeout(()=>{
       const wrap=document.getElementById("wrap");
-      const th=document.querySelector("th.today-hdr");
+      const th=document.querySelector("#thead th.today-hdr");
       if(th)wrap.scrollLeft=th.offsetLeft-wrap.clientWidth/2+th.offsetWidth/2;
+    },50);
+  }
+  if(tab==="enf"){
+    setTimeout(()=>{
+      const wrapEnf=document.getElementById("wrapEnf");
+      const th=document.querySelector("#theadEnf th.today-hdr");
+      if(wrapEnf&&th)wrapEnf.scrollLeft=th.offsetLeft-wrapEnf.clientWidth/2+th.offsetWidth/2;
     },50);
   }
 }
@@ -909,38 +1269,120 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const y=date.getFullYear(),m=date.getMonth(),d=date.getDate();
   const dateStr=y+String(m+1).padStart(2,"0")+String(d).padStart(2,"0");
   const ovKey=(userRow-1)+"_"+dateStr;
-  const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA_ENF[ri][dow];
-  const t=cell?cell[0]:null,u=cell?cell[1]:null;
-  const cls=chipCls(t,u);
+  const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
+  const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
+  const isCombined=(t==="MT"||t==="TN")&&u2;
+  const lbl1=t==="MT"?"M":"T";
+  const lbl2=t==="MT"?"T":"N";
+  const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
+  const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
   const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
-  const isLorSlash=!t||t==="L"||t==="/";
+  const isLorSlash2=!t||t==="L"||t==="/";
+  const chipHtml=isCombined
+    ?"<div class='mi-chip neu' style='font-size:1.5rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
+      +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl1+"</span>"
+      +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl2+"</span>"
+      +"</div>"
+    :"<div class='mi-chip "+cls+"' style='font-size:1.5rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
   if(!isCurrentMonth){
     const numColor2="#b9b9be";
-    return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;height:90px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
-      <div style="font-size:1.1rem;font-weight:700;color:${numColor2};margin-bottom:6px">${d}</div>
-      <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}">${lbl}</div>
+    return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;min-height:78px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
+      <div style="font-size:1.25rem;font-weight:700;color:${numColor2};margin-bottom:6px">${d}</div>
+      ${chipHtml}
     </td>`;
   }
-  const bg=isToday?"#4caf50":isWE?"#f3e5f5":"var(--s1)";
-  const numColor=isToday?"#fff":isWE?"#6f42c1":"var(--tx)";
-  const bg2=isLorSlash&&!isToday?"#ffffff":bg;
+  const bg=isToday?"#4caf50":isWE?(isDark()?"#000000":"#f3e5f5"):"var(--s1)";
+  const numColor=isToday?"#fff":isWE?(isDark()?"#fff":"#6f42c1"):"var(--tx)";
+  const isLorSlash=!t||t==="L"||t==="/";
+  const bg2=isLorSlash&&!isToday?(isDark()?"#000000":"#ffffff"):bg;
   const iconMi=changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD";
-  return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;height:90px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
-    <div style="font-size:1.1rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
-    <div class="mi-chip ${cls}" style="font-size:1.3rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;${isLorSlash?"background:#fff;color:#333;border:2px solid #333;":""}">${lbl}</div>
+  return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;min-height:78px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
+    <div style="font-size:1.25rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
+    ${chipHtml}
     ${iconMi?`<div onclick="showMiLog(event,${d})" style="position:absolute;top:3px;right:3px;width:14px;height:14px;background:#ffc107;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">✎</div>`+
-    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.55rem;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
+    (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.6rem;color:${isDark()?"#ccc":"#555"};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
     :""}
   </td>`;
 }
 
+function computeDayInfo(dateObj){
+  const me=PEOPLE[userRow-1];
+  const mon=mondayOf(dateObj);
+  const ri=rowFor(me.startRow,mon);
+  const dow=(dateObj.getDay()+6)%7;
+  const y=dateObj.getFullYear(),m=dateObj.getMonth(),d=dateObj.getDate();
+  const dateStr=y+String(m+1).padStart(2,"0")+String(d).padStart(2,"0");
+  const ovKey=(userRow-1)+"_"+dateStr;
+  const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
+  const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
+  const isCombined=(t==="MT"||t==="TN")&&u2;
+  const halves=isCombined?[[t==="MT"?"M":"T",u],[t==="MT"?"T":"N",u2]]:(t&&t!=="L"&&t!=="/"&&t!=="V"&&t!=="LD"?[[t,u]]:[]);
+  const turnosHoy=[...new Set(halves.map(([turno])=>turno))];
+  const mates={};
+  turnosHoy.forEach(turno=>{mates[turno]=[];});
+  if(turnosHoy.length){
+    PEOPLE.forEach((p,pi)=>{
+      if(pi===userRow-1)return;
+      const pri=rowFor(p.startRow,mon);
+      const povKey=pi+"_"+dateStr;
+      const pcell=window.dateOverrides[povKey]!==undefined?window.dateOverrides[povKey]:ROTA[pri][dow];
+      const pt=pcell?pcell[0]:null,pu=pcell?pcell[1]:null,pu2=pcell&&pcell[2]?pcell[2]:null;
+      const pIsCombined=(pt==="MT"||pt==="TN")&&pu2;
+      const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"?[[pt,pu]]:[]);
+      pHalves.forEach(([pTurno,pUnit])=>{
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:p.name,unit:pUnit,source:"tce"});
+      });
+    });
+  }
+  if(userRow===4&&window.enfDateOverrides&&turnosHoy.length){
+    const enfDow=dow;
+    PEOPLE_ENF.forEach((p,pi)=>{
+      const pri=rowForEnf(p.startRow,mon);
+      const povKey=pi+"_"+dateStr;
+      const pcell=window.enfDateOverrides[povKey]!==undefined?window.enfDateOverrides[povKey]:ROTA_ENF[pri][enfDow];
+      const pt=pcell?pcell[0]:null,pu=pcell?pcell[1]:null;
+      let pHalves=[];
+      if(pt==="D")pHalves=[["M",pu],["T",pu]];
+      else if(pt==="M"||pt==="N")pHalves=[[pt,pu]];
+      pHalves.forEach(([pTurno,pUnit])=>{
+        if(turnosHoy.includes(pTurno))mates[pTurno].push({name:"👩‍⚕️ "+p.name,unit:pUnit,source:"enf"});
+      });
+    });
+  }
+  return {t,halves,mates};
+}
+function computeTodayInfo(){return computeDayInfo(new Date());}
+function dayCardHTML(dateObj,isToday){
+  const info=computeDayInfo(dateObj);
+  if(!info.halves.length)return "";
+  const blocks=info.halves.map(([turno,unit])=>{
+    const unitInfo=UNITS.find(x=>x[0]===unit);
+    const unitLabel=unitInfo?unitInfo[1]:(unit||"—");
+    const mateList=info.mates[turno]||[];
+    const mateTxt=mateList.length?mateList.map(mt=>{
+      const mUnitInfo=UNITS.find(x=>x[0]===mt.unit);
+      const mUnitShort=mUnitInfo?mUnitInfo[1].replace(/^\S+\s/,""):(mt.unit||"—");
+      return `${mt.name} (${mUnitShort})`;
+    }).join(", "):t("nadieMasTurno");
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px">
+      <span class="chip ${chipCls(turno,unit)}" style="width:40px;height:40px;font-size:.95rem">${turno}</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:.88rem">${turnoNombre(turno)} · ${unitLabel}</div>
+        <div style="font-size:.74rem;color:var(--mu)">👥 ${mateTxt}</div>
+      </div>
+    </div>`;
+  }).join(info.halves.length>1?'<div style="height:1px;background:var(--bd);margin:2px 8px"></div>':"");
+  return `<div style="background:var(--s2);border-radius:12px;padding:6px 10px;margin-bottom:12px;flex-shrink:0">${blocks}</div>`;
+}
+function todayCardHTML(){return dayCardHTML(new Date(),true);}
+
 function renderMiTurno(){
-  if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
-  const me=PEOPLE_ENF[userRow-1];
+  if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
+  const me=PEOPLE[userRow-1];
   const today=new Date();
   const last=new Date(miYear,miMonth+1,0).getDate();
   const firstDow=(new Date(miYear,miMonth,1).getDay()+6)%7;
-  let cD=0,cM=0,cN=0;
+  let cD=0,cM=0,cT=0,cN=0;
   for(let d=1;d<=last;d++){
     const date=new Date(miYear,miMonth,d);
     const dow=(date.getDay()+6)%7;
@@ -948,24 +1390,26 @@ function renderMiTurno(){
     const ri=rowFor(me.startRow,mon);
     const dateStr=miYear+String(miMonth+1).padStart(2,"0")+String(d).padStart(2,"0");
     const ovKey=(userRow-1)+"_"+dateStr;
-    const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA_ENF[ri][dow];
+    const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
     const t=cell?cell[0]:null;
-    if(t==="D")cD++;else if(t==="M")cM++;else if(t==="N")cN++;
+    if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px">
-    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.8rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
+  let html=userRow===4?todayCardHTML():"";
+  html+=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
+    <span style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.73rem">
-    <span style="background:var(--Ab);color:var(--A);padding:3px 10px;border-radius:6px;font-weight:600">☀️ ${cD}D</span>
-    <span style="background:var(--Vb);color:var(--V);padding:3px 10px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
-    <span style="background:var(--Ib);color:var(--I);padding:3px 10px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
+  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.78rem;flex-shrink:0">
+    <span style="background:var(--Vb);color:var(--V);padding:4px 11px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
+    <span class="stat-badge-t" style="padding:4px 11px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
+    <span style="background:var(--Ib);color:var(--I);padding:4px 11px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
   </div>`;
 
-  html+=`<table style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>`;
+  html+=`<div style="flex:1;min-height:0;display:flex;flex-direction:column">
+  <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>`;
   ["L","M","X","J","V","S","D"].forEach((d,i)=>{
     const isWE=i>=5;
-    html+=`<th style="text-align:center;padding:8px 2px;font-size:.88rem;color:${isWE?"#6f42c1":"var(--mu)"};font-weight:700;border-bottom:2px solid var(--bd)">${d}</th>`;
+    html+=`<th style="text-align:center;padding:8px 2px;font-size:.95rem;color:${isWE?"#6f42c1":"var(--mu)"};font-weight:700;border-bottom:2px solid var(--bd)">${d}</th>`;
   });
   html+=`</tr></thead><tbody>`;
 
@@ -995,7 +1439,8 @@ function renderMiTurno(){
     html+=`</tr>`;
     if(!started)started=true;
   }
-  html+=`</tbody></table>`;
+  html+=`</tbody></table>
+  </div>`;
   html+=`<div class="video-promo-banner" onclick="openVideoHelp()" style="background:var(--I);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;flex-shrink:0">${t("videoPromoBanner")}</div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   document.getElementById("miTurnoContent").onclick=function(e){
@@ -1006,7 +1451,7 @@ function renderMiTurno(){
     const di=parseInt(td.dataset.di);
     const dk=(userRow-1)+"_"+miYear+String(miMonth+1).padStart(2,"0")+String(day).padStart(2,"0");
     const ov=window.dateOverrides[dk];
-    const base=ROTA_ENF[ri][di];
+    const base=ROTA[ri][di];
     const cell=ov!==undefined?ov:base;
     const t=cell?cell[0]:null;
     openDayAction(day,ri,di,dk,t);
@@ -1022,7 +1467,8 @@ function renderMiTurno(){
       else{miMonth--;if(miMonth<0){miMonth=11;miYear--;}}
       renderMiTurno();
     }
-  };}
+  };
+}
 
 function showMiLog(e,day){
   e.stopPropagation();
@@ -1031,7 +1477,7 @@ function showMiLog(e,day){
   if(!data)return;
   const popup=document.getElementById("logPopup");
   if(pinLocked){
-    popup.innerHTML=`🔒 Cambia tu PIN para ver este comentario`;
+    popup.innerHTML=t("commentLockedShort");
   } else {
     popup.innerHTML=`👤 <b>${data.quien||"?"}</b> 🔄 Con: <b>${data.con||"—"}</b><br>${data.comentario?"💬 "+data.comentario+"<br>":""}📋 ${data.cambio||""}`;
   }
@@ -1039,16 +1485,17 @@ function showMiLog(e,day){
   setTimeout(()=>popup.style.display="none",5000);
 }
 
-const TURNS_LIST=[["D","☀️ D"],["M","🌅 M"],["N","🌙 N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
+const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
 
 function openEdit(ri,di,dk,force){
   if(!miEditMode&&!force)return;
   if(pinLocked){showPinWarn();return;}
   editCtx={ri,di,dateKey:dk||""};
   const ovKey=dk||(userRow-1)+"_";
-  const cell=window.dateOverrides[ovKey]||ROTA_ENF[ri][di];
+  const cell=window.dateOverrides[ovKey]||ROTA[ri][di];
   editTurn=cell?cell[0]:null;
   editUnit=cell?cell[1]:null;
+  editUnit2=cell&&cell[2]?cell[2]:null;
   document.getElementById("mTitle").textContent=`${DAYS_ES[di]} — fila ${ri+1}`;
   document.getElementById("mSub").textContent=cell?`Actual: ${cell[0]}${cell[1]?" ("+cell[1]+")":""}`:""
   renderTurnBtns();renderUnitBtns();
@@ -1066,31 +1513,64 @@ function renderUnitBtns(){
   const show=editTurn&&editTurn!=="L"&&editTurn!=="/"&&editTurn!=="V"&&editTurn!=="LD";
   document.getElementById("unitSection").style.display=show?"":"none";
   if(!show)return;
+  const isCombined=editTurn==="MT"||editTurn==="TN";
+  const lbl1=editTurn==="MT"?"Mañana:":editTurn==="TN"?"Tarde:":"Unidad:";
+  const lbl2=editTurn==="MT"?"Tarde:":"Noche:";
+  document.getElementById("unitLabel1").textContent=lbl1;
   document.getElementById("unitGrid1").innerHTML=UNITS.map(([k,l])=>
     `<div class="ubtn ${k} ${editUnit===k?"active":""}" onclick="selUnit('${k}')">${l}</div>`).join("");
+  const sec2=document.getElementById("unitSection2");
+  if(sec2){
+    sec2.style.display=isCombined?"block":"none";
+    document.getElementById("unitLabel2").textContent=lbl2;
+    document.getElementById("unitGrid2").innerHTML=UNITS.map(([k,l])=>
+      `<div class="ubtn ${k} ${editUnit2===k?"active":""}" onclick="selUnit2('${k}')">${l}</div>`).join("");
+  }
 }
-function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD")editUnit=null;renderTurnBtns();renderUnitBtns();}
-function selUnit(u){editUnit=u;renderUnitBtns();}
-function confirmEdit(){applyEdit(editTurn,editUnit);}
+const UNIT_INFO={
+  I:{icon:"🔴",name:"Ictus",color:"var(--I)",manana:"Reondrá y limpiará material de la unidad (farmacia, carro de material, etc.)"},
+  V:{icon:"🟢",name:"351-353",color:"var(--V)",manana:"Llevará las dietas y la colocación de farmacia."},
+  N2:{icon:"⚫",name:"354/337-339",color:"var(--N2)",manana:"Llevará el oficio sucio y la limpieza de carros."},
+  A:{icon:"🔵",name:"340-345",color:"var(--A)",manana:"Llevará el oficio de cocina y la sala de exploraciones."}
+};
+function showUnitInfo(key){
+  const info=UNIT_INFO[key];
+  if(!info)return;
+  document.getElementById("unitInfoContent").innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="font-family:Syne,sans-serif;font-size:.95rem;color:${info.color}">${info.icon} ${info.name}</h2>
+      <span onclick="closeUnitInfo()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <p style="font-size:.78rem;font-weight:700;color:var(--mu);margin-bottom:6px">🌅 Mañana</p>
+    <p style="font-size:.85rem;color:var(--tx);line-height:1.6">${info.manana}</p>
+  `;
+  document.getElementById("overlayUnitInfo").classList.add("open");
+}
+function closeUnitInfo(){document.getElementById("overlayUnitInfo").classList.remove("open");}
 
-function applyEdit(t,u){
+function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD"){editUnit=null;editUnit2=null;}if(t!=="MT"&&t!=="TN")editUnit2=null;renderTurnBtns();renderUnitBtns();}
+function selUnit(u){editUnit=u;renderUnitBtns();}
+function selUnit2(u){editUnit2=u;renderUnitBtns();}
+function confirmEdit(){applyEdit(editTurn,editUnit,editUnit2);}
+
+function applyEdit(t,u,u2){
   if(!editCtx)return;
-  const val=t?[t,u||null]:null;
+  const val=t?(u2?[t,u||null,u2]:[t,u||null]):null;
   if(editCtx.dateKey){
     window.dateOverrides[editCtx.dateKey]=val;
     const who=document.getElementById("inputWho").value.trim()||userName;
     const withWho=document.getElementById("inputWith").value.trim()||"—";
     const comment=document.getElementById("inputComment").value.trim();
     if(db&&editCtx.dateKey){
-      db.ref("enf_changes/"+editCtx.dateKey).set(val).catch(()=>{});
+      db.ref("rota_changes/"+editCtx.dateKey).set(val).catch(()=>{});
       const parts=editCtx.dateKey.split("_");
       const pi_=parts[0],date_=parts[1];
       if(val){
-        db.ref("enf_icons/"+pi_+"/"+date_).set({quien:who,con:withWho,comentario:comment,cambio:val[0]+(val[1]?" ("+val[1]+")":"")}).catch(()=>{});
+        db.ref("change_icons/"+pi_+"/"+date_).set({quien:who,con:withWho,comentario:comment,cambio:val[0]+(val[1]?" ("+val[1]+")":"")}).catch(()=>{});
       }else{
-        db.ref("enf_icons/"+pi_+"/"+date_).remove().catch(()=>{});
+        db.ref("change_icons/"+pi_+"/"+date_).remove().catch(()=>{});
       }
-      db.ref("enf_log").push({quien:who,con:withWho,comentario:comment,fecha:new Date().toLocaleString("es-ES"),dateKey:editCtx.dateKey,cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado"}).catch(()=>{});
+      db.ref("change_log").push({quien:who,con:withWho,comentario:comment,fecha:new Date().toLocaleString("es-ES"),dateKey:editCtx.dateKey,cambio:val?val[0]+(val[1]?" ("+val[1]+")":""):"Borrado"}).catch(()=>{});
     }
   }
   closeModal();render();
@@ -1098,12 +1578,12 @@ function applyEdit(t,u){
 
 
 function renderResumen(){
-  if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">No se encontró tu fila.</p>';return;}
+  if(userRow===0){document.getElementById("resumenContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
   // Debug: count overrides for this person
   const myKeys=Object.keys(window.dateOverrides||{}).filter(k=>k.startsWith((userRow-1)+"_"));
   const vacKeys=myKeys.filter(k=>{const v=window.dateOverrides[k];return v&&(Array.isArray(v)?v[0]:v&&v[0])==="V";});
   console.log("Overrides for pi="+(userRow-1)+":", myKeys.length, "vacation days:", vacKeys.length);
-  const me=PEOPLE_ENF[userRow-1];
+  const me=PEOPLE[userRow-1];
   const pi=userRow-1;
 
   // CCOO 2026: 1529-3N (N=noches)
@@ -1113,8 +1593,7 @@ function renderResumen(){
   }
 
   function calcYear(yr){
-    const counts={D:0,M:0,N:0,V:0,LD:0};
-    const vacDeduct={D:0,M:0,N:0};
+    const counts={M:0,T:0,N:0,V:0,LD:0};
     let d=new Date(yr,0,1);
     while(d.getFullYear()===yr){
       const dow=(d.getDay()+6)%7;
@@ -1122,46 +1601,48 @@ function renderResumen(){
       const ri=rowFor(me.startRow,mon);
       const ds=yr+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
       const ov=window.dateOverrides[pi+"_"+ds];
-      const baseCell=ROTA_ENF[ri][dow];
+      const baseCell=ROTA[ri][dow];
       const baseT=baseCell&&Array.isArray(baseCell)?baseCell[0]:(baseCell?baseCell[0]:null);
       // Always count base rotation first
-      if(baseT==="D") counts.D++;
-      else if(baseT==="M") counts.M++;
+      if(baseT==="M") counts.M++;
+      else if(baseT==="T") counts.T++;
       else if(baseT==="N") counts.N++;
       // Then check override
       if(ov!==undefined){
         const t=ov&&Array.isArray(ov)?ov[0]:(ov?ov[0]:null);
         if(t==="V"){
           // Remove base shift and count as vacation
-          if(baseT==="D") counts.D--;
-          else if(baseT==="M") counts.M--;
+          if(baseT==="M") counts.M--;
+          else if(baseT==="T") counts.T--;
           else if(baseT==="N") counts.N--;
           counts.V++;
         } else if(t==="LD"){
           counts.LD++;
           // LD replaces base but counts as worked - keep base count
         } else if(t&&t!=="L"&&t!=="/"){
-          // Changed shift - remove base, add new
-          if(baseT==="D") counts.D--;
-          else if(baseT==="M") counts.M--;
+          // Changed shift - remove base, add new (MT/TN dobles suman ambas mitades)
+          if(baseT==="M") counts.M--;
+          else if(baseT==="T") counts.T--;
           else if(baseT==="N") counts.N--;
-          if(t==="D") counts.D++;
+          if(t==="MT"){ counts.M++; counts.T++; }
+          else if(t==="TN"){ counts.T++; counts.N++; }
           else if(t==="M") counts.M++;
+          else if(t==="T") counts.T++;
           else if(t==="N") counts.N++;
         }
       }
       d.setDate(d.getDate()+1);
     }
-    counts.D=Math.max(0,counts.D);
     counts.M=Math.max(0,counts.M);
+    counts.T=Math.max(0,counts.T);
     counts.N=Math.max(0,counts.N);
     return counts;
   }
 
   function buildTable(yr){
     const c=calcYear(yr);
-    // D=mañana+tarde (14h), M=7h mañana, N=10h noche
-    const horas=c.D*14+c.M*7+c.N*10;
+    // M=7h mañana, T=7h tarde, N=10h noche
+    const horas=c.M*7+c.T*7+c.N*10;
     const jornada=ccoo(c.N);
     const exceso=horas-jornada;
     const lds=(exceso/7).toFixed(1);
@@ -1170,8 +1651,8 @@ function renderResumen(){
     html+='<table style="width:100%;border-collapse:collapse;font-size:.78rem">';
     html+='<thead><tr style="background:var(--s2);border-bottom:2px solid var(--bd)">';
     html+='<th style="text-align:left;padding:6px">Año</th>';
-    html+='<th style="text-align:center;padding:6px;color:var(--I)">D</th>';
-    html+='<th style="text-align:center;padding:6px;color:var(--V)">M</th>';
+    html+='<th style="text-align:center;padding:6px;color:var(--I)">M</th>';
+    html+='<th style="text-align:center;padding:6px;color:var(--V)">T</th>';
     html+='<th style="text-align:center;padding:6px;color:var(--A)">N</th>';
     html+='<th style="text-align:center;padding:6px;color:#856404">🏖</th>';
     html+='<th style="text-align:center;padding:6px;color:#0c5460">LD</th>';
@@ -1181,8 +1662,8 @@ function renderResumen(){
     html+='</tr></thead><tbody>';
     html+=`<tr style="border-bottom:1px solid var(--bd)">`;
     html+=`<td style="padding:6px;font-weight:600">${yr}</td>`;
-    html+=`<td style="text-align:center;padding:6px">${c.D}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.M}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${c.T}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.N}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.V}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.LD}</td>`;
@@ -1198,7 +1679,7 @@ function renderResumen(){
   let html=`<h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:4px">📊 Resumen de <span style="color:var(--I)">${me.name}</span></h2>`;
   html+=buildTable(year);
   html+=buildTable(year+1);
-  html+=`<div style="margin-top:16px;padding:12px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:.72rem;color:#856404;line-height:1.5">
+  html+=`<div class="disclaimer-box" style="margin-top:16px;padding:12px;border:1px solid #ffc107;border-radius:8px;font-size:.72rem;line-height:1.5">
     ⚠️ <b>Cálculo orientativo.</b> Este resumen puede contener errores. Por favor, consulta con tu supervisor/a antes de tomar decisiones basadas en estos datos.
   </div>`;
   document.getElementById("resumenContent").innerHTML=html;
@@ -1210,39 +1691,41 @@ function checkPin(){
     document.getElementById("pinError").style.display="block";
     return;
   }
-  const onOk=()=>{
-    if(isAdminLogin) localStorage.setItem("enf_admin","1");
-    enterApp();
-  };
-  const onFail=()=>{
-    document.getElementById("pinError").textContent=t("codeWrong");
-    document.getElementById("pinError").style.display="block";
-    document.getElementById("pinInput").value="";
-  };
   if(db){
-    db.ref("enf_pins/"+userRow).once("value").then(snap=>{
+    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
       const stored=snap.val()||"0000";
-      if(pin===stored) onOk(); else onFail();
-    }).catch(()=>onOk());
+      if(pin===stored){
+        enterApp();
+      } else {
+        document.getElementById("pinError").textContent=t("codeWrong");
+        document.getElementById("pinError").style.display="block";
+        document.getElementById("pinInput").value="";
+      }
+    }).catch(()=>enterApp());
   } else {
-    const stored=localStorage.getItem("enf_pin_"+userRow)||"0000";
-    if(pin===stored) onOk(); else onFail();
+    const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
+    if(pin===stored){enterApp();}
+    else {
+      document.getElementById("pinError").textContent=t("codeWrong");
+      document.getElementById("pinError").style.display="block";
+      document.getElementById("pinInput").value="";
+    }
   }
 }
 
 function enterApp(){
-  localStorage.setItem("enf_verified_"+userRow,"1");
+  localStorage.setItem("tcaes_verified_"+userRow,"1");
   document.getElementById("nameScreen").style.display="none";
   initApp();
   setTimeout(()=>initProposals(),1000);
-  setTimeout(()=>{renderMiTurno();showTab(getDefaultTab());},500);
+  setTimeout(()=>{renderMiTurno();showTab("mi");},500);
   setTimeout(()=>checkPinLock(),700);
   setTimeout(()=>checkLegalDisclaimer(),900);
 }
 
 function checkPinLock(){
   if(!db){pinLocked=false;return;}
-  db.ref("enf_pins/"+userRow).once("value").then(snap=>{
+  db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
     const stored=snap.val();
     pinLocked=(!stored||stored==="0000");
     const banner=document.getElementById("pinLockBanner");
@@ -1250,6 +1733,37 @@ function checkPinLock(){
     if(pinLocked)showPinWarn();
     render();renderMiTurno();renderProposals();
   }).catch(()=>{pinLocked=false;});
+}
+
+const LEGAL_VERSION="1";
+function legalKey(){return "tcaes_legal_v"+LEGAL_VERSION+"_"+userRow;}
+function checkLegalDisclaimer(){
+  if(!userRow)return;
+  if(!localStorage.getItem(legalKey())){
+    showLegalModal(true);
+  }
+}
+function showLegalModal(mandatory){
+  document.getElementById("legalTitle").textContent=t("legalTitle");
+  document.getElementById("legalBody").innerHTML=t("legalBody");
+  document.getElementById("legalAcceptBtn").style.display=mandatory?"block":"none";
+  document.getElementById("legalCloseBtn").style.display=mandatory?"none":"block";
+  document.getElementById("overlayLegal").classList.add("open");
+}
+function closeLegal(){
+  document.getElementById("overlayLegal").classList.remove("open");
+}
+function acceptLegal(){
+  if(!confirm(t("legalConfirm")))return;
+  localStorage.setItem(legalKey(),"1");
+  if(db){
+    db.ref("legal_acceptances/"+userRow).set({
+      name:userName,
+      version:LEGAL_VERSION,
+      date:new Date().toLocaleString("es-ES")
+    }).catch(()=>{});
+  }
+  closeLegal();
 }
 
 function showPinWarn(){
@@ -1269,14 +1783,14 @@ function changePin(){
   const oldPin=prompt(t("currentCodePrompt"));
   if(!oldPin) return;
   if(db){
-    db.ref("enf_pins/"+userRow).once("value").then(snap=>{
+    db.ref("tcaes_pins/"+userRow).once("value").then(snap=>{
       const stored=snap.val()||"0000";
       if(oldPin!==stored){alert(t("codeWrong"));return;}
       const newPin=prompt(t("newCodePrompt"));
       if(!newPin||!/^[0-9]{4}$/.test(newPin)){alert(t("codeWrongLen"));return;}
       const confirm2=prompt(t("repeatCodePrompt"));
       if(newPin!==confirm2){alert(t("codesMismatch"));return;}
-      db.ref("enf_pins/"+userRow).set(newPin).then(()=>{
+      db.ref("tcaes_pins/"+userRow).set(newPin).then(()=>{
         alert(t("codeChangedOk"));
         checkPinLock();
       });
@@ -1289,8 +1803,11 @@ function changePin(){
 let proposals={}, currentPropKey=null, propFromDay=null, dayActionCtx=null;
 
 function initProposals(){
-  if(!db){setTimeout(initProposals,1000);return;}
-  db.ref("enf_proposals").on("value",snap=>{
+  if(!db){
+    setTimeout(initProposals,1000); // retry if db not ready
+    return;
+  }
+  db.ref("tcaes_proposals").on("value",snap=>{
     proposals=snap.val()||{};
     updatePropBadge();
     const v=document.getElementById("view-props");
@@ -1299,7 +1816,7 @@ function initProposals(){
 }
 
 function updatePropBadge(){
-  const n=Object.values(proposals).filter(p=>Number(p.to)===Number(userRow)&&p.status==="pending").length;
+  const n=Object.values(proposals).filter(p=>p.to===userRow&&p.status==="pending").length;
   const b=document.getElementById("propBadge");
   if(b){b.textContent=n;b.style.display=n>0?"inline-flex":"none";}
   const mb=document.getElementById("menuBadge");
@@ -1312,6 +1829,15 @@ function openDayAction(day,ri,di,dk,turno){
   const dow=(date.getDay()+6)%7;
   document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+day+"/"+(miMonth+1)+"/"+miYear;
   document.getElementById("dayActionTurn").textContent=turno||t("libre");
+  const cardDiv=document.getElementById("dayActionCard");
+  if(cardDiv){
+    if(userRow===4){
+      const isToday=date.toDateString()===new Date().toDateString();
+      cardDiv.innerHTML=dayCardHTML(date,isToday);
+    } else {
+      cardDiv.innerHTML="";
+    }
+  }
   document.getElementById("overlayDayAction").classList.add("open");
 }
 function closeDayAction(){
@@ -1340,11 +1866,11 @@ function openPropModal(dateKey,turno){
   if(pd)pd.textContent=t("tuTurnoDel")+" "+dy+"/"+mo+"/"+yr+": "+(turno||"");
   const sel=document.getElementById("propPerson");
   if(sel){
-    sel.innerHTML='<option value="">'+t("selecciona")+'</option>';
-    PEOPLE_ENF.forEach((p,i)=>{if(i+1!==userRow)sel.innerHTML+='<option value="'+(i+1)+'">'+p.name+'</option>';});
+    sel.innerHTML='<option value="" id="propPersonDefaultOpt">'+t("selecciona")+'</option>';
+    PEOPLE.forEach((p,i)=>{if(i+1!==userRow)sel.innerHTML+='<option value="'+(i+1)+'">'+p.name+'</option>';});
   }
   const ptd=document.getElementById("propTheirDay");
-  if(ptd)ptd.innerHTML='<option value="">'+t("primeroSelecciona")+'</option>';
+  if(ptd)ptd.innerHTML='<option value="" id="propTheirDayDefaultOpt">'+t("primeroSelecciona")+'</option>';
   const pc=document.getElementById("propComment");
   if(pc)pc.value="";
   document.getElementById("overlayProp").classList.add("open");
@@ -1359,7 +1885,7 @@ function loadPersonDays(){
   if(!pi)return;
   const sel=document.getElementById("propTheirDay");
   sel.innerHTML='<option value="">'+t("cargando")+'</option>';
-  const person=PEOPLE_ENF[pi-1];
+  const person=PEOPLE[pi-1];
   const today=new Date();
   const opts=[];
   let d=new Date(today);
@@ -1370,7 +1896,7 @@ function loadPersonDays(){
     const ri=rowFor(person.startRow,mon);
     const ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
     const ov=window.dateOverrides[(pi-1)+"_"+ds];
-    const cell=ov!==undefined?ov:ROTA_ENF[ri][dow];
+    const cell=ov!==undefined?ov:ROTA[ri][dow];
     const tv=cell?cell[0]:null;
     if(tv)opts.push({dk:(pi-1)+"_"+ds,t:tv,label:String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+" ("+tv+")"});
     d.setDate(d.getDate()+1);
@@ -1389,11 +1915,11 @@ function sendProposal(){
   if(!propFromDay)return;
   if(!db){alert(t("sinConexionSimple"));return;}
   const prop={from:userRow,fromName:userName,fromDay:propFromDay.dateKey,fromTurn:propFromDay.turno,
-    to:toPi,toName:PEOPLE_ENF[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
+    to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
     commentFrom:comment,commentTo:"",createdAt:new Date().toLocaleString("es-ES")};
-  db.ref("enf_proposals").push(prop).then(()=>{
+  db.ref("tcaes_proposals").push(prop).then(()=>{
     closePropModal();
-    alert(t("propuestaEnviada")+" "+PEOPLE_ENF[toPi-1].name);
+    alert(t("propuestaEnviada")+" "+PEOPLE[toPi-1].name);
   }).catch(()=>alert(t("errorEnviar")));
 }
 
@@ -1426,68 +1952,97 @@ function respondProposal(decision){
   const p=proposals[currentPropKey];
   const comment=(document.getElementById("respondComment").value||"").trim();
   if(decision==="accepted"){
+    // fromDay key: "{fromPi}_{fromDate}" e.g. "3_20260708"
+    // toDay key: "{toPi}_{toDate}" e.g. "13_20260731"
     const fromPi=Number(p.from)-1;
     const toPi=Number(p.to)-1;
-    const fromDate=(p.fromDay||"").split("_")[1];
-    const toDate=(p.toDay||"").split("_")[1];
+    const fromDate=(p.fromDay||"").split("_")[1]; // e.g. "20260708"
+    const toDate=(p.toDay||"").split("_")[1];     // e.g. "20260731"
+    // fromTurn = what "from" person had on fromDate
     const fromTurn=p.fromTurn||"L";
+    // toTurn = what "to" person had on toDate
     const toTurn=p.toTurn||"L";
+    // Swap: from person now has toTurn on toDate, to person now has fromTurn on fromDate
+    // Also free up original days
     const updates={};
-    updates["enf_changes/"+fromPi+"_"+fromDate]="L";
-    updates["enf_changes/"+fromPi+"_"+toDate]=toTurn;
-    updates["enf_changes/"+toPi+"_"+toDate]="L";
-    updates["enf_changes/"+toPi+"_"+fromDate]=fromTurn;
+    updates["rota_changes/"+fromPi+"_"+fromDate]="L"; // from person free on original day
+    updates["rota_changes/"+fromPi+"_"+toDate]=toTurn; // from person works to person's day
+    updates["rota_changes/"+toPi+"_"+toDate]="L"; // to person free on original day
+    updates["rota_changes/"+toPi+"_"+fromDate]=fromTurn; // to person works from person's day
     db.ref().update(updates);
   }
-  db.ref("enf_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
+  db.ref("tcaes_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
     closeRespondModal();
-    if(decision==="accepted"){alert("✅ Cambio aceptado e aplicado");render();}
-    else alert("❌ Proposta rexeitada");
+    if(decision==="accepted"){alert(t("cambioAplicado"));render();}
+    else alert(t("propuestaRechazada"));
   });
 }
 
 function cancelProposal(key){
   if(pinLocked){showPinWarn();return;}
-  if(!confirm("¿Cancelar esta proposta?"))return;
-  db.ref("enf_proposals/"+key).update({status:"cancelled"});
+  if(!confirm(t("confirmCancelar")))return;
+  db.ref("tcaes_proposals/"+key).update({status:"cancelled"});
 }
 
 function renderProposals(){
   const div=document.getElementById("propsContent");
   if(!div)return;
-  if(!db&&Object.keys(proposals).length===0){
-    div.innerHTML='<p style="color:#c62828;font-size:.82rem">⚠️ Sen conexión. Recarga a páxina.</p>';return;
+  // Debug: show state
+  const totalProps=Object.keys(proposals).length;
+  console.log("renderProposals: userRow="+userRow+", total proposals="+totalProps+", db="+!!db);
+  if(totalProps===0 && !db){
+    div.innerHTML='<p style="color:#c62828;font-size:.82rem">'+t("sinConexion")+'</p>';
+    return;
   }
   const keys=Object.keys(proposals).filter(k=>{
     const p=proposals[k];
     return Number(p.from)===Number(userRow)||Number(p.to)===Number(userRow);
   });
-  if(keys.length===0){div.innerHTML='<p style="color:var(--mu);font-size:.82rem">Non tes propostas de cambio.</p>';return;}
+  if(keys.length===0){
+    div.innerHTML='<p style="color:var(--mu);font-size:.82rem">'+t("sinPropuestas")+'</p>';
+    return;
+  }
   const fmt=ds=>ds?ds.slice(6,8)+"/"+ds.slice(4,6):"?";
   let html="";
-  keys.sort((a,b)=>{const ord={pending:0,accepted:1,rejected:2,cancelled:3};return (ord[proposals[a].status]||3)-(ord[proposals[b].status]||3);}).forEach(key=>{
+  keys.sort((a,b)=>{
+    // Pendientes primero, luego más recientes
+    const ord={pending:0,accepted:1,rejected:2,cancelled:3};
+    const sd=(ord[proposals[a].status]||3)-(ord[proposals[b].status]||3);
+    if(sd!==0)return sd;
+    return (proposals[b].createdAt||"").localeCompare(proposals[a].createdAt||"");
+  }).forEach(key=>{
     const p=proposals[key];
     const isFrom=Number(p.from)===Number(userRow);
-    const slabel=p.status==="pending"?"⏳ Pendente":p.status==="accepted"?"✅ Aceptado":p.status==="rejected"?"❌ Rexeitado":"🚫 Cancelado";
+    const slabel=p.status==="pending"?t("pendiente"):p.status==="accepted"?t("aceptado"):p.status==="rejected"?t("rechazado"):t("cancelado");
     const ccls=p.status==="accepted"?"accepted":p.status==="pending"?"pending":"rejected";
     const fromDs=(p.fromDay||"").split("_")[1];
     const toDs=(p.toDay||"").split("_")[1];
     html+='<div class="prop-card '+ccls+'" style="margin-bottom:12px">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:.75rem;font-weight:700">'+slabel+'</span><span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
-    html+='<p style="font-size:.82rem">'+(isFrom?"📤 Proposta a <b>"+p.toName+"</b>":"📥 Proposta de <b>"+p.fromName+"</b>")+'</p>';
-    html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">🔄 <b>'+p.fromName+'</b> da o seu <b>'+(p.fromTurn||"?")+'</b> do '+fmt(fromDs)+'<br>🔄 <b>'+p.toName+'</b> da o seu turno do '+fmt(toDs)+'</p>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html+='<span style="font-size:.75rem;font-weight:700">'+slabel+'</span>';
+    html+='<span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
+    html+='<p style="font-size:.82rem">'+(isFrom?t("propuestaA")+" <b>"+p.toName+"</b>":t("propuestaDe")+" <b>"+p.fromName+"</b>")+'</p>';
+    html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
+    html+='🔄 <b>'+p.fromName+'</b> '+t("daSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' '+fmt(fromDs)+'<br>';
+    html+='🔄 <b>'+p.toName+'</b> '+t("daSu")+' turno '+t("delDia")+' '+fmt(toDs)+'</p>';
     if(pinLocked){
-      html+='<p style="font-size:.75rem;color:#c0392b;margin-top:4px">🔒 Cambia o teu PIN para ver os comentarios</p>';
+      html+='<p style="font-size:.75rem;color:#c0392b;margin-top:4px">'+t("commentLockedLong")+'</p>';
     } else {
-      if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
-      if(p.commentTo)html+='<p style="font-size:.75rem;color:#555">💬 '+p.toName+': "'+p.commentTo+'"</p>';
+      if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
+      if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.toName+': "'+p.commentTo+'"</p>';
     }
-    if(p.status==="pending"&&!isFrom&&!pinLocked)html+='<button onclick="openRespondModal(\'' + key + '\')">Ver e responder</button>';
-    if(p.status==="pending"&&isFrom&&!pinLocked)html+='<button onclick="cancelProposal(\'' + key + '\')">Cancelar proposta</button>';
+    if(p.status==="pending"&&!pinLocked){
+      if(!isFrom){
+        html+='<button onclick="openRespondModal(\'' +key+ '\')" style="width:100%;margin-top:10px;padding:10px;border-radius:8px;background:#4caf50;color:#fff;border:none;cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">'+t("verYResponder")+'</button>';
+      } else {
+        html+='<button onclick="cancelProposal(\'' +key+ '\')" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:var(--s2);color:var(--tx);border:1px solid var(--bd);cursor:pointer;font-weight:600;font-family:\'DM Mono\',monospace">'+t("cancelarPropuesta")+'</button>';
+      }
+    }
     html+='</div>';
   });
   div.innerHTML=html;
 }
+
 
 function closeNewFeature(){
   document.getElementById("overlayNewFeature").classList.remove("open");
@@ -1495,19 +2050,11 @@ function closeNewFeature(){
 
 function closeModal(){document.getElementById("overlay").classList.remove("open");editCtx=null;}
 function outsideClose(e){if(e.target.id==="overlay")closeModal();}
-window.onload=()=>{
-  applyLangStatic();
-  if(userName){render();renderMiTurno();showTab(getDefaultTab());setTimeout(goToToday,300);}
-};
-</script>
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
-}
+window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showTab("mi");setTimeout(goToToday,300);}};
 </script>
 <!-- PROPOSALS VIEW -->
 <div id="view-props" style="flex:1;overflow:auto;padding:14px 16px;display:none">
-  <h2 style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:14px" id="propsHeading">🔄 Propostas de cambio</h2>
+  <h2 id="propsHeading" style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:14px">🔄 Propuestas de cambio</h2>
   <div id="propsContent"></div>
 </div>
 
@@ -1515,9 +2062,10 @@ if("serviceWorker" in navigator){
 <div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
   <div class="modal">
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
-    <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:20px;text-align:center"></div>
+    <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
+    <div id="dayActionCard"></div>
     <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
-    <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Propoñer cambio con compañeira/o</button>
+    <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
     <button id="dayActionBackBtn" onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
   </div>
 </div>
@@ -1525,18 +2073,18 @@ if("serviceWorker" in navigator){
 <!-- PROPOSAL MODAL -->
 <div class="overlay" id="overlayProp" onclick="if(event.target.id==='overlayProp')closePropModal()">
   <div class="modal">
-    <h2 id="propModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Propoñer cambio</h2>
+    <h2 id="propModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Proponer cambio</h2>
     <p id="propMyDay" style="font-size:.78rem;color:var(--mu);margin-bottom:12px"></p>
-    <div class="slabel" id="propPersonLabel">Compañeira/o:</div>
+    <div class="slabel" id="propPersonLabel">Compañera/o:</div>
     <select id="propPerson" onchange="loadPersonDays()" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
-      <option value="">Selecciona...</option>
+      <option value="" id="propPersonDefaultOpt">Selecciona...</option>
     </select>
-    <div class="slabel" id="propTheirDayLabel" style="margin-top:10px">Día que queres dela/el:</div>
+    <div class="slabel" id="propTheirDayLabel" style="margin-top:10px">Día que quieres de ella/él:</div>
     <select id="propTheirDay" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
-      <option value="">Primeiro selecciona a persoa</option>
+      <option value="" id="propTheirDayDefaultOpt">Primero selecciona la persona</option>
     </select>
     <div class="slabel" id="propCommentLabel" style="margin-top:10px">Comentario:</div>
-    <input type="text" id="propComment" placeholder="Explica o motivo...">
+    <input type="text" id="propComment" placeholder="Explica el motivo...">
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="mbtn mbtn-ghost" id="propBackBtn" onclick="closePropModal()" style="flex:1">← Volver</button>
       <button class="mbtn mbtn-save" id="propSendBtn" onclick="sendProposal()" style="flex:1">Enviar</button>
@@ -1547,14 +2095,72 @@ if("serviceWorker" in navigator){
 <!-- RESPOND MODAL -->
 <div class="overlay" id="overlayRespond" onclick="if(event.target.id==='overlayRespond')closeRespondModal()">
   <div class="modal">
-    <h2 id="respondModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px">🔄 Responder proposta</h2>
+    <h2 id="respondModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px">🔄 Responder propuesta</h2>
     <div id="respondContent"></div>
-    <div class="slabel" id="respondCommentLabel">O teu comentario (opcional):</div>
-    <input type="text" id="respondComment" placeholder="A túa resposta...">
+    <div class="slabel" id="respondCommentLabel">Tu comentario (opcional):</div>
+    <input type="text" id="respondComment" placeholder="Tu respuesta...">
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="mbtn mbtn-ghost" id="respondBackBtn" onclick="closeRespondModal()" style="flex:1">← Volver</button>
-      <button class="mbtn mbtn-del" id="respondRejectBtn" onclick="respondProposal('rejected')" style="flex:1">Rexeitar</button>
+      <button class="mbtn mbtn-del" id="respondRejectBtn" onclick="respondProposal('rejected')" style="flex:1">Rechazar</button>
       <button class="mbtn mbtn-save" id="respondAcceptBtn" onclick="respondProposal('accepted')" style="flex:1">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE PEOPLE MODAL -->
+<div class="overlay" id="overlayComparePeople" onclick="if(event.target.id==='overlayComparePeople')closeComparePeople()">
+  <div class="modal">
+    <h2 id="comparePeopleTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">👥 Comparar turnos</h2>
+    <p id="comparePeopleSub" style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Elige qué compañeras/os quieres ver en la tabla.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="mbtn mbtn-ghost" id="selectAllPeopleBtn" onclick="selectAllPeople()" style="flex:1">Todas</button>
+      <button class="mbtn mbtn-ghost" id="selectNonePeopleBtn" onclick="selectNonePeople()" style="flex:1">Ninguna</button>
+    </div>
+    <div id="peopleCheckList" style="max-height:48vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <button class="mbtn mbtn-save" id="closeComparePeopleBtn" onclick="closeComparePeople()" style="width:100%;margin-top:14px">Cerrar</button>
+  </div>
+</div>
+
+<!-- VÍDEO DE AYUDA -->
+<div class="overlay" id="overlayVideo" onclick="if(event.target.id==='overlayVideo')closeVideoHelp()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 id="videoTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem">🎥 Vídeo de ayuda</h2>
+      <span onclick="closeVideoHelp()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;background:#000">
+      <iframe id="helpVideoFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- DETALLE DE SUGERENCIA (hilo de respuestas) -->
+<div class="overlay" id="overlaySugDetail" onclick="if(event.target.id==='overlaySugDetail')closeSugDetail()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <h2 id="sugDetailTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem">💡 Sugerencia</h2>
+      <span onclick="closeSugDetail()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <div id="sugDetailOriginal" style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px"></div>
+    <div id="sugDetailReplies" style="max-height:32vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <textarea id="sugReplyText" rows="2" style="width:100%;padding:9px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe por qué (opcional en de acuerdo/en contra)..."></textarea>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="mbtn mbtn-ghost" id="sugAgreeBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('agree')">👍 De acuerdo</button>
+      <button class="mbtn mbtn-ghost" id="sugDisagreeBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('disagree')">👎 En contra</button>
+      <button class="mbtn mbtn-save" id="sugCommentBtn" style="flex:1;font-size:.78rem" onclick="sendSugReply('neutral')">💬 Comentar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUGERIR ALGO -->
+<div class="overlay" id="overlaySugerir" onclick="if(event.target.id==='overlaySugerir')closeSuggestBox()">
+  <div class="modal">
+    <h2 id="sugerirTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">💡 Sugerir algo</h2>
+    <p id="sugerirSubEl" style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.</p>
+    <textarea id="suggestText" rows="5" style="width:100%;padding:10px;border:1.5px solid var(--bd);border-radius:9px;font-family:'DM Mono',monospace;font-size:.85rem;color:var(--tx);background:var(--s1);resize:vertical" placeholder="Escribe aquí tu sugerencia..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="mbtn mbtn-ghost" id="sugerirCancelBtn" onclick="closeSuggestBox()" style="flex:1">Cancelar</button>
+      <button class="mbtn mbtn-save" id="sendSuggestBtn" onclick="sendSuggestion()" style="flex:1">Enviar</button>
     </div>
   </div>
 </div>
@@ -1571,56 +2177,43 @@ if("serviceWorker" in navigator){
     <ol style="font-size:.78rem;color:var(--tx);margin:0 0 12px 18px;line-height:1.9">
       <li>Vai á pestaña <b>👤 Mi turno</b></li>
       <li>Toca calquera día traballado</li>
-      <li>Escolle <b>🔄 Propoñer cambio con compañeira/o</b></li>
+      <li>Escolle <b>🔄 Proponer cambio con compañeira/o</b></li>
       <li>Selecciona a persoa e o día que queres</li>
       <li>Engade un comentario e envía</li>
     </ol>
-    <p style="font-size:.78rem;color:var(--mu);line-height:1.6">A outra persoa verá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar.</p>
+    <p style="font-size:.78rem;color:var(--mu);line-height:1.6">A outra persoa verá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar. Se acepta, o cambio aplícase automaticamente.</p>
     <button onclick="closeNewFeature()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;font-size:.88rem">Entendido ✓</button>
   </div>
 </div>
 
-<!-- LEGAL DISCLAIMER MODAL -->
+<div class="overlay" id="overlayPinWarn">
+  <div class="modal">
+    <h2 id="pinWarnTitle" style="font-family:Syne,sans-serif;font-size:1rem;color:#c0392b;margin-bottom:10px">🔒 Cambia tu código</h2>
+    <p id="pinWarnBody" style="font-size:.85rem;color:var(--tx);line-height:1.6;margin-bottom:14px">Sigues usando el código de por defecto (<b>0000</b>). Mientras no lo cambies por uno tuyo, puedes ver los turnos, pero <b>no podrás hacer cambios, proponer turnos ni ver comentarios</b> de nadie.</p>
+    <button id="changeNowBtn" onclick="changePinFromWarn()" style="width:100%;padding:12px;border-radius:8px;background:#c0392b;color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;margin-bottom:8px">Cambiar código ahora</button>
+    <button id="notNowBtn" onclick="closePinWarn()" style="width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Ahora no</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlayUnitInfo" onclick="if(event.target.id==='overlayUnitInfo')closeUnitInfo()">
+  <div class="modal" id="unitInfoContent"></div>
+</div>
+
 <div class="overlay" id="overlayLegal">
   <div class="modal">
     <h2 id="legalTitle" style="font-family:Syne,sans-serif;font-size:1rem;color:var(--I);margin-bottom:10px">📜 Aviso legal</h2>
     <div id="legalBody" style="font-size:.82rem;color:var(--tx);line-height:1.7;margin-bottom:16px"></div>
     <button id="legalAcceptBtn" onclick="acceptLegal()" style="display:none;width:100%;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace">Acepto</button>
-    <button id="legalCloseBtn" onclick="closeLegal()" style="display:none;width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Pechar</button>
+    <button id="legalCloseBtn" onclick="closeLegal()" style="display:none;width:100%;padding:10px;border-radius:8px;background:var(--s2);color:var(--mu);border:1px solid var(--bd);cursor:pointer;font-family:'DM Mono',monospace">Cerrar</button>
   </div>
 </div>
 
-<!-- COMPARE PEOPLE MODAL -->
-<div class="overlay" id="overlayComparePeople" onclick="if(event.target.id==='overlayComparePeople')closeComparePeople()">
-  <div class="modal">
-    <h2 id="comparePeopleTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">👥 Comparar quendas</h2>
-    <p id="comparePeopleSub" style="font-size:.78rem;color:var(--mu);margin-bottom:12px">Escolle que compañeiras/os queres ver na táboa.</p>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="mbtn mbtn-ghost" id="selectAllPeopleBtn" onclick="selectAllPeople()" style="flex:1">Todas</button>
-      <button class="mbtn mbtn-ghost" id="selectNonePeopleBtn" onclick="selectNonePeople()" style="flex:1">Ningunha</button>
-    </div>
-    <div id="peopleCheckList" style="max-height:48vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
-    <button class="mbtn mbtn-save" id="closeComparePeopleBtn" onclick="closeComparePeople()" style="width:100%;margin-top:14px">Pechar</button>
-  </div>
-</div>
-
-<!-- VÍDEO DE AXUDA -->
-<div class="overlay" id="overlayVideo" onclick="if(event.target.id==='overlayVideo')closeVideoHelp()">
-  <div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2 id="videoTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem">🎥 Vídeo de axuda</h2>
-      <span onclick="closeVideoHelp()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
-    </div>
-    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;background:#000">
-      <iframe id="helpVideoFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>
-  </div>
-</div>
-
-<!-- BACK BUTTON SUPPORT -->
 <script>
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayPinWarn","overlayComparePeople","overlayLegal","overlayVideo","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlaySugerir","overlaySugDetail","overlayVideo","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
