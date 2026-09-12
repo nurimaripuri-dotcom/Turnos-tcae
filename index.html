@@ -228,6 +228,7 @@ setTimeout(function(){
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
       <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
       <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
+      <button class="menu-item" id="menuVideoBtn" onclick="closeMenu();openVideoHelp()">🎥 Vídeo de ayuda</button>
       <button class="menu-item" id="menuLegalBtn" onclick="closeMenu();showLegalModal(false)">📜 Aviso legal</button>
       <div class="menu-sep"></div>
       <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
@@ -337,6 +338,17 @@ let hiddenPeople=new Set(JSON.parse(localStorage.getItem("tcaes_hidden_people")|
 function saveHiddenPeople(){localStorage.setItem("tcaes_hidden_people",JSON.stringify([...hiddenPeople]));}
 function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
 function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
+
+const HELP_VIDEO_ID="f2ntwQXH-YA";
+function openVideoHelp(){
+  document.getElementById("videoTitleEl").textContent=t("videoTitle");
+  document.getElementById("helpVideoFrame").src="https://www.youtube.com/embed/"+HELP_VIDEO_ID+"?autoplay=1";
+  document.getElementById("overlayVideo").classList.add("open");
+}
+function closeVideoHelp(){
+  document.getElementById("overlayVideo").classList.remove("open");
+  document.getElementById("helpVideoFrame").src="";
+}
 
 function openSuggestBox(){
   document.getElementById("suggestText").value="";
@@ -527,7 +539,8 @@ const I18N={
     diaVacaciones:"vacaciones", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
     nadieMasTurno:"nadie más ese turno",
     turnoM:"Mañana", turnoT:"Tarde", turnoN:"Noche",
-    enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: "
+    enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: ",
+    menuVideo:"🎥 Vídeo de ayuda", videoTitle:"🎥 Vídeo de ayuda"
   },
   gl:{
     askName:"Cal é o teu nome?", namePh:"Escribe o teu nome...", next:"Seguinte →",
@@ -596,7 +609,8 @@ const I18N={
     diaVacaciones:"vacacións", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
     nadieMasTurno:"ninguén máis nesa quenda",
     turnoM:"Mañá", turnoT:"Tarde", turnoN:"Noite",
-    enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: "
+    enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: ",
+    menuVideo:"🎥 Vídeo de axuda", videoTitle:"🎥 Vídeo de axuda"
   }
 };
 function t(key){return (I18N[lang]&&I18N[lang][key])!==undefined?I18N[lang][key]:key;}
@@ -644,6 +658,7 @@ function applyLangStatic(){
   const tabEnfLbl=document.getElementById("tab-enf-label"); if(tabEnfLbl)tabEnfLbl.textContent=t("tabEnf");
   const tabSugLbl=document.getElementById("tab-sugerencias-label"); if(tabSugLbl)tabSugLbl.textContent=t("tabSugerencias");
   const menuSugBtn=document.getElementById("menuSuggestBtn"); if(menuSugBtn)menuSugBtn.textContent=t("menuSugerir");
+  const menuVidBtn=document.getElementById("menuVideoBtn"); if(menuVidBtn)menuVidBtn.textContent=t("menuVideo");
   const lAccept=document.getElementById("legalAcceptBtn"); if(lAccept)lAccept.textContent=t("legalAccept");
   const lClose=document.getElementById("legalCloseBtn"); if(lClose)lClose.textContent=t("cerrar");
   const themeBtn=document.getElementById("menuThemeBtn");
@@ -2099,6 +2114,19 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
   </div>
 </div>
 
+<!-- VÍDEO DE AYUDA -->
+<div class="overlay" id="overlayVideo" onclick="if(event.target.id==='overlayVideo')closeVideoHelp()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 id="videoTitleEl" style="font-family:Syne,sans-serif;font-size:.95rem">🎥 Vídeo de ayuda</h2>
+      <span onclick="closeVideoHelp()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
+    </div>
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;background:#000">
+      <iframe id="helpVideoFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 <!-- DETALLE DE SUGERENCIA (hilo de respuestas) -->
 <div class="overlay" id="overlaySugDetail" onclick="if(event.target.id==='overlaySugDetail')closeSugDetail()">
   <div class="modal">
@@ -2178,11 +2206,12 @@ if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 window.addEventListener("popstate",function(){
-  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlaySugerir","overlaySugDetail","overlay"];
+  const modals=["overlayRespond","overlayProp","overlayDayAction","overlayNewFeature","overlayUnitInfo","overlayPinWarn","overlayComparePeople","overlaySugerir","overlaySugDetail","overlayVideo","overlay"];
   for(const id of modals){
     const el=document.getElementById(id);
     if(el&&el.classList.contains("open")){
       el.classList.remove("open");
+      if(id==="overlayVideo"){const f=document.getElementById("helpVideoFrame");if(f)f.src="";}
       history.pushState(null,"","");
       return;
     }
