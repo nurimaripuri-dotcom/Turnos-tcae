@@ -155,6 +155,14 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 .prop-btn.reject{background:#ef5350;color:#fff}
 .prop-btn.cancel{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
 .log-popup{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:.75rem;z-index:500;max-width:320px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+@keyframes videoPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.45)}
+  50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}
+}
+.video-promo-banner{
+  animation:videoPulse 1.8s ease-out infinite;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -540,7 +548,8 @@ const I18N={
     nadieMasTurno:"nadie más ese turno",
     turnoM:"Mañana", turnoT:"Tarde", turnoN:"Noche",
     enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: ",
-    menuVideo:"🎥 Vídeo de ayuda", videoTitle:"🎥 Vídeo de ayuda"
+    menuVideo:"🎥 Vídeo de ayuda", videoTitle:"🎥 Vídeo de ayuda",
+    videoPromoBanner:"🎥 Nuevo: vídeo de ayuda de la app — toca para verlo"
   },
   gl:{
     askName:"Cal é o teu nome?", namePh:"Escribe o teu nome...", next:"Seguinte →",
@@ -610,7 +619,8 @@ const I18N={
     nadieMasTurno:"ninguén máis nesa quenda",
     turnoM:"Mañá", turnoT:"Tarde", turnoN:"Noite",
     enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: ",
-    menuVideo:"🎥 Vídeo de axuda", videoTitle:"🎥 Vídeo de axuda"
+    menuVideo:"🎥 Vídeo de axuda", videoTitle:"🎥 Vídeo de axuda",
+    videoPromoBanner:"🎥 Novo: vídeo de axuda da app — toca para velo"
   }
 };
 function t(key){return (I18N[lang]&&I18N[lang][key])!==undefined?I18N[lang][key]:key;}
@@ -1344,11 +1354,7 @@ function computeDayInfo(dateObj){
 function computeTodayInfo(){return computeDayInfo(new Date());}
 function dayCardHTML(dateObj,isToday){
   const info=computeDayInfo(dateObj);
-  const prefix=isToday?t("hoyPrefix"):t("eseDiaPrefix");
-  if(!info.halves.length){
-    const msg=info.t==="V"?`🏖 ${prefix} ${t("diaVacaciones")}`:info.t==="LD"?`📋 ${prefix} ${t("diaLD")}`:info.t==="/"?`↗️ ${prefix} ${t("diaSales")}`:`✅ ${prefix} ${t("diaLibras")}`;
-    return `<div style="background:var(--s2);border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center;font-weight:700;font-size:.95rem;flex-shrink:0">${msg}</div>`;
-  }
+  if(!info.halves.length)return "";
   const blocks=info.halves.map(([turno,unit])=>{
     const unitInfo=UNITS.find(x=>x[0]===unit);
     const unitLabel=unitInfo?unitInfo[1]:(unit||"—");
@@ -1435,6 +1441,7 @@ function renderMiTurno(){
   }
   html+=`</tbody></table>
   </div>`;
+  html+=`<div class="video-promo-banner" onclick="openVideoHelp()" style="background:var(--I);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;flex-shrink:0">${t("videoPromoBanner")}</div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   document.getElementById("miTurnoContent").onclick=function(e){
     const td=e.target.closest("td[data-ri]");
