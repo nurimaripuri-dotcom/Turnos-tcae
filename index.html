@@ -78,6 +78,10 @@ h1 em{color:var(--I);font-style:normal}
 .tab-btn{flex:1;padding:10px;border:none;background:transparent;font-family:"DM Mono",monospace;font-size:.82rem;cursor:pointer;color:var(--mu);border-bottom:3px solid transparent}
 .tab-btn.active{color:var(--I);border-bottom-color:var(--I);font-weight:600}
 .topbar-title{font-family:"Syne",sans-serif;font-size:.88rem;font-weight:700;padding:10px 6px;color:var(--tx)}
+.main-tabs{display:flex;flex:1;min-width:0}
+.main-tabs .tab-btn{padding:10px 2px;font-size:.78rem;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tab-hint{font-size:.68rem;color:var(--mu);padding:0 4px}
+.unit-legend{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 12px 0;font-size:.68rem;color:var(--mu)}
 .menu-wrap{position:relative;flex-shrink:0}
 .menu-btn{background:transparent;border:none;font-size:1.35rem;line-height:1;padding:8px 12px;cursor:pointer;color:var(--tx);position:relative;border-radius:8px}
 .menu-btn:active{background:var(--s2)}
@@ -222,13 +226,14 @@ setTimeout(function(){
 </div>
 <div id="pinLockBanner" style="display:none;background:#f8d7da;color:#721c24;padding:8px 14px;font-size:.78rem;text-align:center;cursor:pointer" onclick="showPinWarn()">🔒 Código por defecto activo — solo puedes ver, no editar. Toca aquí para cambiarlo.</div>
 <div class="tabs">
-  <div class="topbar-title" id="topbarTitle">👤 Mi turno</div>
+  <div class="main-tabs" id="mainTabs">
+    <button class="tab-btn active" id="mtab-mi" onclick="showTab('mi')">👤 Mi turno</button>
+    <button class="tab-btn" id="mtab-todos" onclick="showTab('todos')">📋 TCE</button>
+    <button class="tab-btn" id="mtab-enf" onclick="showTab('enf')">👥 DUE</button>
+  </div>
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)">⋮<span class="menu-badge" id="menuBadge" style="display:none"></span></button>
     <div class="menu-dropdown" id="menuDropdown">
-      <button class="menu-item" id="tab-mi" onclick="menuGoTab('mi')">👤 Mi turno</button>
-      <button class="menu-item" id="tab-todos" onclick="menuGoTab('todos')">📅 Todos</button>
-      <button class="menu-item" id="tab-enf" onclick="menuGoTab('enf')" style="display:none"><span id="tab-enf-label">👥 Enfermeras</span></button>
       <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none"><span id="tab-sugerencias-label">📬 Sugerencias</span> <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
       <div class="menu-sep"></div>
       <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
@@ -249,7 +254,8 @@ setTimeout(function(){
 </div>
 
 <div id="view-todos" style="flex:1;overflow:auto;display:none">
-  <div style="display:flex;justify-content:flex-end;padding:8px 12px 0">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px 0">
+    <span class="tab-hint" id="tceHint">✏️ Toca una casilla de tu fila para cambiar tu turno</span>
     <button id="comparePeopleBtn" onclick="openComparePeople()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.8rem;font-family:'DM Mono',monospace">👥 Comparar</button>
   </div>
 
@@ -268,6 +274,8 @@ setTimeout(function(){
 
 <!-- ENFERMERAS VIEW (solo consulta, solo Alberto) -->
 <div id="view-enf" style="flex:1;overflow:auto;display:none">
+  <div style="padding:8px 12px 0"><span class="tab-hint" id="dueHint">👁 Solo consulta</span></div>
+  <div class="unit-legend" id="dueLegend"></div>
   <div class="wrap" id="wrapEnf">
     <table id="tblEnf" style="border-collapse:collapse;width:max-content">
       <thead id="theadEnf"></thead>
@@ -527,7 +535,7 @@ const I18N={
     legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
     months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],
-    tabEnf:"👥 Enfermeras", tabSugerencias:"📬 Sugerencias",
+    tabEnf:"👥 DUE", tabTce:"📋 TCE", tabDue:"👥 DUE", tceHint:"✏️ Toca una casilla de tu fila para cambiar tu turno", newFeatTitle:"🆕 Novedades", newFeatHead:"Ahora hay 3 pestañas arriba", newFeatL1:"<b>👤 Mi turno</b>: tu calendario del mes", newFeatL2:"<b>📋 TCE</b>: el cuadrante de todas las TCE. Toca una casilla de <b>tu fila</b> para cambiar tu turno", newFeatL3:"<b>👥 DUE</b>: el cuadrante de las enfermeras (solo consulta)", newFeatFoot:"El resto de opciones (Cambios, código, idioma, vídeo…) siguen en el menú ⋮.", newFeatOk:"Entendido ✓", dueHint:"👁 Solo consulta", tabSugerencias:"📬 Sugerencias",
     menuSugerir:"💡 Sugerir algo", sugerirTitle:"💡 Sugerir algo",
     sugerirSub:"Ideas, fallos o mejoras para la app. Le llega directamente a Alberto.",
     sugerirPh:"Escribe aquí tu sugerencia...",
@@ -598,7 +606,7 @@ const I18N={
     legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
     months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"],
-    tabEnf:"👥 Enfermeiras", tabSugerencias:"📬 Suxestións",
+    tabEnf:"👥 DUE", tabTce:"📋 TCE", tabDue:"👥 DUE", tceHint:"✏️ Toca unha casiña da túa fila para cambiar a túa quenda", newFeatTitle:"🆕 Novidades", newFeatHead:"Agora hai 3 pestanas arriba", newFeatL1:"<b>👤 A miña quenda</b>: o teu calendario do mes", newFeatL2:"<b>📋 TCE</b>: o cadrante de todas as TCE. Toca unha casiña da <b>túa fila</b> para cambiar a túa quenda", newFeatL3:"<b>👥 DUE</b>: o cadrante das enfermeiras (só consulta)", newFeatFoot:"O resto de opcións (Cambios, código, idioma, vídeo…) seguen no menú ⋮.", newFeatOk:"Entendido ✓", dueHint:"👁 Só consulta", tabSugerencias:"📬 Suxestións",
     menuSugerir:"💡 Suxerir algo", sugerirTitle:"💡 Suxerir algo",
     sugerirSub:"Ideas, fallos ou melloras para a app. Chégalle directamente a Alberto.",
     sugerirPh:"Escribe aquí a túa suxestión...",
@@ -647,7 +655,7 @@ function toggleLang(){
   const rv=document.getElementById("view-resumen");
   if(rv&&rv.style.display!=="none"&&typeof renderResumen==="function")renderResumen();
 }
-function tabTitles(){return {mi:t("tabMi"),todos:(userRow===4?"📋 TCE":t("tabTodos")),props:t("tabCambios"),resumen:t("tabResumen"),enf:t("tabEnf"),sugerencias:t("tabSugerencias")};}
+function tabTitles(){return {mi:t("tabMi"),todos:t("tabTce"),props:t("tabCambios"),resumen:t("tabResumen"),enf:t("tabDue"),sugerencias:t("tabSugerencias")};}
 function applyLangStatic(){
   document.getElementById("askNameP").textContent=t("askName");
   document.getElementById("nameInput").placeholder=t("namePh");
@@ -660,12 +668,12 @@ function applyLangStatic(){
   document.getElementById("pinLockBanner").textContent=t("bannerCode");
   const title=document.getElementById("topbarTitle");
   if(title)title.textContent=tabTitles()[typeof currentTab!=="undefined"?currentTab:"mi"]||t("tabMi");
-  document.getElementById("tab-mi").textContent=t("menuVolver");
+  const _mt=(id,k)=>{const el=document.getElementById(id);if(el)el.textContent=t(k);};
+  _mt("mtab-mi","tabMi");_mt("mtab-todos","tabTce");_mt("mtab-enf","tabDue");_mt("tceHint","tceHint");_mt("dueHint","dueHint");
   document.getElementById("menuChangeCodeBtn").textContent=t("menuChangeCode");
   document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
   document.getElementById("menuLangBtn").textContent=t("menuLangTo");
   const mLegal=document.getElementById("menuLegalBtn"); if(mLegal)mLegal.textContent=t("menuLegal");
-  const tabEnfLbl=document.getElementById("tab-enf-label"); if(tabEnfLbl)tabEnfLbl.textContent=t("tabEnf");
   const tabSugLbl=document.getElementById("tab-sugerencias-label"); if(tabSugLbl)tabSugLbl.textContent=t("tabSugerencias");
   const menuSugBtn=document.getElementById("menuSuggestBtn"); if(menuSugBtn)menuSugBtn.textContent=t("menuSugerir");
   const menuVidBtn=document.getElementById("menuVideoBtn"); if(menuVidBtn)menuVidBtn.textContent=t("menuVideo");
@@ -805,11 +813,7 @@ function startDataListeners(){
       });
     });
     if(userRow===4){
-      // Solo Alberto: pestaña extra de solo consulta con el cuadrante de Enfermeras
-      const tabEnfBtn=document.getElementById("tab-enf");
-      if(tabEnfBtn)tabEnfBtn.style.display="flex";
-      const tabTodosBtn=document.getElementById("tab-todos");
-      if(tabTodosBtn)tabTodosBtn.textContent="📋 TCE";
+      // Solo Alberto (en pruebas): buzón de sugerencias
       const tabSugBtn=document.getElementById("tab-sugerencias");
       if(tabSugBtn)tabSugBtn.style.display="flex";
       db.ref("app_suggestions").on("value",snap=>{
@@ -825,60 +829,61 @@ function startDataListeners(){
         if(currentTab==="sugerencias")renderSugerencias();
         if(currentSugKey)renderSugDetail();
       },err=>console.log("Error leyendo app_suggestions:",err));
-      if(!enfListenersStarted){
-        enfListenersStarted=true;
-        const startEnfListeners=()=>{
-          if(window.enfFirebaseListenersAttached)return;
-          window.enfFirebaseListenersAttached=true;
-          db.ref("enf_changes").on("value",snap=>{
-            const raw=snap.val()||{};
-            window.enfDateOverrides={};
-            Object.entries(raw).forEach(([k,v])=>{
-              if(v===null){window.enfDateOverrides[k]=null;}
-              else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
-              else{window.enfDateOverrides[k]=v;}
-            });
-            enfDataError=null;
-            if(currentTab==="enf")renderEnfermeras();
-            if(currentTab==="mi")renderMiTurno();
-          },err=>{
-            console.log("Error leyendo enf_changes:",err);
-            enfDataError=(err&&err.message)||String(err);
-            if(currentTab==="enf")renderEnfermeras();
+    }
+    // Cuadrante de DUE (solo consulta) para todo el mundo
+    if(!enfListenersStarted){
+      enfListenersStarted=true;
+      const startEnfListeners=()=>{
+        if(window.enfFirebaseListenersAttached)return;
+        window.enfFirebaseListenersAttached=true;
+        db.ref("enf_changes").on("value",snap=>{
+          const raw=snap.val()||{};
+          window.enfDateOverrides={};
+          Object.entries(raw).forEach(([k,v])=>{
+            if(v===null){window.enfDateOverrides[k]=null;}
+            else if(typeof v==="object"&&!Array.isArray(v)){window.enfDateOverrides[k]=Object.values(v);}
+            else{window.enfDateOverrides[k]=v;}
           });
-          db.ref("enf_icons").on("value",snap=>{
-            enfChangeIcons=snap.val()||{};
-            if(currentTab==="enf")renderEnfermeras();
-          },err=>{console.log("Error leyendo enf_icons:",err);});
-        };
-        // Igual que hace la propia app de Enfermeras: esperamos a que la auth anónima
-        // esté lista antes de leer sus datos, porque sus reglas de Firebase la exigen
-        // (.read: "auth != null" — confirmado en la consola). Nunca leemos sin usuario.
-        const authRef=firebase.app("tcaes_app").auth();
-        try{
-          authRef.onAuthStateChanged(user=>{
-            if(user)startEnfListeners();
-          });
-        }catch(e){
-          console.log("Error esperando auth para Enfermeras:",e);
-          enfDataError=(e&&e.message)||String(e);
+          enfDataError=null;
           if(currentTab==="enf")renderEnfermeras();
-        }
-        const checkAuthRetry=(attempt)=>{
-          setTimeout(()=>{
-            if(window.enfFirebaseListenersAttached)return;
-            if(authRef.currentUser){startEnfListeners();return;}
-            if(attempt<3){
-              authRef.signInAnonymously().catch(e=>console.log("Reintento de auth anónima falló:",e));
-              checkAuthRetry(attempt+1);
-            } else {
-              enfDataError="no se pudo verificar la sesión anónima tras varios intentos (revisa si la autenticación anónima está activada en Firebase Console → Authentication → Sign-in method)";
-              if(currentTab==="enf")renderEnfermeras();
-            }
-          },4000);
-        };
-        checkAuthRetry(1);
+          if(currentTab==="mi")renderMiTurno();
+        },err=>{
+          console.log("Error leyendo enf_changes:",err);
+          enfDataError=(err&&err.message)||String(err);
+          if(currentTab==="enf")renderEnfermeras();
+        });
+        db.ref("enf_icons").on("value",snap=>{
+          enfChangeIcons=snap.val()||{};
+          if(currentTab==="enf")renderEnfermeras();
+        },err=>{console.log("Error leyendo enf_icons:",err);});
+      };
+      // Igual que hace la propia app de Enfermeras: esperamos a que la auth anónima
+      // esté lista antes de leer sus datos, porque sus reglas de Firebase la exigen
+      // (.read: "auth != null" — confirmado en la consola). Nunca leemos sin usuario.
+      const authRef=firebase.app("tcaes_app").auth();
+      try{
+        authRef.onAuthStateChanged(user=>{
+          if(user)startEnfListeners();
+        });
+      }catch(e){
+        console.log("Error esperando auth para Enfermeras:",e);
+        enfDataError=(e&&e.message)||String(e);
+        if(currentTab==="enf")renderEnfermeras();
       }
+      const checkAuthRetry=(attempt)=>{
+        setTimeout(()=>{
+          if(window.enfFirebaseListenersAttached)return;
+          if(authRef.currentUser){startEnfListeners();return;}
+          if(attempt<3){
+            authRef.signInAnonymously().catch(e=>console.log("Reintento de auth anónima falló:",e));
+            checkAuthRetry(attempt+1);
+          } else {
+            enfDataError="no se pudo verificar la sesión anónima tras varios intentos (revisa si la autenticación anónima está activada en Firebase Console → Authentication → Sign-in method)";
+            if(currentTab==="enf")renderEnfermeras();
+          }
+        },4000);
+      };
+      checkAuthRetry(1);
     }
   }catch(e){render();}
 }
@@ -974,7 +979,8 @@ function render(){
           +`<span class="chip ${cls2||cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl2}</span>`
           +`</div>`
         :`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>`;
-      body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
+      const tapAttr=isMyRow?` onclick="tableCellTap(${pi},${dc.yr},${dc.mn},${dc.d})"`:"";
+      body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important${isMyRow?";cursor:pointer":""}"${tapAttr}>
         <div style="position:relative;display:inline-block">
           ${chipInner}
           ${dot}
@@ -988,7 +994,6 @@ function render(){
 }
 
 function renderEnfermeras(){
-  if(userRow!==4)return; // solo consulta, solo Alberto
   const theadEnf=document.getElementById("theadEnf"),tbodyEnf=document.getElementById("tbodyEnf");
   if(!theadEnf||!tbodyEnf)return;
   const wrapEnf=document.getElementById("wrapEnf");
@@ -1005,6 +1010,8 @@ function renderEnfermeras(){
   } else if(errBanner){
     errBanner.style.display="none";
   }
+  const dueLeg=document.getElementById("dueLegend");
+  if(dueLeg)dueLeg.innerHTML=`<span>${t("unidadLegend")}</span>`+UNITS_ENF.map(([k,l])=>`<div class="lc ${k}">${l}</div>`).join("");
   const today=new Date();
   const dayCols=[];
   for(let m=0;m<12;m++){
@@ -1219,16 +1226,15 @@ function showTab(tab){
   if(ve)ve.style.display=tab==="enf"?"block":"none";
   const vs=document.getElementById("view-sugerencias");
   if(vs)vs.style.display=tab==="sugerencias"?"block":"none";
-  const title=document.getElementById("topbarTitle");
-  if(title)title.textContent=tabTitles()[tab]||"";
+  ["mi","todos","enf"].forEach(k=>{const b=document.getElementById("mtab-"+k);if(b)b.classList.toggle("active",k===tab);});
   if(tab==="props")renderProposals();
   if(tab==="enf")renderEnfermeras();
   if(tab==="sugerencias")renderSugerencias();
   if(tab==="mi"){
-    const annKey="tcaes_ann_todos_v1";
-    const shown=parseInt(localStorage.getItem(annKey)||"0");
-    if(shown<5){
-      localStorage.setItem(annKey,String(shown+1));
+    let annSeen=false;
+    try{annSeen=!!localStorage.getItem("tcaes_ann_tabs_v2");localStorage.setItem("tcaes_ann_tabs_v2","1");}catch(e){}
+    if(!annSeen){
+      fillNewFeature();
       setTimeout(()=>{const o=document.getElementById("overlayNewFeature");if(o)o.classList.add("open");},400);
     }
   }
@@ -1823,11 +1829,21 @@ function updatePropBadge(){
   if(mb)mb.style.display=n>0?"block":"none";
 }
 
-function openDayAction(day,ri,di,dk,turno){
-  dayActionCtx={day,ri,di,dk,turno};
-  const date=new Date(miYear,miMonth,day);
+function tableCellTap(pi,y,m,d){
+  if(pi!==userRow-1)return;
+  const date=new Date(y,m,d);
   const dow=(date.getDay()+6)%7;
-  document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+day+"/"+(miMonth+1)+"/"+miYear;
+  const ri=rowFor(PEOPLE[pi].startRow,mondayOf(date));
+  const dk=pi+"_"+y+String(m+1).padStart(2,"0")+String(d).padStart(2,"0");
+  const ov=window.dateOverrides[dk];
+  const cell=ov!==undefined?ov:ROTA[ri][dow];
+  openDayAction(d,ri,dow,dk,cell?cell[0]:null,date);
+}
+function openDayAction(day,ri,di,dk,turno,dateObj){
+  dayActionCtx={day,ri,di,dk,turno};
+  const date=dateObj||new Date(miYear,miMonth,day);
+  const dow=(date.getDay()+6)%7;
+  document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
   document.getElementById("dayActionTurn").textContent=turno||t("libre");
   const cardDiv=document.getElementById("dayActionCard");
   if(cardDiv){
@@ -2044,6 +2060,16 @@ function renderProposals(){
 }
 
 
+function fillNewFeature(){
+  const set=(id,h)=>{const el=document.getElementById(id);if(el)el.innerHTML=h;};
+  set("newFeatTitle",t("newFeatTitle"));
+  set("newFeatBtn",t("newFeatOk"));
+  set("newFeatBody",`<p style="font-size:.82rem;font-weight:700;margin-bottom:10px">${t("newFeatHead")}</p>
+    <ul style="font-size:.78rem;color:var(--tx);margin:0 0 12px 18px;line-height:1.9">
+      <li>${t("newFeatL1")}</li><li>${t("newFeatL2")}</li><li>${t("newFeatL3")}</li>
+    </ul>
+    <p style="font-size:.76rem;color:var(--mu);line-height:1.6">${t("newFeatFoot")}</p>`);
+}
 function closeNewFeature(){
   document.getElementById("overlayNewFeature").classList.remove("open");
 }
@@ -2169,20 +2195,11 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div class="overlay" id="overlayNewFeature" onclick="if(event.target.id==='overlayNewFeature')closeNewFeature()">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <h2 style="font-family:Syne,sans-serif;font-size:.95rem;color:#2e7d32">🆕 Nova función</h2>
+      <h2 id="newFeatTitle" style="font-family:Syne,sans-serif;font-size:.95rem;color:#2e7d32">🆕 Novedades</h2>
       <span onclick="closeNewFeature()" style="cursor:pointer;font-size:1.2rem;color:var(--mu);padding:4px 8px">✕</span>
     </div>
-    <p style="font-size:.82rem;font-weight:700;margin-bottom:8px">Propostas de cambio de quenda</p>
-    <p style="font-size:.78rem;color:var(--mu);line-height:1.6;margin-bottom:10px">Agora podes propoñerlle un cambio a calquera compañeira/o directamente dende a app:</p>
-    <ol style="font-size:.78rem;color:var(--tx);margin:0 0 12px 18px;line-height:1.9">
-      <li>Vai á pestaña <b>👤 Mi turno</b></li>
-      <li>Toca calquera día traballado</li>
-      <li>Escolle <b>🔄 Proponer cambio con compañeira/o</b></li>
-      <li>Selecciona a persoa e o día que queres</li>
-      <li>Engade un comentario e envía</li>
-    </ol>
-    <p style="font-size:.78rem;color:var(--mu);line-height:1.6">A outra persoa verá un aviso na pestaña <b>🔄 Cambios</b> e poderá aceptar ou rexeitar. Se acepta, o cambio aplícase automaticamente.</p>
-    <button onclick="closeNewFeature()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;font-size:.88rem">Entendido ✓</button>
+    <div id="newFeatBody"></div>
+    <button id="newFeatBtn" onclick="closeNewFeature()" style="width:100%;margin-top:16px;padding:12px;border-radius:8px;background:var(--I);color:#fff;border:none;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;font-size:.88rem">Entendido ✓</button>
   </div>
 </div>
 
