@@ -14,7 +14,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d0_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d0_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -25,7 +25,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d0_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -39,7 +39,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d1_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d1_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -50,7 +50,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d1_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -64,7 +64,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d2_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d2_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -75,7 +75,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d2_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -89,7 +89,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d3_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d3_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -100,7 +100,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d3_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -114,7 +114,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d4_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d4_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -125,7 +125,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d4_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -139,7 +139,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d5_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d5_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -150,7 +150,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d5_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>
@@ -164,7 +164,7 @@
             android:background="#DDDDDD" android:maxLines="1" />
         <FrameLayout android:id="@+id/d6_body"
             android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            android:layout_marginTop="1dp" android:minHeight="58dp" android:background="#FFFFFF">
             <TextView android:id="@+id/d6_badge"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_gravity="top|start" android:paddingStart="2dp"
@@ -175,7 +175,7 @@
                 android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
             <TextView android:id="@+id/d6_turn"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:layout_gravity="center" android:layout_marginTop="10dp" android:layout_marginBottom="6dp"
                 android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
         </FrameLayout>
     </LinearLayout>

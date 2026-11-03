@@ -21,6 +21,7 @@ public class TurnosWidget extends AppWidgetProvider {
     private static final int HDR_NORMAL = 0xFFDDDDDD;
     private static final int HDR_SPECIAL = 0xFFE8A090;
     private static final int TODAY_RED = 0xFFD32F2F;
+    private static final int TODAY_BG = 0xFFF8DAD7;
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
@@ -67,12 +68,12 @@ public class TurnosWidget extends AppWidgetProvider {
             int badge = id(r, pkg, "d" + i + "_badge");
 
             v.setTextViewText(hdr, NAMES[dow - 1]);
-            v.setInt(hdr, "setBackgroundColor", (weekend || today) ? HDR_SPECIAL : HDR_NORMAL);
+            v.setInt(hdr, "setBackgroundColor", weekend ? HDR_SPECIAL : HDR_NORMAL);
             v.setTextViewText(num, String.valueOf(c.get(Calendar.DAY_OF_MONTH)));
             v.setTextColor(num, today ? TODAY_RED : Color.BLACK);
             v.setTextViewText(turn, d != null ? d.optString("t", "·") : (days == null ? "?" : "·"));
             v.setTextColor(turn, color(d != null ? d.optString("fg") : null, Color.BLACK));
-            v.setInt(body, "setBackgroundColor", color(d != null ? d.optString("bg") : null, Color.WHITE));
+            v.setInt(body, "setBackgroundColor", today ? TODAY_BG : Color.WHITE);
             int n = d != null ? d.optInt("n", 0) : 0;
             v.setTextViewText(badge, n > 0 ? (n > 1 ? n + "✉" : "✉") : "");
             c.add(Calendar.DAY_OF_MONTH, 1);
