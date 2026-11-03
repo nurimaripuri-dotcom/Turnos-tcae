@@ -774,11 +774,45 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(pi) pi.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
 });
 
+// --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
+function initPushNative(){
+  try{
+    const C=window.Capacitor;
+    if(!C||!C.isNativePlatform||!C.isNativePlatform())return;
+    const PN=C.Plugins&&C.Plugins.PushNotifications;
+    if(!PN||!db||!userRow||window._pushInit)return;
+    window._pushInit=true;
+    PN.addListener("registration",tk=>{
+      const token=tk&&tk.value; if(!token)return;
+      const prev=localStorage.getItem("tcaes_push_token");
+      const prevRow=localStorage.getItem("tcaes_push_row");
+      if(prev&&(prev!==token||prevRow!==String(userRow))) db.ref("tcaes_push_tokens/"+(prevRow||userRow)+"/"+prev).remove().catch(()=>{});
+      localStorage.setItem("tcaes_push_token",token);
+      localStorage.setItem("tcaes_push_row",String(userRow));
+      db.ref("tcaes_push_tokens/"+userRow+"/"+token).set({ts:Date.now(),name:userName||""}).catch(e=>console.log("push token:",e));
+    });
+    PN.addListener("registrationError",e=>console.log("push registro:",e));
+    PN.addListener("pushNotificationActionPerformed",()=>{try{showTab("props");}catch(e){}});
+    PN.checkPermissions()
+      .then(p=>p.receive==="granted"?p:PN.requestPermissions())
+      .then(p=>{if(p.receive==="granted")PN.register();})
+      .catch(e=>console.log("push permisos:",e));
+  }catch(e){console.log("initPushNative:",e);}
+}
+function removePushToken(){
+  try{
+    const tk=localStorage.getItem("tcaes_push_token"),row=localStorage.getItem("tcaes_push_row");
+    if(tk&&row&&db)db.ref("tcaes_push_tokens/"+row+"/"+tk).remove().catch(()=>{});
+    localStorage.removeItem("tcaes_push_token");localStorage.removeItem("tcaes_push_row");
+  }catch(e){}
+}
+
 function initApp(){
   try{
     // Las reglas de la base de datos son abiertas, no hace falta esperar a la autenticación
     // (intentamos igualmente el login anónimo por si acaso, pero no bloqueamos la carga de datos por él)
     startDataListeners();
+    setTimeout(initPushNative,1500);
   }catch(e){console.log("initApp error:",e);render();}
 }
 
@@ -1210,6 +1244,7 @@ function menuGoTab(tab){
 }
 function logout(){
   if(!confirm(t("logoutConfirm")))return;
+  removePushToken();
   localStorage.removeItem("tcaes_user");
   localStorage.removeItem("tcaes_row");
   if(userRow)localStorage.removeItem("tcaes_verified_"+userRow);

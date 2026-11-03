@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "362053048865",
+    "firebase_url": "https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "rotatorio-tcaes",
+    "storage_bucket": "rotatorio-tcaes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362053048865:android:d542ca9721e4cf29b6a160",
+        "android_client_info": {
+          "package_name": "io.github.nurimaripuri.turnosenf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwAKtalpOtMc3GT6gCL_JNvzLBQtIkhUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362053048865:android:cf3e96c1a48ac5f3b6a160",
+        "android_client_info": {
+          "package_name": "io.github.nurimaripuri.turnostce"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwAKtalpOtMc3GT6gCL_JNvzLBQtIkhUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

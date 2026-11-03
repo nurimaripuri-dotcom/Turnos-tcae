@@ -1,0 +1,44 @@
+name: Avisos push
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # GitHub lo ejecuta cada 5-15 min aprox.
+  workflow_dispatch:
+
+concurrency:
+  group: push-sender
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: push-sender
+    steps:
+      - name: Comprobar secret
+        id: chk
+        working-directory: .
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "::notice::Falta el secret FIREBASE_SERVICE_ACCOUNT; no se envía nada."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v5
+        if: steps.chk.outputs.ok == '1'
+
+      - uses: actions/setup-node@v5
+        if: steps.chk.outputs.ok == '1'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: push-sender/package-lock.json
+
+      - name: Enviar avisos
+        if: steps.chk.outputs.ok == '1'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          npm ci --no-audit --no-fund
+          node send.js
