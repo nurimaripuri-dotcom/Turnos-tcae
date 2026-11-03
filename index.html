@@ -287,9 +287,13 @@ setTimeout(function(){
 
 <!-- NOTAS VIEW (solo Alberto y Yoli, cada uno las suyas) -->
 <div id="view-notas" style="flex:1;overflow:auto;padding:14px 16px;display:none">
-  <div style="font-family:Syne,sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:4px">📝 Mis notas</div>
+  <div style="font-family:Syne,sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:4px">📝 Notas</div>
   <div id="notasWho" style="font-size:.75rem;color:var(--mu);margin-bottom:12px"></div>
   <textarea id="notaInput" rows="3" placeholder="Escribe una nota…" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace;font-size:.88rem;resize:vertical"></textarea>
+  <div style="display:flex;gap:6px;margin-top:8px">
+    <button id="notaVisPriv" onclick="setNotaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privada</button>
+    <button id="notaVisShared" onclick="setNotaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Los dos</button>
+  </div>
   <button onclick="saveNota()" style="width:100%;margin:8px 0 16px;padding:12px;border-radius:10px;border:none;background:var(--I);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">💾 Guardar nota</button>
   <div id="notasList"></div>
 </div>
@@ -808,23 +812,25 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 // ===== AGENDA COMPARTIDA Y NOTAS (solo Alberto y Yoli) =====
-let agendaData={}, notasData={}, agendaDayKey=null, coupleInit=false;
+let agendaData={}, notasData={}, notasShared={}, notaVis="priv", agendaDayKey=null, coupleInit=false;
 function initCouple(){
   try{
     const show=isCouple();
     const nb=document.getElementById("mtab-notas"); if(nb)nb.style.display=show?"":"none";
     if(isPartner){
       ["mtab-todos","mtab-enf","tab-props","menuSuggestBtn","tab-sugerencias"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
-      const w=document.getElementById("notasWho"); if(w)w.textContent="Solo las ves tú (Yoli).";
+      const w=document.getElementById("notasWho"); if(w)w.textContent="🔒 Privadas: solo tú (Yoli) · 👥 Los dos: Alberto y tú.";
     } else {
-      const w=document.getElementById("notasWho"); if(w)w.textContent="Solo las ves tú (Alberto).";
+      const w=document.getElementById("notasWho"); if(w)w.textContent="🔒 Privadas: solo tú (Alberto) · 👥 Los dos: Yoli y tú.";
     }
     if(!show||!db||coupleInit)return;
     coupleInit=true;
     db.ref("tcaes_agenda").on("value",snap=>{agendaData=snap.val()||{};try{renderMiTurno();}catch(e){}});
-    db.ref("tcaes_notes/"+noteOwner()).on("value",snap=>{notasData=snap.val()||{};if(currentTab==="notas")renderNotas();});
+    db.ref("tcaes_notes/"+noteOwner()).on("value",snap=>{notasData=snap.val()||{};if(curTabSafe()==="notas")renderNotas();});
+    db.ref("tcaes_notes/compartidas").on("value",snap=>{notasShared=snap.val()||{};if(curTabSafe()==="notas")renderNotas();});
   }catch(e){console.log("initCouple:",e);}
 }
+function curTabSafe(){try{return currentTab;}catch(e){return "";}}
 function agendaFor(dateStr){
   return Object.entries(agendaData).filter(([k,e])=>e&&e.d===dateStr)
     .sort((a,b)=>(a[1].time||"99").localeCompare(b[1].time||"99"));
@@ -887,35 +893,67 @@ function deleteAgendaEvent(k){
   if(!confirm("¿Borrar este evento?"))return;
   db.ref("tcaes_agenda/"+k).remove().then(()=>setTimeout(renderAgendaDay,200));
 }
+function notaPath(scope){return "tcaes_notes/"+(scope==="shared"?"compartidas":noteOwner());}
+function notaSrc(scope){return scope==="shared"?notasShared:notasData;}
+function setNotaVis(v){
+  notaVis=v;
+  [["notaVisPriv","priv"],["notaVisShared","shared"]].forEach(([id,val])=>{
+    const b=document.getElementById(id); if(!b)return;
+    const on=val===v;
+    b.style.background=on?(val==="shared"?"#6f42c1":"var(--I)"):"var(--s2)";
+    b.style.color=on?"#fff":"var(--tx)";
+    b.style.borderColor=on?"transparent":"var(--bd)";
+  });
+}
 function renderNotas(){
+  setNotaVis(notaVis);
   const cont=document.getElementById("notasList");
   if(!cont)return;
-  const items=Object.entries(notasData).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
-  if(!items.length){cont.innerHTML=`<p style="color:var(--mu);font-size:.85rem;text-align:center">Aún no tienes notas.</p>`;return;}
-  cont.innerHTML=items.map(([k,n])=>`<div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--s1)">
+  const items=[...Object.entries(notasData).map(([k,n])=>["priv",k,n]),...Object.entries(notasShared).map(([k,n])=>["shared",k,n])]
+    .filter(x=>x[2]).sort((a,b)=>(b[2].ts||0)-(a[2].ts||0));
+  if(!items.length){cont.innerHTML=`<p style="color:var(--mu);font-size:.85rem;text-align:center">Aún no hay notas.</p>`;return;}
+  const me=isPartner?"Yoli":"Alberto";
+  cont.innerHTML=items.map(([sc,k,n])=>{
+    const shared=sc==="shared";
+    const tag=shared?`<span style="background:#6f42c1;color:#fff;border-radius:6px;padding:1px 6px;font-size:.65rem;font-weight:700">👥 Los dos${n.by?" · "+escH(n.by):""}</span>`
+                    :`<span style="background:var(--s2);color:var(--mu);border-radius:6px;padding:1px 6px;font-size:.65rem;font-weight:700">🔒 Privada</span>`;
+    const canMove=!shared||n.by===me;
+    return `<div style="border:1px solid ${shared?"#6f42c1":"var(--bd)"};border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--s1)">
+    <div style="margin-bottom:4px">${tag}</div>
     <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.45">${escH(n.text)}</div>
     <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <span style="flex:1;font-size:.68rem;color:var(--mu)">${n.ts?new Date(n.ts).toLocaleString("es-ES"):""}</span>
-      <button onclick="editNota('${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">✏️</button>
-      <button onclick="deleteNota('${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">🗑</button>
-    </div></div>`).join("");
+      ${canMove?`<button onclick="moveNota('${sc}','${k}')" title="${shared?"Hacer privada":"Compartir con los dos"}" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">${shared?"🔒":"👥"}</button>`:""}
+      <button onclick="editNota('${sc}','${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">✏️</button>
+      <button onclick="deleteNota('${sc}','${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">🗑</button>
+    </div></div>`;}).join("");
 }
 function saveNota(){
   const el=document.getElementById("notaInput");
   const text=(el.value||"").trim();
   if(!text||!db)return;
-  db.ref("tcaes_notes/"+noteOwner()).push({text,ts:Date.now()}).then(()=>{el.value="";}).catch(()=>alert(t("errorEnviar")));
+  const data={text,ts:Date.now()};
+  if(notaVis==="shared")data.by=isPartner?"Yoli":"Alberto";
+  db.ref(notaPath(notaVis)).push(data).then(()=>{el.value="";}).catch(()=>alert(t("errorEnviar")));
 }
-function editNota(k){
-  const cur=notasData[k]; if(!cur)return;
+function editNota(sc,k){
+  const cur=notaSrc(sc)[k]; if(!cur)return;
   const text=prompt("Editar nota:",cur.text);
   if(text===null)return;
-  if(!text.trim()){deleteNota(k);return;}
-  db.ref("tcaes_notes/"+noteOwner()+"/"+k).update({text:text.trim(),ts:Date.now()});
+  if(!text.trim()){deleteNota(sc,k);return;}
+  db.ref(notaPath(sc)+"/"+k).update({text:text.trim(),ts:Date.now()});
 }
-function deleteNota(k){
-  if(!confirm("¿Borrar esta nota?"))return;
-  db.ref("tcaes_notes/"+noteOwner()+"/"+k).remove();
+function deleteNota(sc,k){
+  if(!confirm(sc==="shared"?"¿Borrar esta nota? Se borra para los dos.":"¿Borrar esta nota?"))return;
+  db.ref(notaPath(sc)+"/"+k).remove();
+}
+function moveNota(sc,k){
+  const cur=notaSrc(sc)[k]; if(!cur)return;
+  const to=sc==="shared"?"priv":"shared";
+  if(!confirm(to==="shared"?"¿Compartir esta nota con los dos?":"¿Hacerla privada? Dejará de verla la otra persona."))return;
+  const data={text:cur.text,ts:cur.ts||Date.now()};
+  if(to==="shared")data.by=isPartner?"Yoli":"Alberto";
+  db.ref(notaPath(to)).push(data).then(()=>db.ref(notaPath(sc)+"/"+k).remove());
 }
 
 // --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
