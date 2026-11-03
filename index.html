@@ -230,7 +230,6 @@ setTimeout(function(){
     <button class="tab-btn active" id="mtab-mi" onclick="showTab('mi')">👤 Mi turno</button>
     <button class="tab-btn" id="mtab-todos" onclick="showTab('todos')">📋 TCE</button>
     <button class="tab-btn" id="mtab-enf" onclick="showTab('enf')">👥 DUE</button>
-    <button class="tab-btn" id="mtab-notas" onclick="showTab('notas')" style="display:none">📝 Notas</button>
   </div>
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu(event)">⋮<span class="menu-badge" id="menuBadge" style="display:none"></span></button>
@@ -283,19 +282,6 @@ setTimeout(function(){
       <tbody id="tbodyEnf"></tbody>
     </table>
   </div>
-</div>
-
-<!-- NOTAS VIEW (solo Alberto y Yoli, cada uno las suyas) -->
-<div id="view-notas" style="flex:1;overflow:auto;padding:14px 16px;display:none">
-  <div style="font-family:Syne,sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:4px">📝 Notas</div>
-  <div id="notasWho" style="font-size:.75rem;color:var(--mu);margin-bottom:12px"></div>
-  <textarea id="notaInput" rows="3" placeholder="Escribe una nota…" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace;font-size:.88rem;resize:vertical"></textarea>
-  <div style="display:flex;gap:6px;margin-top:8px">
-    <button id="notaVisPriv" onclick="setNotaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privada</button>
-    <button id="notaVisShared" onclick="setNotaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Los dos</button>
-  </div>
-  <button onclick="saveNota()" style="width:100%;margin:8px 0 16px;padding:12px;border-radius:10px;border:none;background:var(--I);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">💾 Guardar nota</button>
-  <div id="notasList"></div>
 </div>
 
 <!-- SUGERENCIAS VIEW (solo Alberto) -->
@@ -811,29 +797,28 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(pi) pi.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
 });
 
-// ===== AGENDA COMPARTIDA Y NOTAS (solo Alberto y Yoli) =====
-let agendaData={}, notasData={}, notasShared={}, notaVis="priv", agendaDayKey=null, coupleInit=false;
+// ===== AGENDA (solo Alberto y Yoli): apuntes compartidos o privados por día =====
+// Compartidos: tcaes_agenda/{id}  ·  Privados: tcaes_agenda_priv/{alberto|yoli}/{id}
+let agendaData={}, agendaPriv={}, agendaVis="shared", agendaDayKey=null, coupleInit=false;
+function meName(){return isPartner?"Yoli":"Alberto";}
+function agendaPath(scope){return scope==="priv"?"tcaes_agenda_priv/"+noteOwner():"tcaes_agenda";}
 function initCouple(){
   try{
-    const show=isCouple();
-    const nb=document.getElementById("mtab-notas"); if(nb)nb.style.display=show?"":"none";
     if(isPartner){
       ["mtab-todos","mtab-enf","tab-props","menuSuggestBtn","tab-sugerencias"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
-      const w=document.getElementById("notasWho"); if(w)w.textContent="🔒 Privadas: solo tú (Yoli) · 👥 Los dos: Alberto y tú.";
-    } else {
-      const w=document.getElementById("notasWho"); if(w)w.textContent="🔒 Privadas: solo tú (Alberto) · 👥 Los dos: Yoli y tú.";
     }
-    if(!show||!db||coupleInit)return;
+    if(!isCouple()||!db||coupleInit)return;
     coupleInit=true;
-    db.ref("tcaes_agenda").on("value",snap=>{agendaData=snap.val()||{};try{renderMiTurno();}catch(e){}});
-    db.ref("tcaes_notes/"+noteOwner()).on("value",snap=>{notasData=snap.val()||{};if(curTabSafe()==="notas")renderNotas();});
-    db.ref("tcaes_notes/compartidas").on("value",snap=>{notasShared=snap.val()||{};if(curTabSafe()==="notas")renderNotas();});
+    const rerender=()=>{try{renderMiTurno();}catch(e){} if(agendaDayKey)renderAgendaDay();};
+    db.ref("tcaes_agenda").on("value",snap=>{agendaData=snap.val()||{};rerender();});
+    db.ref(agendaPath("priv")).on("value",snap=>{agendaPriv=snap.val()||{};rerender();});
   }catch(e){console.log("initCouple:",e);}
 }
-function curTabSafe(){try{return currentTab;}catch(e){return "";}}
+function agendaAll(){
+  return [...Object.entries(agendaData).map(([k,e])=>["shared",k,e]),...Object.entries(agendaPriv).map(([k,e])=>["priv",k,e])].filter(x=>x[2]&&x[2].d);
+}
 function agendaFor(dateStr){
-  return Object.entries(agendaData).filter(([k,e])=>e&&e.d===dateStr)
-    .sort((a,b)=>(a[1].time||"99").localeCompare(b[1].time||"99"));
+  return agendaAll().filter(x=>x[2].d===dateStr).sort((a,b)=>(a[2].time||"99").localeCompare(b[2].time||"99"));
 }
 function agendaBadgeHTML(dateStr){
   if(!isCouple())return "";
@@ -846,15 +831,16 @@ function fmtAgendaDate(dateStr){
   const dt=new Date(y,m,d);
   return I18N[lang].days[(dt.getDay()+6)%7]+" "+d+"/"+(m+1);
 }
+function agendaIcon(scope,e){return scope==="priv"?"🔒":"👥"+(e.by?" "+escH(e.by):"");}
 function agendaUpcomingHTML(){
   const now=new Date();
   const todayStr=now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0");
-  const list=Object.values(agendaData).filter(e=>e&&e.d>=todayStr)
-    .sort((a,b)=>(a.d+(a.time||"99")).localeCompare(b.d+(b.time||"99"))).slice(0,5);
+  const list=agendaAll().filter(x=>x[2].d>=todayStr)
+    .sort((a,b)=>(a[2].d+(a[2].time||"99")).localeCompare(b[2].d+(b[2].time||"99"))).slice(0,5);
   let h=`<div style="margin-top:12px;background:var(--s2);border-radius:12px;padding:10px 12px;flex-shrink:0">
-    <div style="font-weight:800;font-size:.85rem;margin-bottom:6px">📅 Próximos (agenda compartida)</div>`;
-  if(!list.length)h+=`<div style="font-size:.78rem;color:var(--mu)">Nada apuntado. Toca un día del calendario para añadir.</div>`;
-  list.forEach(e=>{h+=`<div style="font-size:.8rem;padding:3px 0"><b>${escH(fmtAgendaDate(e.d))}</b>${e.time?" · "+escH(e.time):""} — ${escH(e.text)} <span style="color:var(--mu);font-size:.7rem">(${escH(e.by||"")})</span></div>`;});
+    <div style="font-weight:800;font-size:.85rem;margin-bottom:6px">📅 Próximos</div>`;
+  if(!list.length)h+=`<div style="font-size:.78rem;color:var(--mu)">Nada apuntado. Toca un día del calendario → Agenda del día.</div>`;
+  list.forEach(([sc,k,e])=>{h+=`<div onclick="openAgendaDay('${e.d}')" style="font-size:.8rem;padding:3px 0;cursor:pointer"><b>${escH(fmtAgendaDate(e.d))}</b>${e.time?" · "+escH(e.time):""} — ${escH(e.text)} <span style="color:var(--mu);font-size:.7rem">${agendaIcon(sc,e)}</span></div>`;});
   return h+`</div>`;
 }
 function dayActionAgenda(){
@@ -863,11 +849,22 @@ function dayActionAgenda(){
   closeDayAction();
   if(key)setTimeout(()=>openAgendaDay(key),250);
 }
+function setAgendaVis(v){
+  agendaVis=v;
+  [["agendaVisShared","shared"],["agendaVisPriv","priv"]].forEach(([id,val])=>{
+    const b=document.getElementById(id); if(!b)return;
+    const on=val===v;
+    b.style.background=on?(val==="shared"?"#6f42c1":"var(--I)"):"var(--s2)";
+    b.style.color=on?"#fff":"var(--tx)";
+    b.style.borderColor=on?"transparent":"var(--bd)";
+  });
+}
 function openAgendaDay(dateStr){
   agendaDayKey=dateStr;
   document.getElementById("agendaTitle").textContent="📅 "+fmtAgendaDate(dateStr);
   document.getElementById("agendaTime").value="";
   document.getElementById("agendaText").value="";
+  setAgendaVis("shared");
   renderAgendaDay();
   document.getElementById("overlayAgenda").classList.add("open");
 }
@@ -876,84 +873,24 @@ function renderAgendaDay(){
   const cont=document.getElementById("agendaList");
   if(!cont||!agendaDayKey)return;
   const items=agendaFor(agendaDayKey);
-  if(!items.length){cont.innerHTML=`<div style="font-size:.8rem;color:var(--mu)">Sin eventos este día.</div>`;return;}
-  cont.innerHTML=items.map(([k,e])=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--bd);border-radius:8px;margin-bottom:6px">
-    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":""}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${escH(e.by||"")}</div></div>
-    <button onclick="deleteAgendaEvent('${k}')" style="border:none;background:transparent;font-size:1rem;cursor:pointer">🗑</button></div>`).join("");
+  if(!items.length){cont.innerHTML=`<div style="font-size:.8rem;color:var(--mu)">Nada apuntado este día.</div>`;return;}
+  cont.innerHTML=items.map(([sc,k,e])=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid ${sc==="shared"?"#6f42c1":"var(--bd)"};border-radius:8px;margin-bottom:6px">
+    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":""}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}</div></div>
+    <button onclick="deleteAgendaEvent('${sc}','${k}')" style="border:none;background:transparent;font-size:1rem;cursor:pointer">🗑</button></div>`).join("");
 }
 function addAgendaEvent(){
   const text=document.getElementById("agendaText").value.trim();
   const time=document.getElementById("agendaTime").value||"";
   if(!text||!agendaDayKey||!db)return;
-  db.ref("tcaes_agenda").push({d:agendaDayKey,time,text,by:isPartner?"Yoli":"Alberto",ts:Date.now()})
+  const data={d:agendaDayKey,time,text,ts:Date.now()};
+  if(agendaVis==="shared")data.by=meName();
+  db.ref(agendaPath(agendaVis)).push(data)
     .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";setTimeout(renderAgendaDay,200);})
     .catch(()=>alert(t("errorEnviar")));
 }
-function deleteAgendaEvent(k){
-  if(!confirm("¿Borrar este evento?"))return;
-  db.ref("tcaes_agenda/"+k).remove().then(()=>setTimeout(renderAgendaDay,200));
-}
-function notaPath(scope){return "tcaes_notes/"+(scope==="shared"?"compartidas":noteOwner());}
-function notaSrc(scope){return scope==="shared"?notasShared:notasData;}
-function setNotaVis(v){
-  notaVis=v;
-  [["notaVisPriv","priv"],["notaVisShared","shared"]].forEach(([id,val])=>{
-    const b=document.getElementById(id); if(!b)return;
-    const on=val===v;
-    b.style.background=on?(val==="shared"?"#6f42c1":"var(--I)"):"var(--s2)";
-    b.style.color=on?"#fff":"var(--tx)";
-    b.style.borderColor=on?"transparent":"var(--bd)";
-  });
-}
-function renderNotas(){
-  setNotaVis(notaVis);
-  const cont=document.getElementById("notasList");
-  if(!cont)return;
-  const items=[...Object.entries(notasData).map(([k,n])=>["priv",k,n]),...Object.entries(notasShared).map(([k,n])=>["shared",k,n])]
-    .filter(x=>x[2]).sort((a,b)=>(b[2].ts||0)-(a[2].ts||0));
-  if(!items.length){cont.innerHTML=`<p style="color:var(--mu);font-size:.85rem;text-align:center">Aún no hay notas.</p>`;return;}
-  const me=isPartner?"Yoli":"Alberto";
-  cont.innerHTML=items.map(([sc,k,n])=>{
-    const shared=sc==="shared";
-    const tag=shared?`<span style="background:#6f42c1;color:#fff;border-radius:6px;padding:1px 6px;font-size:.65rem;font-weight:700">👥 Los dos${n.by?" · "+escH(n.by):""}</span>`
-                    :`<span style="background:var(--s2);color:var(--mu);border-radius:6px;padding:1px 6px;font-size:.65rem;font-weight:700">🔒 Privada</span>`;
-    const canMove=!shared||n.by===me;
-    return `<div style="border:1px solid ${shared?"#6f42c1":"var(--bd)"};border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--s1)">
-    <div style="margin-bottom:4px">${tag}</div>
-    <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.45">${escH(n.text)}</div>
-    <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-      <span style="flex:1;font-size:.68rem;color:var(--mu)">${n.ts?new Date(n.ts).toLocaleString("es-ES"):""}</span>
-      ${canMove?`<button onclick="moveNota('${sc}','${k}')" title="${shared?"Hacer privada":"Compartir con los dos"}" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">${shared?"🔒":"👥"}</button>`:""}
-      <button onclick="editNota('${sc}','${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">✏️</button>
-      <button onclick="deleteNota('${sc}','${k}')" style="border:none;background:transparent;font-size:.95rem;cursor:pointer">🗑</button>
-    </div></div>`;}).join("");
-}
-function saveNota(){
-  const el=document.getElementById("notaInput");
-  const text=(el.value||"").trim();
-  if(!text||!db)return;
-  const data={text,ts:Date.now()};
-  if(notaVis==="shared")data.by=isPartner?"Yoli":"Alberto";
-  db.ref(notaPath(notaVis)).push(data).then(()=>{el.value="";}).catch(()=>alert(t("errorEnviar")));
-}
-function editNota(sc,k){
-  const cur=notaSrc(sc)[k]; if(!cur)return;
-  const text=prompt("Editar nota:",cur.text);
-  if(text===null)return;
-  if(!text.trim()){deleteNota(sc,k);return;}
-  db.ref(notaPath(sc)+"/"+k).update({text:text.trim(),ts:Date.now()});
-}
-function deleteNota(sc,k){
-  if(!confirm(sc==="shared"?"¿Borrar esta nota? Se borra para los dos.":"¿Borrar esta nota?"))return;
-  db.ref(notaPath(sc)+"/"+k).remove();
-}
-function moveNota(sc,k){
-  const cur=notaSrc(sc)[k]; if(!cur)return;
-  const to=sc==="shared"?"priv":"shared";
-  if(!confirm(to==="shared"?"¿Compartir esta nota con los dos?":"¿Hacerla privada? Dejará de verla la otra persona."))return;
-  const data={text:cur.text,ts:cur.ts||Date.now()};
-  if(to==="shared")data.by=isPartner?"Yoli":"Alberto";
-  db.ref(notaPath(to)).push(data).then(()=>db.ref(notaPath(sc)+"/"+k).remove());
+function deleteAgendaEvent(sc,k){
+  if(!confirm(sc==="shared"?"¿Borrar? Se borra para los dos.":"¿Borrar este apunte?"))return;
+  db.ref(agendaPath(sc)+"/"+k).remove().then(()=>setTimeout(renderAgendaDay,200));
 }
 
 // --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
@@ -1445,10 +1382,7 @@ function showTab(tab){
   if(ve)ve.style.display=tab==="enf"?"block":"none";
   const vs=document.getElementById("view-sugerencias");
   if(vs)vs.style.display=tab==="sugerencias"?"block":"none";
-  const vn=document.getElementById("view-notas");
-  if(vn)vn.style.display=tab==="notas"?"block":"none";
-  if(tab==="notas")renderNotas();
-  ["mi","todos","enf","notas"].forEach(k=>{const b=document.getElementById("mtab-"+k);if(b)b.classList.toggle("active",k===tab);});
+  ["mi","todos","enf"].forEach(k=>{const b=document.getElementById("mtab-"+k);if(b)b.classList.toggle("active",k===tab);});
   if(tab==="props")renderProposals();
   if(tab==="enf")renderEnfermeras();
   if(tab==="sugerencias")renderSugerencias();
@@ -2338,6 +2272,10 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
     <div style="display:flex;gap:6px;margin-bottom:8px">
       <input id="agendaTime" type="time" style="flex:0 0 110px;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
       <input id="agendaText" type="text" maxlength="200" placeholder="Qué hay…" style="flex:1;min-width:0;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button id="agendaVisShared" onclick="setAgendaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Compartido</button>
+      <button id="agendaVisPriv" onclick="setAgendaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privado</button>
     </div>
     <button onclick="addAgendaEvent()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--V);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">➕ Añadir</button>
     <button onclick="closeAgendaDay()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:10px;font-family:'DM Mono',monospace">← Volver</button>
