@@ -42,7 +42,8 @@ jobs:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/release.jks" || { echo "::error::El secret ANDROID_KEYSTORE_BASE64 no es válido (incompleto o con caracteres de más). Vuelve a pegarlo."; exit 1; }
+            echo "Keystore: $(wc -c < "$RUNNER_TEMP/release.jks") bytes (esperado 4364)"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
           else
             echo "::warning::Sin secret ANDROID_KEYSTORE_BASE64: APK firmado con clave debug (solo para pruebas, no se publica)."
