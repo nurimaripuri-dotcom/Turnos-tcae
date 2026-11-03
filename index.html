@@ -893,6 +893,46 @@ function deleteAgendaEvent(sc,k){
   db.ref(agendaPath(sc)+"/"+k).remove().then(()=>setTimeout(renderAgendaDay,200));
 }
 
+// --- Widget de Android (7 días): la web calcula los turnos y se los pasa a la app nativa ---
+let _widgetTimer=null,_widgetLast="",_widgetPlugin=null;
+function widgetPlugin(){
+  const C=window.Capacitor;
+  if(!C||!C.isNativePlatform||!C.isNativePlatform())return null;
+  if(!_widgetPlugin){try{_widgetPlugin=C.registerPlugin?C.registerPlugin("WidgetBridge"):(C.Plugins&&C.Plugins.WidgetBridge);}catch(e){_widgetPlugin=C.Plugins&&C.Plugins.WidgetBridge;}}
+  return _widgetPlugin||null;
+}
+const WIDGET_COLORS={I:["#c0392b","#fde8e8"],V:["#1e8449","#d5f5e3"],N2:["#34495e","#eaecee"],A:["#1565c0","#d6eaf8"]};
+function scheduleWidgetSync(){
+  if(!widgetPlugin())return;
+  clearTimeout(_widgetTimer);_widgetTimer=setTimeout(syncWidget,1500);
+}
+function syncWidget(){
+  try{
+    const P=widgetPlugin(); if(!P||!userRow)return;
+    const me=PEOPLE[userRow-1]; if(!me)return;
+    const days={};
+    const start=new Date();start.setHours(12,0,0,0);start.setDate(start.getDate()-1);
+    for(let i=0;i<64;i++){
+      const date=new Date(start);date.setDate(start.getDate()+i);
+      const dow=(date.getDay()+6)%7;
+      const ri=rowFor(me.startRow,mondayOf(date));
+      const ds=date.getFullYear()+String(date.getMonth()+1).padStart(2,"0")+String(date.getDate()).padStart(2,"0");
+      const ov=window.dateOverrides&&window.dateOverrides[(userRow-1)+"_"+ds];
+      const cell=ov!==undefined?ov:ROTA[ri][dow];
+      const t=cell?cell[0]:null,u=cell?cell[1]:null;
+      const neutral=!t||t==="L"||t==="/"||t==="V"||t==="LD";
+      const col=(!neutral&&WIDGET_COLORS[u])||["#000000","#ffffff"];
+      const lbl=t==="V"?"🏖":(t||"·");
+      let n=0;try{if(isCouple())n=agendaFor(ds).length;}catch(e){}
+      days[ds]={t:lbl,fg:col[0],bg:col[1],n};
+    }
+    const json=JSON.stringify({v:1,days});
+    if(json===_widgetLast)return;
+    _widgetLast=json;
+    P.setData({json}).catch(e=>console.log("widget:",e));
+  }catch(e){console.log("syncWidget:",e);}
+}
+
 // --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
 function initPushNative(){
   try{
@@ -1542,6 +1582,7 @@ function dayCardHTML(dateObj,isToday){
 function todayCardHTML(){return dayCardHTML(new Date(),true);}
 
 function renderMiTurno(){
+  scheduleWidgetSync();
   if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
   const me=PEOPLE[userRow-1];
   const today=new Date();

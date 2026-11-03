@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:padding="4dp"
+    android:background="@drawable/widget_bg">
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d0_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d0_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d0_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d0_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d0_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d1_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d1_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d1_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d1_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d1_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d2_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d2_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d2_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d2_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d2_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d3_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d3_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d3_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d3_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d3_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d4_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d4_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d4_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d4_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d4_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d5_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d5_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d5_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d5_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d5_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:orientation="vertical" android:layout_marginStart="1dp" android:layout_marginEnd="1dp">
+        <TextView android:id="@+id/d6_hdr"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:textSize="12sp" android:textStyle="bold" android:textColor="#000000"
+            android:background="#DDDDDD" android:maxLines="1" />
+        <FrameLayout android:id="@+id/d6_body"
+            android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:layout_marginTop="1dp" android:background="#FFFFFF">
+            <TextView android:id="@+id/d6_badge"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|start" android:paddingStart="2dp"
+                android:textSize="9sp" android:textColor="#000000" />
+            <TextView android:id="@+id/d6_num"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="top|end" android:paddingEnd="3dp"
+                android:textSize="15sp" android:textStyle="bold" android:textColor="#000000" />
+            <TextView android:id="@+id/d6_turn"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:layout_marginTop="8dp"
+                android:textSize="22sp" android:textStyle="bold" android:textColor="#000000" android:maxLines="1" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

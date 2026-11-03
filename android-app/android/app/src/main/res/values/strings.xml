@@ -4,4 +4,6 @@
     <string name="title_activity_main">TCAES 3ºC</string>
     <string name="package_name">io.github.nurimaripuri.turnostce</string>
     <string name="custom_url_scheme">io.github.nurimaripuri.turnostce</string>
+    <string name="widget_name">Mis turnos (7 días)</string>
+    <string name="widget_description">Tus turnos de hoy y los próximos 6 días</string>
 </resources>
