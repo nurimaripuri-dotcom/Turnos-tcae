@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: android-app
@@ -31,8 +31,6 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: gradle
-
-      - uses: android-actions/setup-android@v3
 
       - name: Instalar dependencias y sincronizar Capacitor
         run: |
@@ -58,6 +56,8 @@ jobs:
         working-directory: android-app/android
         run: |
           chmod +x gradlew
+          echo "ANDROID_HOME=$ANDROID_HOME ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls "$ANDROID_HOME/platforms" || echo "::error::No hay SDK de Android en el runner"
           set +e
           ./gradlew assembleRelease -PappVersionCode=${{ github.run_number }} --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log"
           rc=${PIPESTATUS[0]}
