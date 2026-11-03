@@ -1329,6 +1329,8 @@ function changeYear(d){
   if(currentTab==="enf")renderEnfermeras();
 }
 function goToToday(){
+  const _n=new Date();miMonth=_n.getMonth();miYear=_n.getFullYear();
+  try{renderMiTurno();}catch(e){}
   currentYear=new Date().getFullYear();
   render();
   if(currentTab==="enf")renderEnfermeras();
