@@ -1,0 +1,12 @@
+{
+  "appId": "io.github.nurimaripuri.turnostce",
+  "appName": "TCAES 3ºC",
+  "webDir": "www",
+  "server": {
+    "url": "https://nurimaripuri-dotcom.github.io/Turnos-tcae/",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "backgroundColor": "#c0392b"
+  }
+}

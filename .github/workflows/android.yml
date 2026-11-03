@@ -1,0 +1,76 @@
+name: App Android
+
+on:
+  push:
+    branches: [main, android-app]
+    paths:
+      - 'android-app/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: android-app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Instalar dependencias y sincronizar Capacitor
+        run: |
+          npm ci
+          npx cap sync android
+
+      - name: Preparar keystore de firma
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sin secret ANDROID_KEYSTORE_BASE64: APK firmado con clave debug (solo para pruebas, no se publica)."
+          fi
+
+      - name: Compilar APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -PappVersionCode=${{ github.run_number }} --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/TurnosTCE.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TurnosTCE.apk
+          path: TurnosTCE.apk
+
+      - name: Publicar en Releases (solo main y con keystore)
+        if: github.ref == 'refs/heads/main' && env.ANDROID_KEYSTORE_PATH != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: .
+        run: |
+          gh release create "android-v${{ github.run_number }}" "TurnosTCE.apk" \
+            --title "App Android v1.0.${{ github.run_number }}" \
+            --notes "Descarga TurnosTCE.apk e instálalo. Si ya tienes la app, se actualiza encima sin perder nada." \
+            --latest
