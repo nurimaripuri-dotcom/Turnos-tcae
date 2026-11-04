@@ -1647,6 +1647,17 @@ function dayCardHTML(dateObj,isToday){
 }
 function todayCardHTML(){return dayCardHTML(new Date(),true);}
 
+// Factor con el que el sistema agranda el texto (1 = normal). En la app Android sigue el tamaño de letra del móvil.
+function textScaleFactor(){
+  try{
+    const d=document.createElement("div");
+    d.style.cssText="position:absolute;visibility:hidden;font-size:100px;line-height:1;top:-999px";
+    d.textContent="M";document.body.appendChild(d);
+    const f=parseFloat(getComputedStyle(d).fontSize)/100;
+    d.remove();
+    return (f>0.5&&f<3)?f:1;
+  }catch(e){return 1;}
+}
 // Ajusta el calendario de "Mi turno" al alto de la pantalla (como las apps de calendario nativas)
 function fitMiCalendar(){
   try{
@@ -1659,9 +1670,11 @@ function fitMiCalendar(){
     const padB=parseFloat(cs.paddingBottom)||0;
     const top=tbl.getBoundingClientRect().top-view.getBoundingClientRect().top+view.scrollTop;
     const avail=view.clientHeight-top-padB-(thead?thead.offsetHeight:0)-4;
-    const h=Math.max(46,Math.floor(avail/rows.length));
-    const numPx=Math.max(12,Math.min(22,Math.round(h*0.24)));
-    const chipPx=Math.max(14,Math.min(34,Math.round(h*0.32)));
+    const h=Math.max(38,Math.floor(avail/rows.length));
+    // Si el móvil agranda la letra (ajuste de tamaño de fuente de Android), se compensa solo dentro de las casillas
+    const fz=textScaleFactor();
+    const numPx=Math.max(12,Math.min(22,Math.round(h*0.24)))/fz;
+    const chipPx=Math.max(14,Math.min(34,Math.round(h*0.32)))/fz;
     const padPx=Math.max(2,Math.round(h*0.09));
     tbl.style.height="auto";
     rows.forEach(tr=>tr.querySelectorAll("td").forEach(td=>{
