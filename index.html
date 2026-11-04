@@ -1650,7 +1650,7 @@ function renderMiTurno(){
     if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html=isAlbertoAdmin()?todayCardHTML():"";
+  let html="";  // tarjeta "quién está de turno conmigo" retirada a petición de Alberto
   html+=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
     <span style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
   </div>
@@ -2105,7 +2105,7 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
   if(cardDiv){
     if(isAlbertoAdmin()){
       const isToday=date.toDateString()===new Date().toDateString();
-      cardDiv.innerHTML=dayCardHTML(date,isToday);
+      cardDiv.innerHTML="";
     } else {
       cardDiv.innerHTML="";
     }
