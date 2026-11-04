@@ -497,8 +497,13 @@ const FESTIVOS={
   "20270501":"Festa do Traballo","20270517":"Día das Letras Galegas","20271012":"Festa Nacional de España",
   "20271101":"Todos os Santos","20271206":"Constitución","20271208":"Inmaculada","20271225":"Nadal"
 };
+const FESTIVOS_ES={"Aninovo":"Año Nuevo","Reis":"Reyes","San Xosé":"San José","Xoves Santo":"Jueves Santo","Venres Santo":"Viernes Santo",
+  "Festa do Traballo":"Fiesta del Trabajo","San Xoán":"San Juan","Día Nacional de Galicia":"Día Nacional de Galicia","Asunción":"Asunción",
+  "Festa Nacional de España":"Fiesta Nacional de España","Inmaculada":"Inmaculada","Nadal":"Navidad","Día das Letras Galegas":"Día de las Letras Gallegas",
+  "Todos os Santos":"Todos los Santos","Constitución":"Constitución"};
+function festivoNombre(k){const f=FESTIVOS[k];if(!f)return "";return (typeof lang!=="undefined"&&lang==="gl")?f:(FESTIVOS_ES[f]||f);}
 function festivoHTML(dateStr){
-  const f=FESTIVOS[dateStr]; if(!f)return "";
+  const f=festivoNombre(dateStr); if(!f)return "";
   return `<div title="${f}" style="position:absolute;top:0;left:0;width:0;height:0;border-top:16px solid #d32f2f;border-right:16px solid transparent;border-top-left-radius:10px;z-index:1;pointer-events:none"></div>`;
 }
 // --- Pareja: Yoli entra con su nombre y PIN propio y ve la fila de Alberto en solo lectura ---
@@ -2195,6 +2200,10 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
   const date=dateObj||new Date(miYear,miMonth,day);
   const dow=(date.getDay()+6)%7;
   document.getElementById("dayActionTitle").textContent=I18N[lang].days[dow]+" "+date.getDate()+"/"+(date.getMonth()+1)+"/"+date.getFullYear();
+  {const fe=document.getElementById("dayActionFest");
+   const fk=date.getFullYear()+String(date.getMonth()+1).padStart(2,"0")+String(date.getDate()).padStart(2,"0");
+   const fn=festivoNombre(fk);
+   if(fe){fe.style.display=fn?"block":"none";fe.textContent=fn?(lang==="gl"?"🔺 Festivo: ":"🔺 Festivo: ")+fn:"";}}
   document.getElementById("dayActionTurn").textContent=turno||t("libre");
   const cardDiv=document.getElementById("dayActionCard");
   if(cardDiv){
@@ -2439,6 +2448,7 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
   <div class="modal">
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
+    <div id="dayActionFest" style="display:none;background:#fde8e8;color:#c0392b;border-left:4px solid #d32f2f;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:.82rem;font-weight:700"></div>
     <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
     <div id="dayActionCard"></div>
     <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
