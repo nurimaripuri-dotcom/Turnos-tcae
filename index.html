@@ -214,7 +214,7 @@ setTimeout(function(){
     <button class="hbtn primary" id="todayBtn" onclick="goToToday()">📍 Hoy</button>
   </div>
 </header>
-<div class="legend">
+<div class="legend" style="display:none">
   <span style="color:var(--mu)" id="unidadLegendLabel">Unidad →</span>
   <div class="lc I" onclick="showUnitInfo('I')" style="cursor:pointer">🔴 Ictus</div>
   <div class="lc V" onclick="showUnitInfo('V')" style="cursor:pointer">🟢 351-353</div>
@@ -1784,11 +1784,31 @@ function renderUnitBtns(){
   }
 }
 const UNIT_INFO={
-  I:{icon:"🔴",name:"Ictus",color:"var(--I)",manana:"Reondrá y limpiará material de la unidad (farmacia, carro de material, etc.)"},
+  I:{icon:"🔴",name:"Ictus",color:"var(--I)",manana:"Repondrá y limpiará material de la unidad (farmacia, carro de material, etc.)"},
   V:{icon:"🟢",name:"351-353",color:"var(--V)",manana:"Llevará las dietas y la colocación de farmacia."},
   N2:{icon:"⚫",name:"354/337-339",color:"var(--N2)",manana:"Llevará el oficio sucio y la limpieza de carros."},
   A:{icon:"🔵",name:"340-345",color:"var(--A)",manana:"Llevará el oficio de cocina y la sala de exploraciones."}
 };
+// Unidad y tareas del día (en la ventana que se abre al tocar un día)
+function dayUnitHTML(cell){
+  if(!cell||!cell[0])return "";
+  const t=cell[0],u=cell[1],u2=cell[2];
+  let parts=[];
+  if(t==="MT")parts=[["M",u],["T",u2||u]];
+  else if(t==="TN")parts=[["T",u],["N",u2||u]];
+  else if(t==="M"||t==="T"||t==="N"||t==="D")parts=[[t,u]];
+  else return "";
+  const lbl={M:"🌅 Mañana",T:"🌤 Tarde",N:"🌙 Noche",D:"☀️ Día"};
+  return parts.map(([tt,uu])=>{
+    const info=UNIT_INFO[uu];
+    if(!info)return `<div style="font-size:.8rem;color:var(--mu);margin-bottom:8px">${lbl[tt]||tt}: sin unidad asignada</div>`;
+    const tareas=tt==="M"&&info.manana?info.manana:"";
+    return `<div class="lc ${uu}" style="display:block;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:.85rem;text-align:left">
+      <div style="font-weight:800">${info.icon} ${info.name} <span style="font-weight:600;opacity:.8">· ${lbl[tt]||tt}</span></div>
+      ${tareas?`<div style="margin-top:6px;line-height:1.5;color:var(--tx)">📋 ${tareas}</div>`:""}
+    </div>`;
+  }).join("");
+}
 function showUnitInfo(key){
   const info=UNIT_INFO[key];
   if(!info)return;
@@ -2103,12 +2123,9 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
   document.getElementById("dayActionTurn").textContent=turno||t("libre");
   const cardDiv=document.getElementById("dayActionCard");
   if(cardDiv){
-    if(isAlbertoAdmin()){
-      const isToday=date.toDateString()===new Date().toDateString();
-      cardDiv.innerHTML="";
-    } else {
-      cardDiv.innerHTML="";
-    }
+    let cell=null;
+    try{const ov=dk&&window.dateOverrides?window.dateOverrides[dk]:undefined;cell=ov!==undefined?ov:ROTA[ri][di];}catch(e){}
+    cardDiv.innerHTML=dayUnitHTML(cell);
   }
   const ab=document.getElementById("dayActionAgendaBtn");
   if(ab)ab.style.display=isCouple()?"block":"none";
