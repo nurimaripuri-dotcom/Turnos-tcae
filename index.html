@@ -244,6 +244,7 @@ setTimeout(function(){
       <button class="menu-item" id="menuVideoBtn" onclick="closeMenu();openVideoHelp()">🎥 Vídeo de ayuda</button>
       <button class="menu-item" id="menuLegalBtn" onclick="closeMenu();showLegalModal(false)">📜 Aviso legal</button>
       <div class="menu-sep"></div>
+      <button class="menu-item" id="menuReloadBtn" onclick="closeMenu();hardReload()">🔄 Recargar</button>
       <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
     </div>
   </div>
@@ -979,6 +980,21 @@ function checkApkUpdate(){
     });
   }catch(e){console.log("checkApkUpdate:",e);}
 }
+
+// --- Recargar para coger la última versión (útil sobre todo en la app Android) ---
+function hardReload(){
+  try{fetch(location.href,{cache:"reload"}).catch(()=>{}).finally(()=>location.reload());}catch(e){location.reload();}
+}
+(function(){
+  let hiddenAt=0;
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){hiddenAt=Date.now();return;}
+    if(hiddenAt&&Date.now()-hiddenAt>5*60*1000){
+      const busy=document.querySelector(".overlay.open input:focus,.overlay.open textarea:focus");
+      if(!busy)hardReload();
+    }
+  });
+})();
 
 // --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
 function initPushNative(){
