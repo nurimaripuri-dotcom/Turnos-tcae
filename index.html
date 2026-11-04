@@ -275,7 +275,7 @@ setTimeout(function(){
 <!-- ENFERMERAS VIEW (solo consulta, solo Alberto) -->
 <div id="view-enf" style="flex:1;overflow:auto;display:none">
   <div style="padding:8px 12px 0"><span class="tab-hint" id="dueHint">👁 Solo consulta</span></div>
-  <div class="unit-legend" id="dueLegend"></div>
+  <div class="unit-legend" id="dueLegend" style="display:none"></div>
   <div class="wrap" id="wrapEnf">
     <table id="tblEnf" style="border-collapse:collapse;width:max-content">
       <thead id="theadEnf"></thead>
@@ -901,6 +901,9 @@ function widgetPlugin(){
   if(!_widgetPlugin){try{_widgetPlugin=C.registerPlugin?C.registerPlugin("WidgetBridge"):(C.Plugins&&C.Plugins.WidgetBridge);}catch(e){_widgetPlugin=C.Plugins&&C.Plugins.WidgetBridge;}}
   return _widgetPlugin||null;
 }
+// Diseño del widget: se puede retocar aquí sin reinstalar el APK (requiere APK v12 o posterior)
+const WIDGET_STYLE={hdr:"#DDDDDD",hdrWe:"#E8A090",hdrText:"#000000",cellBg:"#FFFFFF",todayBg:"#F8DAD7",num:"#000000",todayNum:"#D32F2F",
+  hdrSize:12,numSize:15,turnSize:26,badgeSize:14,badgeChar:"✉",badgeCount1:false};
 const WIDGET_COLORS={I:["#c0392b","#fde8e8"],V:["#1e8449","#d5f5e3"],N2:["#34495e","#eaecee"],A:["#1565c0","#d6eaf8"]};
 function scheduleWidgetSync(){
   if(!widgetPlugin())return;
@@ -926,11 +929,41 @@ function syncWidget(){
       let n=0;try{if(isCouple())n=agendaFor(ds).length;}catch(e){}
       days[ds]={t:lbl,fg:col[0],bg:col[1],n};
     }
-    const json=JSON.stringify({v:1,days});
+    const json=JSON.stringify({v:1,style:WIDGET_STYLE,days});
     if(json===_widgetLast)return;
     _widgetLast=json;
     P.setData({json}).catch(e=>console.log("widget:",e));
   }catch(e){console.log("syncWidget:",e);}
+}
+
+// --- Aviso de APK nuevo (solo dentro de la app Android) ---
+function checkApkUpdate(){
+  try{
+    const C=window.Capacitor;
+    if(!C||!C.isNativePlatform||!C.isNativePlatform()||window._updChecked)return;
+    window._updChecked=true;
+    const REPO="Turnos-tcae",APK="TurnosTCE.apk",LS="tcaes_apk_latest";
+    let P=null;try{P=C.registerPlugin?C.registerPlugin("AppInfo"):(C.Plugins&&C.Plugins.AppInfo);}catch(e){}
+    const installed=P&&P.getVersion?P.getVersion().then(r=>+r.versionCode||0).catch(()=>0):Promise.resolve(0);
+    let cached=null;try{cached=JSON.parse(localStorage.getItem(LS)||"null");}catch(e){}
+    const latest=(cached&&Date.now()-cached.ts<6*3600e3)?Promise.resolve(cached.v):
+      fetch("https://api.github.com/repos/nurimaripuri-dotcom/"+REPO+"/releases/latest").then(r=>r.ok?r.json():null).then(j=>{
+        const m=j&&String(j.tag_name||"").match(/android-v(\d+)/);const v=m?+m[1]:0;
+        if(v)localStorage.setItem(LS,JSON.stringify({ts:Date.now(),v}));return v;}).catch(()=>0);
+    Promise.all([installed,latest]).then(([inst,lat])=>{
+      if(!lat||inst>=lat)return;
+      if(sessionStorage.getItem("tcaes_upd_later"))return;
+      const url="https://github.com/nurimaripuri-dotcom/"+REPO+"/releases/latest/download/"+APK;
+      const b=document.createElement("div");
+      b.id="apkUpdateBanner";
+      b.style.cssText="position:fixed;left:10px;right:10px;bottom:14px;z-index:9999;background:#1e8449;color:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-family:'DM Mono',monospace;font-size:.82rem;display:flex;align-items:center;gap:10px";
+      b.innerHTML='<div style="flex:1">📲 <b>Hay una versión nueva de la app</b><br><span style="opacity:.9;font-size:.75rem">Descárgala e instálala encima; no se pierde nada.</span></div>'+
+        '<a href="'+url+'" style="background:#fff;color:#1e8449;font-weight:700;padding:8px 12px;border-radius:8px;text-decoration:none;white-space:nowrap">Actualizar</a>'+
+        '<button style="background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer" aria-label="Luego">✕</button>';
+      b.querySelector("button").onclick=()=>{sessionStorage.setItem("tcaes_upd_later","1");b.remove();};
+      document.body.appendChild(b);
+    });
+  }catch(e){console.log("checkApkUpdate:",e);}
 }
 
 // --- Notificaciones push: solo dentro de la app Android (Capacitor). En el navegador no hace nada. ---
@@ -971,7 +1004,7 @@ function initApp(){
     // Las reglas de la base de datos son abiertas, no hace falta esperar a la autenticación
     // (intentamos igualmente el login anónimo por si acaso, pero no bloqueamos la carga de datos por él)
     startDataListeners();
-    setTimeout(initPushNative,1500);
+    setTimeout(initPushNative,1500);setTimeout(checkApkUpdate,4000);
     initCouple();
   }catch(e){console.log("initApp error:",e);render();}
 }

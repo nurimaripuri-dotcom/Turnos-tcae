@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.util.TypedValue;
 import android.widget.RemoteViews;
 import java.util.Calendar;
 import java.util.Locale;
@@ -45,10 +46,30 @@ public class TurnosWidget extends AppWidgetProvider {
     static void update(Context ctx, AppWidgetManager mgr, int widgetId) {
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget_turnos);
         JSONObject days = null;
+        JSONObject st = new JSONObject();
         try {
             String s = ctx.getSharedPreferences(PREFS, 0).getString(KEY, null);
-            if (s != null) days = new JSONObject(s).optJSONObject("days");
+            if (s != null) {
+                JSONObject root = new JSONObject(s);
+                days = root.optJSONObject("days");
+                JSONObject o = root.optJSONObject("style");
+                if (o != null) st = o;
+            }
         } catch (Exception ignored) {}
+        // Estilo: lo manda la web (así se puede retocar sin reinstalar). Valores por defecto si falta.
+        int hdrNormal = color(st.optString("hdr"), HDR_NORMAL);
+        int hdrWeekend = color(st.optString("hdrWe"), HDR_SPECIAL);
+        int hdrText = color(st.optString("hdrText"), Color.BLACK);
+        int todayBg = color(st.optString("todayBg"), TODAY_BG);
+        int cellBg = color(st.optString("cellBg"), Color.WHITE);
+        int todayNum = color(st.optString("todayNum"), TODAY_RED);
+        int numColor = color(st.optString("num"), Color.BLACK);
+        float hdrSize = (float) st.optDouble("hdrSize", 12);
+        float numSize = (float) st.optDouble("numSize", 15);
+        float turnSize = (float) st.optDouble("turnSize", 26);
+        float badgeSize = (float) st.optDouble("badgeSize", 14);
+        String badgeChar = st.optString("badgeChar", "✉");
+        boolean badgeCount1 = st.optBoolean("badgeCount1", false);
 
         Resources r = ctx.getResources();
         String pkg = ctx.getPackageName();
@@ -68,14 +89,19 @@ public class TurnosWidget extends AppWidgetProvider {
             int badge = id(r, pkg, "d" + i + "_badge");
 
             v.setTextViewText(hdr, NAMES[dow - 1]);
-            v.setInt(hdr, "setBackgroundColor", weekend ? HDR_SPECIAL : HDR_NORMAL);
+            v.setInt(hdr, "setBackgroundColor", weekend ? hdrWeekend : hdrNormal);
+            v.setTextColor(hdr, hdrText);
+            v.setTextViewTextSize(hdr, TypedValue.COMPLEX_UNIT_SP, hdrSize);
+            v.setTextViewTextSize(num, TypedValue.COMPLEX_UNIT_SP, numSize);
+            v.setTextViewTextSize(turn, TypedValue.COMPLEX_UNIT_SP, turnSize);
+            v.setTextViewTextSize(badge, TypedValue.COMPLEX_UNIT_SP, badgeSize);
             v.setTextViewText(num, String.valueOf(c.get(Calendar.DAY_OF_MONTH)));
-            v.setTextColor(num, today ? TODAY_RED : Color.BLACK);
+            v.setTextColor(num, today ? todayNum : numColor);
             v.setTextViewText(turn, d != null ? d.optString("t", "·") : (days == null ? "?" : "·"));
             v.setTextColor(turn, color(d != null ? d.optString("fg") : null, Color.BLACK));
-            v.setInt(body, "setBackgroundColor", today ? TODAY_BG : Color.WHITE);
+            v.setInt(body, "setBackgroundColor", today ? todayBg : cellBg);
             int n = d != null ? d.optInt("n", 0) : 0;
-            v.setTextViewText(badge, n > 0 ? (n > 1 ? n + "✉" : "✉") : "");
+            v.setTextViewText(badge, n > 0 ? ((n > 1 || badgeCount1) ? n + badgeChar : badgeChar) : "");
             c.add(Calendar.DAY_OF_MONTH, 1);
         }
 
