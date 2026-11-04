@@ -485,6 +485,20 @@ let suggestions=[],currentSugKey=null;
 let currentYear=new Date().getFullYear();
 let editMode=false,miEditMode=false;
 let pinLocked=false;
+// --- Festivos laborales (Estado + Galicia), según el calendario laboral oficial publicado en el DOG ---
+// 2026: Decreto 46/2025 · 2027: Decreto 68/2026. Añadir cada año el siguiente cuando se publique.
+const FESTIVOS={
+  "20260101":"Aninovo","20260106":"Reis","20260319":"San Xosé","20260402":"Xoves Santo","20260403":"Venres Santo",
+  "20260501":"Festa do Traballo","20260624":"San Xoán","20260725":"Día Nacional de Galicia","20260815":"Asunción",
+  "20261012":"Festa Nacional de España","20261208":"Inmaculada","20261225":"Nadal",
+  "20270101":"Aninovo","20270106":"Reis","20270319":"San Xosé","20270325":"Xoves Santo","20270326":"Venres Santo",
+  "20270501":"Festa do Traballo","20270517":"Día das Letras Galegas","20271012":"Festa Nacional de España",
+  "20271101":"Todos os Santos","20271206":"Constitución","20271208":"Inmaculada","20271225":"Nadal"
+};
+function festivoHTML(dateStr){
+  const f=FESTIVOS[dateStr]; if(!f)return "";
+  return `<div title="${f}" style="position:absolute;top:0;left:0;width:0;height:0;border-top:16px solid #d32f2f;border-right:16px solid transparent;border-top-left-radius:10px;z-index:1;pointer-events:none"></div>`;
+}
 // --- Pareja: Yoli entra con su nombre y PIN propio y ve la fila de Alberto en solo lectura ---
 const ALBERTO_ROW=4;
 const PARTNER_NAMES=["yoli","yolanda"];
@@ -1526,6 +1540,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
     return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;min-height:78px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
       <div style="font-size:1.25rem;font-weight:700;color:${numColor2};margin-bottom:6px">${d}</div>
       ${chipHtml}
+      ${festivoHTML(dateStr)}
     </td>`;
   }
   const bg=isToday?"#4caf50":isWE?(isDark()?"#000000":"#f3e5f5"):"var(--s1)";
@@ -1540,6 +1555,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
     (()=>{const txt=[iconMi.con&&iconMi.con!=="—"?"🔄 "+iconMi.con:"",iconMi.comentario?"💬 "+iconMi.comentario:""].filter(Boolean).join(" ");return txt?`<div style="font-size:.6rem;color:${isDark()?"#ccc":"#555"};margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${txt}</div>`:""})()
     :""}
     ${agendaBadgeHTML(dateStr)}
+    ${festivoHTML(dateStr)}
   </td>`;
 }
 
