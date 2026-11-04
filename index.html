@@ -1492,6 +1492,7 @@ function showTab(tab){
   if(tab==="enf")renderEnfermeras();
   if(tab==="sugerencias")renderSugerencias();
   if(tab==="mi"){
+    setTimeout(fitMiCalendar,30);
     let annSeen=false;
     try{annSeen=!!localStorage.getItem("tcaes_ann_tabs_v2");localStorage.setItem("tcaes_ann_tabs_v2","1");}catch(e){}
     if(!annSeen){
@@ -1646,6 +1647,34 @@ function dayCardHTML(dateObj,isToday){
 }
 function todayCardHTML(){return dayCardHTML(new Date(),true);}
 
+// Ajusta el calendario de "Mi turno" al alto de la pantalla (como las apps de calendario nativas)
+function fitMiCalendar(){
+  try{
+    const view=document.getElementById("view-mi"), cont=document.getElementById("miTurnoContent");
+    if(!view||!cont||view.style.display==="none"||!view.clientHeight)return;
+    const tbl=cont.querySelector("table"); if(!tbl)return;
+    const rows=tbl.querySelectorAll("tbody tr"); if(!rows.length)return;
+    const thead=tbl.querySelector("thead");
+    const cs=getComputedStyle(view);
+    const padB=parseFloat(cs.paddingBottom)||0;
+    const top=tbl.getBoundingClientRect().top-view.getBoundingClientRect().top+view.scrollTop;
+    const avail=view.clientHeight-top-padB-(thead?thead.offsetHeight:0)-4;
+    const h=Math.max(46,Math.floor(avail/rows.length));
+    const numPx=Math.max(12,Math.min(22,Math.round(h*0.24)));
+    const chipPx=Math.max(14,Math.min(34,Math.round(h*0.32)));
+    const padPx=Math.max(2,Math.round(h*0.09));
+    tbl.style.height="auto";
+    rows.forEach(tr=>tr.querySelectorAll("td").forEach(td=>{
+      td.style.height=h+"px"; td.style.minHeight="0"; td.style.padding="2px";
+      const num=td.firstElementChild&&td.firstElementChild.tagName==="DIV"?td.querySelector(":scope > div"):null;
+      if(num&&/^\d+$/.test(num.textContent.trim())){num.style.fontSize=numPx+"px";num.style.marginBottom=Math.round(h*0.04)+"px";}
+      td.querySelectorAll(".mi-chip").forEach(c=>{c.style.fontSize=chipPx+"px";c.style.paddingTop=c.style.paddingBottom=padPx+"px";});
+      td.querySelectorAll(".mi-chip .chip").forEach(c=>{c.style.fontSize=Math.round(chipPx*0.7)+"px";});
+    }));
+  }catch(e){console.log("fitMiCalendar:",e);}
+}
+window.addEventListener("resize",()=>{clearTimeout(window._fitT);window._fitT=setTimeout(fitMiCalendar,150);});
+
 function renderMiTurno(){
   scheduleWidgetSync();
   if(userRow===0){document.getElementById("miTurnoContent").innerHTML='<p style="color:var(--mu);padding:20px">'+t("filaNoEncontrada")+'</p>';return;}
@@ -1667,13 +1696,14 @@ function renderMiTurno(){
   }
 
   let html="";  // tarjeta "quién está de turno conmigo" retirada a petición de Alberto
-  html+=`<div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;gap:8px;flex-shrink:0">
-    <span style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;text-align:center">${MONTHS()[miMonth]}<br><span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px;font-size:.78rem;flex-shrink:0">
-    <span style="background:var(--Vb);color:var(--V);padding:4px 11px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
-    <span class="stat-badge-t" style="padding:4px 11px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
-    <span style="background:var(--Ib);color:var(--I);padding:4px 11px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
+  // Cabecera compacta: mes + año y contadores en una sola línea
+  html+=`<div id="miHead" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-shrink:0;flex-wrap:wrap">
+    <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800">${MONTHS()[miMonth]} <span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
+    <span style="display:flex;gap:5px;font-size:.74rem">
+      <span style="background:var(--Vb);color:var(--V);padding:3px 8px;border-radius:6px;font-weight:600">🌅 ${cM}M</span>
+      <span class="stat-badge-t" style="padding:3px 8px;border-radius:6px;font-weight:600">🌤 ${cT}T</span>
+      <span style="background:var(--Ib);color:var(--I);padding:3px 8px;border-radius:6px;font-weight:600">🌙 ${cN}N</span>
+    </span>
   </div>`;
 
   html+=`<div style="flex:1;min-height:0;display:flex;flex-direction:column">
@@ -1715,6 +1745,7 @@ function renderMiTurno(){
   if(isCouple())html+=agendaUpcomingHTML();
   html+=`<div class="video-promo-banner" onclick="openVideoHelp()" style="background:var(--I);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;flex-shrink:0">${t("videoPromoBanner")}</div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
+  setTimeout(fitMiCalendar,0);
   document.getElementById("miTurnoContent").onclick=function(e){
     const td=e.target.closest("td[data-ri]");
     if(!td)return;
