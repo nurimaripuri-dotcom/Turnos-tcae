@@ -246,6 +246,7 @@ setTimeout(function(){
       <div class="menu-sep"></div>
       <button class="menu-item" id="menuReloadBtn" onclick="closeMenu();hardReload()">🔄 Recargar</button>
       <button class="menu-item danger" id="menuLogoutBtn" onclick="closeMenu();logout()">🚪 Cerrar sesión</button>
+      <div id="menuVersion" style="padding:8px 14px 4px;font-size:.7rem;color:var(--mu);text-align:center"></div>
     </div>
   </div>
 </div>
@@ -951,6 +952,19 @@ function syncWidget(){
   }catch(e){console.log("syncWidget:",e);}
 }
 
+// --- Versión instalada al final del menú ⋮ ---
+function showAppVersion(){
+  try{
+    const el=document.getElementById("menuVersion"); if(!el)return;
+    const C=window.Capacitor;
+    if(!C||!C.isNativePlatform||!C.isNativePlatform()){el.textContent="🌐 Versión web";return;}
+    let P=null;try{P=C.registerPlugin?C.registerPlugin("AppInfo"):(C.Plugins&&C.Plugins.AppInfo);}catch(e){}
+    const latest=()=>{try{const c=JSON.parse(localStorage.getItem("tcaes_apk_latest")||"null");return c&&c.v?c.v:0;}catch(e){return 0;}};
+    const put=(inst)=>{const l=latest();el.textContent="📱 App "+(inst?"v"+inst:"(versión antigua)")+(l&&(!inst||l>inst)?" · disponible v"+l:"");};
+    if(P&&P.getVersion)P.getVersion().then(r=>put(+r.versionCode||0)).catch(()=>put(0));else put(0);
+  }catch(e){}
+}
+
 // --- Aviso de APK nuevo (solo dentro de la app Android) ---
 function checkApkUpdate(){
   try{
@@ -961,11 +975,12 @@ function checkApkUpdate(){
     let P=null;try{P=C.registerPlugin?C.registerPlugin("AppInfo"):(C.Plugins&&C.Plugins.AppInfo);}catch(e){}
     const installed=P&&P.getVersion?P.getVersion().then(r=>+r.versionCode||0).catch(()=>0):Promise.resolve(0);
     let cached=null;try{cached=JSON.parse(localStorage.getItem(LS)||"null");}catch(e){}
-    const latest=(cached&&Date.now()-cached.ts<6*3600e3)?Promise.resolve(cached.v):
+    const latest=(cached&&Date.now()-cached.ts<15*60e3)?Promise.resolve(cached.v):
       fetch("https://api.github.com/repos/nurimaripuri-dotcom/"+REPO+"/releases/latest").then(r=>r.ok?r.json():null).then(j=>{
         const m=j&&String(j.tag_name||"").match(/android-v(\d+)/);const v=m?+m[1]:0;
         if(v)localStorage.setItem(LS,JSON.stringify({ts:Date.now(),v}));return v;}).catch(()=>0);
     Promise.all([installed,latest]).then(([inst,lat])=>{
+      showAppVersion();
       if(!lat||inst>=lat)return;
       if(sessionStorage.getItem("tcaes_upd_later"))return;
       const url="https://github.com/nurimaripuri-dotcom/"+REPO+"/releases/latest/download/"+APK;
@@ -1034,7 +1049,7 @@ function initApp(){
     // Las reglas de la base de datos son abiertas, no hace falta esperar a la autenticación
     // (intentamos igualmente el login anónimo por si acaso, pero no bloqueamos la carga de datos por él)
     startDataListeners();
-    setTimeout(initPushNative,1500);setTimeout(checkApkUpdate,4000);
+    setTimeout(initPushNative,1500);setTimeout(checkApkUpdate,4000);setTimeout(showAppVersion,1000);
     initCouple();
   }catch(e){console.log("initApp error:",e);render();}
 }
