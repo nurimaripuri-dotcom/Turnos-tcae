@@ -1,0 +1,9 @@
+{
+  "name": "calendar-sync",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.4"
+  }
+}

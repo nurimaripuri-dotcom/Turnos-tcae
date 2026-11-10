@@ -1,0 +1,50 @@
+name: Sincronizar Google Calendar
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # GitHub lo ejecuta cada 5-15 min aprox.
+  workflow_dispatch:
+
+concurrency:
+  group: calendar-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: calendar-sync
+    steps:
+      - name: Comprobar configuración
+        id: chk
+        working-directory: .
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          C1: ${{ secrets.GCAL_SHARED_ID }}
+          C2: ${{ secrets.GCAL_ALBERTO_ID }}
+          C3: ${{ secrets.GCAL_YOLI_ID }}
+        run: |
+          if [ -z "$SA" ] || [ -z "$C1$C2$C3" ]; then echo "::notice::Falta FIREBASE_SERVICE_ACCOUNT o algún GCAL_*_ID; no se sincroniza."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v5
+        if: steps.chk.outputs.ok == '1'
+
+      - uses: actions/setup-node@v5
+        if: steps.chk.outputs.ok == '1'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: calendar-sync/package-lock.json
+
+      - name: Sincronizar
+        if: steps.chk.outputs.ok == '1'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GCAL_SHARED_ID: ${{ secrets.GCAL_SHARED_ID }}
+          GCAL_ALBERTO_ID: ${{ secrets.GCAL_ALBERTO_ID }}
+          GCAL_YOLI_ID: ${{ secrets.GCAL_YOLI_ID }}
+        run: |
+          npm ci --no-audit --no-fund
+          node sync.js
