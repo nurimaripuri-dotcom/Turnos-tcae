@@ -944,7 +944,7 @@ function syncWidget(){
       const ov=window.dateOverrides&&window.dateOverrides[(userRow-1)+"_"+ds];
       const cell=ov!==undefined?ov:ROTA[ri][dow];
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
-      const neutral=!t||t==="L"||t==="/"||t==="V"||t==="LD";
+      const neutral=!t||t==="L"||t==="/"||t==="V"||t==="LD"||t==="LDA";
       const col=(!neutral&&WIDGET_COLORS[u])||["#000000","#ffffff"];
       const lbl=t==="V"?"🏖":(t||"·");
       let n=0;try{if(isCouple())n=agendaFor(ds).length;}catch(e){}
@@ -1191,7 +1191,7 @@ function weekOff(mon){return Math.round((mon-REF_MONDAY)/(7*86400000));}
 function rowFor(sr,mon){const o=weekOff(mon);return((sr-1+o)%15+15)%15;}
 
 function chipCls(t,u){
-  if(!t||t==="L"||t==="/"||t==="V"||t==="LD")return"neu";
+  if(!t||t==="L"||t==="/"||t==="V"||t==="LD"||t==="LDA")return"neu";
   return u||"neu";
 }
 
@@ -1246,9 +1246,9 @@ function render(){
       const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
       const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
-      const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+      const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
-      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
+      const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD"&&cell[0]!=="LDA";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
       const chipInner=isCombined
         ?`<div style="display:flex;width:34px;height:34px;border-radius:6px;overflow:hidden;gap:1px">`
@@ -1330,9 +1330,9 @@ function renderEnfermeras(){
       const cls=chipCls(t,u);
       const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
       const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
-      const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+      const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
-      const iconData=enfChangeIcons[pi]&&enfChangeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD";
+      const iconData=enfChangeIcons[pi]&&enfChangeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD"&&cell[0]!=="LDA";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLogEnf(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
@@ -1564,7 +1564,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const lbl2=t==="MT"?"T":"N";
   const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
   const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
-  const lbl=t==="V"?"🏖":t==="LD"?"📋":(t||"·");
+  const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
   const isLorSlash2=!t||t==="L"||t==="/";
   const chipHtml=isCombined
     ?"<div class='mi-chip neu' style='font-size:1.5rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
@@ -1584,7 +1584,7 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const numColor=isToday?"#fff":isWE?(isDark()?"#fff":"#6f42c1"):"var(--tx)";
   const isLorSlash=!t||t==="L"||t==="/";
   const bg2=isLorSlash&&!isToday?(isDark()?"#000000":"#ffffff"):bg;
-  const iconMi=!isPartner&&changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD";
+  const iconMi=!isPartner&&changeIcons[userRow-1]&&changeIcons[userRow-1][dateStr]&&t!=="V"&&t!=="LD"&&t!=="LDA";
   return `<td data-ri="${ri}" data-di="${dow}" data-day="${d}" style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:${bg2};border-radius:12px;min-height:78px;vertical-align:middle;cursor:${miEditMode?"pointer":"default"};position:relative">
     <div style="font-size:1.25rem;font-weight:700;color:${numColor};margin-bottom:6px">${d}</div>
     ${chipHtml}
@@ -1607,7 +1607,7 @@ function computeDayInfo(dateObj){
   const cell=window.dateOverrides[ovKey]!==undefined?window.dateOverrides[ovKey]:ROTA[ri][dow];
   const t=cell?cell[0]:null,u=cell?cell[1]:null,u2=cell&&cell[2]?cell[2]:null;
   const isCombined=(t==="MT"||t==="TN")&&u2;
-  const halves=isCombined?[[t==="MT"?"M":"T",u],[t==="MT"?"T":"N",u2]]:(t&&t!=="L"&&t!=="/"&&t!=="V"&&t!=="LD"?[[t,u]]:[]);
+  const halves=isCombined?[[t==="MT"?"M":"T",u],[t==="MT"?"T":"N",u2]]:(t&&t!=="L"&&t!=="/"&&t!=="V"&&t!=="LD"&&t!=="LDA"?[[t,u]]:[]);
   const turnosHoy=[...new Set(halves.map(([turno])=>turno))];
   const mates={};
   turnosHoy.forEach(turno=>{mates[turno]=[];});
@@ -1619,7 +1619,7 @@ function computeDayInfo(dateObj){
       const pcell=window.dateOverrides[povKey]!==undefined?window.dateOverrides[povKey]:ROTA[pri][dow];
       const pt=pcell?pcell[0]:null,pu=pcell?pcell[1]:null,pu2=pcell&&pcell[2]?pcell[2]:null;
       const pIsCombined=(pt==="MT"||pt==="TN")&&pu2;
-      const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"?[[pt,pu]]:[]);
+      const pHalves=pIsCombined?[[pt==="MT"?"M":"T",pu],[pt==="MT"?"T":"N",pu2]]:(pt&&pt!=="L"&&pt!=="/"&&pt!=="V"&&pt!=="LD"&&pt!=="LDA"?[[pt,pu]]:[]);
       pHalves.forEach(([pTurno,pUnit])=>{
         if(turnosHoy.includes(pTurno))mates[pTurno].push({name:p.name,unit:pUnit,source:"tce"});
       });
@@ -1821,7 +1821,7 @@ function showMiLog(e,day){
   setTimeout(()=>popup.style.display="none",5000);
 }
 
-const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"]];
+const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"],["LDA","📋 LD año pasado"]];
 
 function openEdit(ri,di,dk,force){
   if(!miEditMode&&!force)return;
@@ -1846,7 +1846,7 @@ function renderTurnBtns(){
     `<div class="tbtn ${editTurn===k?"active":""}" onclick="selTurn('${k}')">${l}</div>`).join("");
 }
 function renderUnitBtns(){
-  const show=editTurn&&editTurn!=="L"&&editTurn!=="/"&&editTurn!=="V"&&editTurn!=="LD";
+  const show=editTurn&&editTurn!=="L"&&editTurn!=="/"&&editTurn!=="V"&&editTurn!=="LD"&&editTurn!=="LDA";
   document.getElementById("unitSection").style.display=show?"":"none";
   if(!show)return;
   const isCombined=editTurn==="MT"||editTurn==="TN";
@@ -1904,7 +1904,7 @@ function showUnitInfo(key){
 }
 function closeUnitInfo(){document.getElementById("overlayUnitInfo").classList.remove("open");}
 
-function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD"){editUnit=null;editUnit2=null;}if(t!=="MT"&&t!=="TN")editUnit2=null;renderTurnBtns();renderUnitBtns();}
+function selTurn(t){editTurn=t;if(t==="L"||t==="/"||t==="V"||t==="LD"||t==="LDA"){editUnit=null;editUnit2=null;}if(t!=="MT"&&t!=="TN")editUnit2=null;renderTurnBtns();renderUnitBtns();}
 function selUnit(u){editUnit=u;renderUnitBtns();}
 function selUnit2(u){editUnit2=u;renderUnitBtns();}
 function confirmEdit(){applyEdit(editTurn,editUnit,editUnit2);}
@@ -1949,7 +1949,7 @@ function renderResumen(){
   }
 
   function calcYear(yr){
-    const counts={M:0,T:0,N:0,V:0,LD:0};
+    const counts={M:0,T:0,N:0,V:0,LD:0,LDA:0};
     let d=new Date(yr,0,1);
     while(d.getFullYear()===yr){
       const dow=(d.getDay()+6)%7;
@@ -1972,6 +1972,8 @@ function renderResumen(){
           else if(baseT==="T") counts.T--;
           else if(baseT==="N") counts.N--;
           counts.V++;
+        } else if(t==="LDA"){
+          counts.LDA++;
         } else if(t==="LD"){
           counts.LD++;
           // LD replaces base but counts as worked - keep base count
@@ -2012,6 +2014,7 @@ function renderResumen(){
     html+='<th style="text-align:center;padding:6px;color:var(--A)">N</th>';
     html+='<th style="text-align:center;padding:6px;color:#856404">🏖</th>';
     html+='<th style="text-align:center;padding:6px;color:#0c5460">LD</th>';
+    html+='<th style="text-align:center;padding:6px;color:#0c5460">LD ant.</th>';
     html+='<th style="text-align:center;padding:6px;color:#555">Horas</th>';
     html+='<th style="text-align:center;padding:6px;color:#c62828">Exceso</th>';
     html+=`<th style="text-align:center;padding:6px;font-weight:700;color:${col}">LDs</th>`;
@@ -2023,6 +2026,7 @@ function renderResumen(){
     html+=`<td style="text-align:center;padding:6px">${c.N}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.V}</td>`;
     html+=`<td style="text-align:center;padding:6px">${c.LD}</td>`;
+    html+=`<td style="text-align:center;padding:6px">${c.LDA}</td>`;
     html+=`<td style="text-align:center;padding:6px">${horas}h</td>`;
     html+=`<td style="text-align:center;padding:6px;color:${col}">${exceso>=0?"+":""}${exceso}h</td>`;
     html+=`<td style="text-align:center;padding:6px;font-weight:700;color:${col}">${exceso>=0?"+":""}${lds}</td>`;
@@ -2204,7 +2208,7 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
    const fk=date.getFullYear()+String(date.getMonth()+1).padStart(2,"0")+String(date.getDate()).padStart(2,"0");
    const fn=festivoNombre(fk);
    if(fe){fe.style.display=fn?"block":"none";fe.textContent=fn?(lang==="gl"?"🔺 Festivo: ":"🔺 Festivo: ")+fn:"";}}
-  document.getElementById("dayActionTurn").textContent=turno||t("libre");
+  document.getElementById("dayActionTurn").textContent=turno==="LDA"?"📋 LD año pasado":turno==="LD"?"📋 LD":(turno||t("libre"));
   const cardDiv=document.getElementById("dayActionCard");
   if(cardDiv){
     let cell=null;
