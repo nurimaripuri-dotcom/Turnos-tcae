@@ -839,7 +839,7 @@ function agendaAll(){
   return [...Object.entries(agendaData).map(([k,e])=>["shared",k,e]),...Object.entries(agendaPriv).map(([k,e])=>["priv",k,e])].filter(x=>x[2]&&x[2].d);
 }
 function agendaFor(dateStr){
-  return agendaAll().filter(x=>x[2].d===dateStr).sort((a,b)=>(a[2].time||"99").localeCompare(b[2].time||"99"));
+  return agendaAll().filter(x=>x[2].d===dateStr).sort((a,b)=>(a[2].time||"00").localeCompare(b[2].time||"00"));
 }
 function agendaBadgeHTML(dateStr){
   if(!isCouple())return "";
@@ -857,11 +857,11 @@ function agendaUpcomingHTML(){
   const now=new Date();
   const todayStr=now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0");
   const list=agendaAll().filter(x=>x[2].d>=todayStr)
-    .sort((a,b)=>(a[2].d+(a[2].time||"99")).localeCompare(b[2].d+(b[2].time||"99"))).slice(0,5);
+    .sort((a,b)=>(a[2].d+(a[2].time||"00")).localeCompare(b[2].d+(b[2].time||"00"))).slice(0,5);
   let h=`<div style="margin-top:12px;background:var(--s2);border-radius:12px;padding:10px 12px;flex-shrink:0">
     <div style="font-weight:800;font-size:.85rem;margin-bottom:6px">📅 Próximos</div>`;
   if(!list.length)h+=`<div style="font-size:.78rem;color:var(--mu)">Nada apuntado. Toca un día del calendario → Agenda del día.</div>`;
-  list.forEach(([sc,k,e])=>{h+=`<div onclick="openAgendaDay('${e.d}')" style="font-size:.8rem;padding:3px 0;cursor:pointer"><b>${escH(fmtAgendaDate(e.d))}</b>${e.time?" · "+escH(e.time):""} — ${escH(e.text)} <span style="color:var(--mu);font-size:.7rem">${agendaIcon(sc,e)}</span></div>`;});
+  list.forEach(([sc,k,e])=>{h+=`<div onclick="openAgendaDay('${e.d}')" style="font-size:.8rem;padding:3px 0;cursor:pointer"><b>${escH(fmtAgendaDate(e.d))}</b>${e.time?" · "+escH(e.time):" · todo el día"} — ${escH(e.text)} <span style="color:var(--mu);font-size:.7rem">${agendaIcon(sc,e)}</span></div>`;});
   return h+`</div>`;
 }
 function dayActionAgenda(){
@@ -885,6 +885,7 @@ function openAgendaDay(dateStr){
   document.getElementById("agendaTitle").textContent="📅 "+fmtAgendaDate(dateStr);
   document.getElementById("agendaTime").value="";
   document.getElementById("agendaText").value="";
+  document.getElementById("agendaAllDay").checked=true;
   setAgendaVis("shared");
   renderAgendaDay();
   document.getElementById("overlayAgenda").classList.add("open");
@@ -896,17 +897,19 @@ function renderAgendaDay(){
   const items=agendaFor(agendaDayKey);
   if(!items.length){cont.innerHTML=`<div style="font-size:.8rem;color:var(--mu)">Nada apuntado este día.</div>`;return;}
   cont.innerHTML=items.map(([sc,k,e])=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid ${sc==="shared"?"#6f42c1":"var(--bd)"};border-radius:8px;margin-bottom:6px">
-    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":""}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}</div></div>
+    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":"<b>🗓 Todo el día</b> · "}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}</div></div>
     <button onclick="deleteAgendaEvent('${sc}','${k}')" style="border:none;background:transparent;font-size:1rem;cursor:pointer">🗑</button></div>`).join("");
 }
 function addAgendaEvent(){
   const text=document.getElementById("agendaText").value.trim();
-  const time=document.getElementById("agendaTime").value||"";
+  const allDay=document.getElementById("agendaAllDay").checked;
+  const time=allDay?"":(document.getElementById("agendaTime").value||"");
   if(!text||!agendaDayKey||!db)return;
+  if(!allDay&&!time){alert("Pon una hora o marca «Todo el día».");return;}
   const data={d:agendaDayKey,time,text,ts:Date.now()};
   if(agendaVis==="shared")data.by=meName();
   db.ref(agendaPath(agendaVis)).push(data)
-    .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";setTimeout(renderAgendaDay,200);})
+    .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";document.getElementById("agendaAllDay").checked=true;setTimeout(renderAgendaDay,200);})
     .catch(()=>alert(t("errorEnviar")));
 }
 function deleteAgendaEvent(sc,k){
@@ -2464,9 +2467,13 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
     <h2 id="agendaTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:10px">📅 Agenda</h2>
     <div id="agendaList" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:6px;margin-bottom:8px">
-      <input id="agendaTime" type="time" style="flex:0 0 110px;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
+      <input id="agendaTime" type="time" oninput="if(this.value)document.getElementById('agendaAllDay').checked=false" style="flex:0 0 110px;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
       <input id="agendaText" type="text" maxlength="200" placeholder="Qué hay…" style="flex:1;min-width:0;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
     </div>
+    <label style="display:flex;align-items:center;gap:8px;margin:-2px 0 10px;font-size:.85rem;cursor:pointer">
+      <input id="agendaAllDay" type="checkbox" onchange="if(this.checked)document.getElementById('agendaTime').value=''" style="width:18px;height:18px">
+      🗓 Todo el día
+    </label>
     <div style="display:flex;gap:6px;margin-bottom:8px">
       <button id="agendaVisShared" onclick="setAgendaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Compartido</button>
       <button id="agendaVisPriv" onclick="setAgendaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privado</button>
