@@ -1203,7 +1203,8 @@ function absLbl(t){return t==="V"?"🏖":t;}
 function absBase(t,baseCell){
   if(!isAbsT(t)||!baseCell)return null;
   const b=baseCell[0];
-  if(!b||b==="L"||b==="/"||isAbsT(b))return null;
+  if(!b||isAbsT(b))return null;
+  if((b==="L"||b==="/")&&t!=="V")return null; // L y / solo se muestran debajo de vacaciones
   return [b,baseCell[1]];
 }
 function splitAbsChipHTML(t,base,big){
@@ -1215,7 +1216,7 @@ function splitAbsChipHTML(t,base,big){
   const sp="width:auto;height:auto;flex:1;min-width:0;padding:"+(big?"3px 0":"0")+";margin:0;border-radius:"+(big?"4px":"0")+";border:none;line-height:1;display:flex;align-items:center;justify-content:center";
   return `<div class="${big?"mi-chip neu":""}" style="${wrap}">`
     +`<span class="chip neu" style="${sp};font-size:${fs1}">${absLbl(t)}</span>`
-    +`<span class="chip ${chipCls(base[0],base[1])}" style="${sp};font-size:${fs2}">${base[0]}</span>`
+    +`<span class="chip ${chipCls(base[0],base[1])}" style="${sp};font-size:${fs2}${chipCls(base[0],base[1])==="neu"?";border-top:1px solid "+(isDark()?"#555":"#bbb"):""}">${base[0]}</span>`
     +`</div>`;
 }
 
