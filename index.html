@@ -924,7 +924,7 @@ function widgetPlugin(){
 }
 // Diseño del widget: se puede retocar aquí sin reinstalar el APK (requiere APK v12 o posterior)
 const WIDGET_STYLE={hdr:"#DDDDDD",hdrWe:"#E8A090",hdrText:"#000000",cellBg:"#FFFFFF",todayBg:"#F8DAD7",num:"#000000",todayNum:"#D32F2F",
-  hdrSize:12,numSize:15,turnSize:26,badgeSize:14,badgeChar:"✉",badgeCount1:false};
+  hdrSize:12,numSize:15,turnSize:26,badgeSize:14,splitTopSize:15,subSize:18,badgeChar:"✉",badgeCount1:false};
 const WIDGET_COLORS={I:["#c0392b","#fde8e8"],V:["#1e8449","#d5f5e3"],N2:["#34495e","#eaecee"],A:["#1565c0","#d6eaf8"]};
 function scheduleWidgetSync(){
   if(!widgetPlugin())return;
@@ -946,9 +946,11 @@ function syncWidget(){
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
       const neutral=!t||t==="L"||t==="/"||t==="V"||t==="LD"||t==="LDA";
       const col=(!neutral&&WIDGET_COLORS[u])||["#000000","#ffffff"];
-      const lbl=t==="V"?"🏖":(t||"·");
+      const lbl=isAbsT(t)?absLbl(t):(t||"·");
       let n=0;try{if(isCouple())n=agendaFor(ds).length;}catch(e){}
       days[ds]={t:lbl,fg:col[0],bg:col[1],n};
+      const ab=absBase(t,ROTA[ri][dow]);
+      if(ab){const sc=WIDGET_COLORS[ab[1]]||["#000000","#ffffff"];days[ds].s=ab[0];days[ds].sfg=sc[0];days[ds].sbg=sc[1];}
     }
     const json=JSON.stringify({v:1,style:WIDGET_STYLE,days});
     if(json===_widgetLast)return;

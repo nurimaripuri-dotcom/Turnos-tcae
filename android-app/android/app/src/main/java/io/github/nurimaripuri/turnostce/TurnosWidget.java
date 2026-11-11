@@ -68,6 +68,9 @@ public class TurnosWidget extends AppWidgetProvider {
         float numSize = (float) st.optDouble("numSize", 15);
         float turnSize = (float) st.optDouble("turnSize", 26);
         float badgeSize = (float) st.optDouble("badgeSize", 14);
+        // Casilla partida (V/LD/LDA + turno que tocaba): tamaños arriba/abajo
+        float splitTopSize = (float) st.optDouble("splitTopSize", 15);
+        float subSize = (float) st.optDouble("subSize", 18);
         String badgeChar = st.optString("badgeChar", "✉");
         boolean badgeCount1 = st.optBoolean("badgeCount1", false);
 
@@ -87,13 +90,25 @@ public class TurnosWidget extends AppWidgetProvider {
             int num = id(r, pkg, "d" + i + "_num");
             int turn = id(r, pkg, "d" + i + "_turn");
             int badge = id(r, pkg, "d" + i + "_badge");
+            int sub = id(r, pkg, "d" + i + "_sub");
 
             v.setTextViewText(hdr, NAMES[dow - 1]);
             v.setInt(hdr, "setBackgroundColor", weekend ? hdrWeekend : hdrNormal);
             v.setTextColor(hdr, hdrText);
             v.setTextViewTextSize(hdr, TypedValue.COMPLEX_UNIT_SP, hdrSize);
             v.setTextViewTextSize(num, TypedValue.COMPLEX_UNIT_SP, numSize);
-            v.setTextViewTextSize(turn, TypedValue.COMPLEX_UNIT_SP, turnSize);
+            String subTxt = d != null ? d.optString("s", "") : "";
+            boolean split = !subTxt.isEmpty();
+            v.setTextViewTextSize(turn, TypedValue.COMPLEX_UNIT_SP, split ? splitTopSize : turnSize);
+            if (split) {
+                v.setViewVisibility(sub, android.view.View.VISIBLE);
+                v.setTextViewText(sub, subTxt);
+                v.setTextViewTextSize(sub, TypedValue.COMPLEX_UNIT_SP, subSize);
+                v.setTextColor(sub, color(d.optString("sfg"), Color.BLACK));
+                v.setInt(sub, "setBackgroundColor", color(d.optString("sbg"), Color.TRANSPARENT));
+            } else {
+                v.setViewVisibility(sub, android.view.View.GONE);
+            }
             v.setTextViewTextSize(badge, TypedValue.COMPLEX_UNIT_SP, badgeSize);
             v.setTextViewText(num, String.valueOf(c.get(Calendar.DAY_OF_MONTH)));
             v.setTextColor(num, today ? todayNum : numColor);
