@@ -5,7 +5,8 @@
 // Cada evento guarda su clave de la app en extendedProperties.private.appKey; así se actualiza o borra sin duplicar.
 process.on("uncaughtException", e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 600)); process.exit(1); });
 process.on("unhandledRejection", e => { console.log("::error::" + (e && e.code ? e.code + ": " : "") + String((e && e.message) || e).slice(0, 600)); process.exit(1); });
-const admin = require("firebase-admin");
+const { initializeApp, cert, getApp } = require("firebase-admin/app");
+const { getDatabase } = require("firebase-admin/database");
 const { JWT } = require("google-auth-library");
 const crypto = require("crypto");
 
@@ -92,9 +93,9 @@ async function syncOne(client, name, calId, items) {
 
 async function main() {
   const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({ credential: admin.credential.cert(sa),
+  initializeApp({ credential: cert(sa),
     databaseURL: "https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app" });
-  const db = admin.database();
+  const db = getDatabase();
   const client = new JWT({ email: sa.client_email, key: sa.private_key,
     scopes: ["https://www.googleapis.com/auth/calendar.events"] });
   const [shared, alb, yoli] = await Promise.all([
@@ -114,7 +115,7 @@ async function main() {
         (st === 404 || st === 403 ? " — ¿está compartido el calendario con " + sa.client_email + " con permiso 'Hacer cambios en eventos'? ¿Está activada la API de Google Calendar?" : ""));
     }
   }
-  await admin.app().delete();
+  await getApp().delete();
   if (failed) process.exit(1);
 }
 

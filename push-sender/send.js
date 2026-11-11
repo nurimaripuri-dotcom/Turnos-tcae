@@ -3,7 +3,9 @@
 // Guarda en <prefijo>_push_sent/{clave} el último estado ya avisado para no repetir.
 process.on("uncaughtException", e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 600)); process.exit(1); });
 process.on("unhandledRejection", e => { console.log("::error::" + (e && e.code ? e.code + ": " : "") + String((e && e.message) || e).slice(0, 600)); process.exit(1); });
-const admin = require("firebase-admin");
+const { initializeApp, cert, getApp } = require("firebase-admin/app");
+const { getDatabase } = require("firebase-admin/database");
+const { getMessaging } = require("firebase-admin/messaging");
 
 const APPS = [
   { name: "TCE", proposals: "tcaes_proposals", tokens: "tcaes_push_tokens", sent: "tcaes_push_sent" },
@@ -15,11 +17,11 @@ try { sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT); }
 catch (e) { console.log("::error::El secret FIREBASE_SERVICE_ACCOUNT no es un JSON válido (" + e.message + "). Vuelve a pegar el contenido entero del archivo .json."); process.exit(1); }
 for (const k of ["project_id", "client_email", "private_key"]) if (!sa[k]) { console.log("::error::Al secret le falta el campo " + k + ". ¿Es el .json de 'Cuentas de servicio'?"); process.exit(1); }
 console.log("Cuenta de servicio:", sa.client_email, "· proyecto:", sa.project_id);
-admin.initializeApp({
-  credential: admin.credential.cert(sa),
+initializeApp({
+  credential: cert(sa),
   databaseURL: "https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
 });
-const db = admin.database();
+const db = getDatabase();
 const DRY = process.env.DRY_RUN === "1";
 
 function fmtDay(k) {
@@ -72,7 +74,7 @@ async function runApp(app) {
     if (!tokens.length) { console.log(`[${app.name}] ${key}: fila ${msg.row} sin app instalada`); continue; }
     console.log(`[${app.name}] ${key}: ${p.status} → fila ${msg.row} (${tokens.length} disp.)`);
     if (DRY) continue;
-    const res = await admin.messaging().sendEachForMulticast({
+    const res = await getMessaging().sendEachForMulticast({
       tokens,
       notification: { title: msg.title, body: msg.body },
       android: { priority: "high" },
@@ -92,5 +94,5 @@ async function runApp(app) {
 
 (async () => {
   for (const app of APPS) await runApp(app);
-  await admin.app().delete();
+  await getApp().delete();
 })().catch(e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 500)); process.exit(1); });
