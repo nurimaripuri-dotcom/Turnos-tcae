@@ -80,7 +80,7 @@ async function syncOne(client, name, calId, items) {
   if (!calId) { console.log(`[${name}] sin calendario configurado, se omite`); return; }
   const g = await listAppEvents(client, calId);
   const p = plan(items, g);
-  console.log(`[${name}] app ${Object.keys(items || {}).length} · Google ${g.length} → crear ${p.create.length}, actualizar ${p.update.length}, borrar ${p.del.length}`);
+  console.log(`::notice::[${name}] app ${Object.keys(items || {}).length} · Google ${g.length} → crear ${p.create.length}, actualizar ${p.update.length}, borrar ${p.del.length}`);
   if (DRY) return;
   const base = API + encodeURIComponent(calId) + "/events";
   for (const ev of p.create) await client.request({ url: base, method: "POST", data: ev });
@@ -121,4 +121,3 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
 module.exports = { eventFor, plan };
-// rev 2026-11-11T10:44:42Z
