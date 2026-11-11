@@ -1195,6 +1195,28 @@ function chipCls(t,u){
   return u||"neu";
 }
 
+// V / LD / LDA: casilla partida — arriba la ausencia, abajo el turno que tocaba
+function isAbsT(t){return t==="V"||t==="LD"||t==="LDA";}
+function absLbl(t){return t==="V"?"🏖":t;}
+function absBase(t,baseCell){
+  if(!isAbsT(t)||!baseCell)return null;
+  const b=baseCell[0];
+  if(!b||b==="L"||b==="/"||isAbsT(b))return null;
+  return [b,baseCell[1]];
+}
+function splitAbsChipHTML(t,base,big){
+  const fs1=big?(t==="LDA"?".85rem":"1rem"):(t==="LDA"?".5rem":".6rem");
+  const fs2=big?"1rem":".62rem";
+  const wrap=big
+    ?"display:flex;flex-direction:column;gap:2px;width:100%;box-sizing:border-box;border-radius:9px;overflow:hidden;padding:3px;font-weight:800"
+    :"display:flex;flex-direction:column;width:34px;height:34px;box-sizing:border-box;border-radius:6px;overflow:hidden;gap:1px;border:2px solid "+(isDark()?"#555":"#333");
+  const sp="width:auto;height:auto;flex:1;min-width:0;padding:"+(big?"3px 0":"0")+";margin:0;border-radius:"+(big?"4px":"0")+";border:none;line-height:1;display:flex;align-items:center;justify-content:center";
+  return `<div class="${big?"mi-chip neu":""}" style="${wrap}">`
+    +`<span class="chip neu" style="${sp};font-size:${fs1}">${absLbl(t)}</span>`
+    +`<span class="chip ${chipCls(base[0],base[1])}" style="${sp};font-size:${fs2}">${base[0]}</span>`
+    +`</div>`;
+}
+
 function render(){
   document.getElementById("yearLabel").textContent=currentYear;
   const today=new Date();
@@ -1244,9 +1266,8 @@ function render(){
       const lbl2=t==="MT"?"T":"N";
       const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
       const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
-      const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
-      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
-      const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
+      const absB=absBase(t,baseCell);
+      const lbl=isAbsT(t)?absLbl(t):(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
       const iconData=changeIcons[pi]&&changeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD"&&cell[0]!=="LDA";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLog(event,${pi},'${dateStr}')">✎</span>`:"";
@@ -1255,7 +1276,8 @@ function render(){
           +`<span class="chip ${cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl1}</span>`
           +`<span class="chip ${cls2||cls}" style="width:auto;height:auto;flex:1;min-width:0;padding:0;margin:0;border-radius:0;border:none;font-size:.62rem">${lbl2}</span>`
           +`</div>`
-        :`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>`;
+        :absB?splitAbsChipHTML(t,absB,false)
+        :`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;${t==="LDA"?"font-size:.6rem":""}">${lbl}</div>`;
       const tapAttr=isMyRow?` onclick="tableCellTap(${pi},${dc.yr},${dc.mn},${dc.d})"`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important${isMyRow?";cursor:pointer":""}"${tapAttr}>
         <div style="position:relative;display:inline-block">
@@ -1328,15 +1350,14 @@ function renderEnfermeras(){
       const cell=window.enfDateOverrides[ovKey]!==undefined?window.enfDateOverrides[ovKey]:baseCell;
       const t=cell?cell[0]:null,u=cell?cell[1]:null;
       const cls=chipCls(t,u);
-      const baseTurn=t==="V"&&baseCell?baseCell[0]:null;
-      const baseTurnCls=baseTurn?chipCls(baseTurn,baseCell?baseCell[1]:null):"";
-      const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
+      const absB=absBase(t,baseCell);
+      const lbl=isAbsT(t)?absLbl(t):(t||"·");
       const cellBg=dc.isToday?"#81c784":dc.isSun?(isDark()?"#000":"#f3e5f5"):bg;
       const iconData=enfChangeIcons[pi]&&enfChangeIcons[pi][dateStr]&&cell&&cell[0]!=="V"&&cell&&cell[0]!=="LD"&&cell[0]!=="LDA";
       const dot=iconData?`<span class="change-dot" style="position:absolute;top:-4px;right:-4px;width:13px;height:13px;background:#ffc107;border-radius:50%;border:1.5px solid #fff;font-size:.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" onclick="showLogEnf(event,${pi},'${dateStr}')">✎</span>`:"";
       body+=`<td class="${dc.isToday?"today-col":dc.isSun?"sun":""}" style="background:${cellBg}!important">
         <div style="position:relative;display:inline-block">
-          <div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;gap:2px">${lbl}${baseTurn?'<span class="chip '+baseTurnCls+'" style="font-size:.6rem;padding:0 3px;border-radius:3px;line-height:1.4">'+baseTurn+'</span>':""}</div>
+          ${absB?splitAbsChipHTML(t,absB,false):`<div class="chip ${cls}" style="display:flex;align-items:center;justify-content:center;${t==="LDA"?"font-size:.6rem":""}">${isAbsT(t)?absLbl(t):lbl}</div>`}
           ${dot}
         </div>
       </td>`;
@@ -1564,14 +1585,15 @@ function miDayCellHTML(date,isCurrentMonth,me,today){
   const lbl2=t==="MT"?"T":"N";
   const cls=isCombined?chipCls(lbl1,u):chipCls(t,u);
   const cls2=isCombined?chipCls(lbl2,u2):(u2?chipCls(t,u2):null);
-  const lbl=t==="V"?"🏖":t==="LDA"?"📋A":t==="LD"?"📋":(t||"·");
+  const lbl=isAbsT(t)?absLbl(t):(t||"·");
   const isLorSlash2=!t||t==="L"||t==="/";
-  const chipHtml=isCombined
+  const absB=absBase(t,ROTA[ri][dow]);
+  const chipHtml=absB?splitAbsChipHTML(t,absB,true):isCombined
     ?"<div class='mi-chip neu' style='font-size:1.5rem;padding:6px 2px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;gap:2px;width:100%;box-sizing:border-box;overflow:hidden'>"
       +"<span class='chip "+cls+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl1+"</span>"
       +"<span class='chip "+(cls2||cls)+"' style='width:auto;height:auto;min-width:0;flex:1;padding:3px 0;border-radius:4px;font-size:1.05rem;line-height:1'>"+lbl2+"</span>"
       +"</div>"
-    :"<div class='mi-chip "+cls+"' style='font-size:1.5rem;padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
+    :"<div class='mi-chip "+cls+"' style='font-size:"+(t==="LDA"?"1.05rem":t==="LD"?"1.25rem":"1.5rem")+";padding:8px 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-weight:800;'>"+lbl+"</div>";
   if(!isCurrentMonth){
     const numColor2="#b9b9be";
     return `<td style="padding:3px 2px;text-align:center;border:1px solid var(--bd);background:var(--s1);border-radius:12px;min-height:78px;vertical-align:middle;cursor:default;position:relative;opacity:.4;pointer-events:none">
