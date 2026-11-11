@@ -8,7 +8,11 @@ const APPS = [
   { name: "Enfermeras", proposals: "enf_proposals", tokens: "enf_push_tokens", sent: "enf_push_sent" },
 ];
 
-const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+let sa;
+try { sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT); }
+catch (e) { console.log("::error::El secret FIREBASE_SERVICE_ACCOUNT no es un JSON válido (" + e.message + "). Vuelve a pegar el contenido entero del archivo .json."); process.exit(1); }
+for (const k of ["project_id", "client_email", "private_key"]) if (!sa[k]) { console.log("::error::Al secret le falta el campo " + k + ". ¿Es el .json de 'Cuentas de servicio'?"); process.exit(1); }
+console.log("Cuenta de servicio:", sa.client_email, "· proyecto:", sa.project_id);
 admin.initializeApp({
   credential: admin.credential.cert(sa),
   databaseURL: "https://rotatorio-tcaes-default-rtdb.europe-west1.firebasedatabase.app",
@@ -87,4 +91,4 @@ async function runApp(app) {
 (async () => {
   for (const app of APPS) await runApp(app);
   await admin.app().delete();
-})().catch(e => { console.error(e); process.exit(1); });
+})().catch(e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 500)); process.exit(1); });
