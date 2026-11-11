@@ -3,6 +3,8 @@
 //   tcaes_agenda_priv/alberto   -> calendario de Alberto   (GCAL_ALBERTO_ID)
 //   tcaes_agenda_priv/yoli      -> calendario de Yoli      (GCAL_YOLI_ID)
 // Cada evento guarda su clave de la app en extendedProperties.private.appKey; así se actualiza o borra sin duplicar.
+process.on("uncaughtException", e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 600)); process.exit(1); });
+process.on("unhandledRejection", e => { console.log("::error::" + (e && e.code ? e.code + ": " : "") + String((e && e.message) || e).slice(0, 600)); process.exit(1); });
 const admin = require("firebase-admin");
 const { JWT } = require("google-auth-library");
 const crypto = require("crypto");

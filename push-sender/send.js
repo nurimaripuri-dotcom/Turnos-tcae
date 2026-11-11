@@ -1,6 +1,8 @@
 // Envía notificaciones push de propuestas de cambio (TCE y Enfermeras).
 // Lo ejecuta GitHub Actions cada 5 minutos con el secret FIREBASE_SERVICE_ACCOUNT.
 // Guarda en <prefijo>_push_sent/{clave} el último estado ya avisado para no repetir.
+process.on("uncaughtException", e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 600)); process.exit(1); });
+process.on("unhandledRejection", e => { console.log("::error::" + (e && e.code ? e.code + ": " : "") + String((e && e.message) || e).slice(0, 600)); process.exit(1); });
 const admin = require("firebase-admin");
 
 const APPS = [
