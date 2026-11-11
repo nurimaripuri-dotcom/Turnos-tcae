@@ -885,7 +885,6 @@ function openAgendaDay(dateStr){
   document.getElementById("agendaTitle").textContent="📅 "+fmtAgendaDate(dateStr);
   document.getElementById("agendaTime").value="";
   document.getElementById("agendaText").value="";
-  document.getElementById("agendaAllDay").checked=true;
   setAgendaVis("shared");
   renderAgendaDay();
   document.getElementById("overlayAgenda").classList.add("open");
@@ -902,14 +901,12 @@ function renderAgendaDay(){
 }
 function addAgendaEvent(){
   const text=document.getElementById("agendaText").value.trim();
-  const allDay=document.getElementById("agendaAllDay").checked;
-  const time=allDay?"":(document.getElementById("agendaTime").value||"");
+  const time=document.getElementById("agendaTime").value||"";
   if(!text||!agendaDayKey||!db)return;
-  if(!allDay&&!time){alert("Pon una hora o marca «Todo el día».");return;}
   const data={d:agendaDayKey,time,text,ts:Date.now()};
   if(agendaVis==="shared")data.by=meName();
   db.ref(agendaPath(agendaVis)).push(data)
-    .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";document.getElementById("agendaAllDay").checked=true;setTimeout(renderAgendaDay,200);})
+    .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";setTimeout(renderAgendaDay,200);})
     .catch(()=>alert(t("errorEnviar")));
 }
 function deleteAgendaEvent(sc,k){
@@ -2467,13 +2464,10 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
     <h2 id="agendaTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:10px">📅 Agenda</h2>
     <div id="agendaList" style="margin-bottom:12px"></div>
     <div style="display:flex;gap:6px;margin-bottom:8px">
-      <input id="agendaTime" type="time" oninput="if(this.value)document.getElementById('agendaAllDay').checked=false" style="flex:0 0 110px;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
+      <input id="agendaTime" type="time" style="flex:0 0 110px;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
       <input id="agendaText" type="text" maxlength="200" placeholder="Qué hay…" style="flex:1;min-width:0;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
     </div>
-    <label style="display:flex;align-items:center;gap:8px;margin:-2px 0 10px;font-size:.85rem;cursor:pointer">
-      <input id="agendaAllDay" type="checkbox" onchange="if(this.checked)document.getElementById('agendaTime').value=''" style="width:18px;height:18px">
-      🗓 Todo el día
-    </label>
+    <div style="margin:-2px 0 10px;font-size:.75rem;color:var(--mu)">🗓 Sin hora = todo el día</div>
     <div style="display:flex;gap:6px;margin-bottom:8px">
       <button id="agendaVisShared" onclick="setAgendaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Compartido</button>
       <button id="agendaVisPriv" onclick="setAgendaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privado</button>
