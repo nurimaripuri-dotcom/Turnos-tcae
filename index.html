@@ -236,6 +236,7 @@ setTimeout(function(){
     <div class="menu-dropdown" id="menuDropdown">
       <button class="menu-item" id="tab-sugerencias" onclick="menuGoTab('sugerencias')" style="display:none"><span id="tab-sugerencias-label">📬 Sugerencias</span> <span id="sugBadge" class="menu-item-badge" style="display:none">0</span></button>
       <div class="menu-sep"></div>
+      <button class="menu-item" id="tab-resumen" onclick="menuGoTab('resumen')">📊 Resumen</button>
       <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
       <button class="menu-item" id="menuSuggestBtn" onclick="closeMenu();openSuggestBox()">💡 Sugerir algo</button>
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
@@ -702,6 +703,7 @@ function applyLangStatic(){
   const _mt=(id,k)=>{const el=document.getElementById(id);if(el)el.textContent=t(k);};
   _mt("mtab-mi","tabMi");_mt("mtab-todos","tabTce");_mt("mtab-enf","tabDue");_mt("tceHint","tceHint");_mt("dueHint","dueHint");
   document.getElementById("menuChangeCodeBtn").textContent=t("menuChangeCode");
+  const resBtn=document.getElementById("tab-resumen"); if(resBtn)resBtn.textContent=t("tabResumen");
   document.getElementById("menuLogoutBtn").textContent=t("menuLogout");
   document.getElementById("menuLangBtn").textContent=t("menuLangTo");
   const mLegal=document.getElementById("menuLegalBtn"); if(mLegal)mLegal.textContent=t("menuLegal");
@@ -826,7 +828,7 @@ function agendaPath(scope){return scope==="priv"?"tcaes_agenda_priv/"+noteOwner(
 function initCouple(){
   try{
     if(isPartner){
-      ["mtab-todos","mtab-enf","tab-props","menuSuggestBtn","tab-sugerencias"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+      ["mtab-todos","mtab-enf","tab-props","tab-resumen","menuSuggestBtn","tab-sugerencias"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
     }
     if(!isCouple()||!db||coupleInit)return;
     coupleInit=true;
@@ -1531,6 +1533,9 @@ function showTab(tab){
   if(ve)ve.style.display=tab==="enf"?"block":"none";
   const vs=document.getElementById("view-sugerencias");
   if(vs)vs.style.display=tab==="sugerencias"?"block":"none";
+  const vr=document.getElementById("view-resumen");
+  if(vr)vr.style.display=tab==="resumen"?"block":"none";
+  if(tab==="resumen")renderResumen();
   ["mi","todos","enf"].forEach(k=>{const b=document.getElementById("mtab-"+k);if(b)b.classList.toggle("active",k===tab);});
   if(tab==="props")renderProposals();
   if(tab==="enf")renderEnfermeras();
