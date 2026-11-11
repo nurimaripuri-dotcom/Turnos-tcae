@@ -121,3 +121,4 @@ async function main() {
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
 module.exports = { eventFor, plan };
+// rev 2026-11-11T10:44:42Z
