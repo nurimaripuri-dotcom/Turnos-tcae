@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'calendar-sync/**'
+      - 'index.html'
       - '.github/workflows/calendar-sync.yml'
 
 concurrency:
@@ -30,8 +31,9 @@ jobs:
           C1: ${{ secrets.GCAL_SHARED_ID }}
           C2: ${{ secrets.GCAL_ALBERTO_ID }}
           C3: ${{ secrets.GCAL_YOLI_ID }}
+          C4: ${{ secrets.GCAL_TURNOS_ID }}
         run: |
-          if [ -z "$SA" ] || [ -z "$C1$C2$C3" ]; then echo "::notice::Falta FIREBASE_SERVICE_ACCOUNT o algún GCAL_*_ID; no se sincroniza."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
+          if [ -z "$SA" ] || [ -z "$C1$C2$C3$C4" ]; then echo "::notice::Falta FIREBASE_SERVICE_ACCOUNT o algún GCAL_*_ID; no se sincroniza."; echo "ok=0" >> "$GITHUB_OUTPUT"; else echo "ok=1" >> "$GITHUB_OUTPUT"; fi
 
       - uses: actions/checkout@v5
         if: steps.chk.outputs.ok == '1'
@@ -50,6 +52,7 @@ jobs:
           GCAL_SHARED_ID: ${{ secrets.GCAL_SHARED_ID }}
           GCAL_ALBERTO_ID: ${{ secrets.GCAL_ALBERTO_ID }}
           GCAL_YOLI_ID: ${{ secrets.GCAL_YOLI_ID }}
+          GCAL_TURNOS_ID: ${{ secrets.GCAL_TURNOS_ID }}
         run: |
           npm ci --no-audit --no-fund
           node sync.js
