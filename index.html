@@ -583,7 +583,7 @@ const I18N={
     sugDeAcuerdoDefault:"De acuerdo", sugEnContraDefault:"No estoy de acuerdo",
     respuestaSing:"respuesta", respuestaPlur:"respuestas",
     hoyPrefix:"Hoy", eseDiaPrefix:"Ese día",
-    diaVacaciones:"vacaciones", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    diaVacaciones:"vacaciones", diaLD:"LD", diaLDA:"LD año pasado", diaSales:"sales", diaLibras:"libras",
     nadieMasTurno:"nadie más ese turno",
     turnoM:"Mañana", turnoT:"Tarde", turnoN:"Noche",
     enfDataErrorPrefix:"⚠️ No se pudieron cargar los cambios de Enfermeras: ",
@@ -654,7 +654,7 @@ const I18N={
     sugDeAcuerdoDefault:"De acordo", sugEnContraDefault:"Non estou de acordo",
     respuestaSing:"resposta", respuestaPlur:"respostas",
     hoyPrefix:"Hoxe", eseDiaPrefix:"Ese día",
-    diaVacaciones:"vacacións", diaLD:"LD", diaSales:"sales", diaLibras:"libras",
+    diaVacaciones:"vacacións", diaLD:"LD", diaLDA:"LD ano pasado", diaSales:"sales", diaLibras:"libras",
     nadieMasTurno:"ninguén máis nesa quenda",
     turnoM:"Mañá", turnoT:"Tarde", turnoN:"Noite",
     enfDataErrorPrefix:"⚠️ Non se puideron cargar os cambios de Enfermaría: ",
@@ -1846,6 +1846,7 @@ function showMiLog(e,day){
 }
 
 const TURNS_LIST=[["M","☀️ M"],["T","🌤 T"],["N","🌙 N"],["MT","☀️🌤 M/T"],["TN","🌤🌙 T/N"],["L","✅ L"],["/","/ Sal"],["V","🏖 Vac"],["LD","📋 LD"],["LDA","📋 LD año pasado"]];
+function turnLbl(k,l){return k==="LDA"?"📋 "+t("diaLDA"):l;}
 
 function openEdit(ri,di,dk,force){
   if(!miEditMode&&!force)return;
@@ -1867,7 +1868,7 @@ function openEdit(ri,di,dk,force){
 
 function renderTurnBtns(){
   document.getElementById("turnRow").innerHTML=TURNS_LIST.map(([k,l])=>
-    `<div class="tbtn ${editTurn===k?"active":""}" onclick="selTurn('${k}')">${l}</div>`).join("");
+    `<div class="tbtn ${editTurn===k?"active":""}" onclick="selTurn('${k}')">${turnLbl(k,l)}</div>`).join("");
 }
 function renderUnitBtns(){
   const show=editTurn&&editTurn!=="L"&&editTurn!=="/"&&editTurn!=="V"&&editTurn!=="LD"&&editTurn!=="LDA";
@@ -2232,7 +2233,7 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
    const fk=date.getFullYear()+String(date.getMonth()+1).padStart(2,"0")+String(date.getDate()).padStart(2,"0");
    const fn=festivoNombre(fk);
    if(fe){fe.style.display=fn?"block":"none";fe.textContent=fn?(lang==="gl"?"🔺 Festivo: ":"🔺 Festivo: ")+fn:"";}}
-  document.getElementById("dayActionTurn").textContent=turno==="LDA"?"📋 LD año pasado":turno==="LD"?"📋 LD":(turno||t("libre"));
+  document.getElementById("dayActionTurn").textContent=turno==="LDA"?"📋 "+t("diaLDA"):turno==="LD"?"📋 LD":(turno||t("libre"));
   const cardDiv=document.getElementById("dayActionCard");
   if(cardDiv){
     let cell=null;
