@@ -2379,7 +2379,7 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
        nd.style.display="block";
      }else{nd.innerHTML="";nd.style.display="none";}
    }}
-  ["dayActionEditBtn","dayActionProposeBtn"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=isPartner?"none":"";});
+  ["dayActionEditBtn","dayActionProposeBtn","dayActionTurn","dayActionCard"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=isPartner?"none":"";});
   document.getElementById("overlayDayAction").classList.add("open");
 }
 function closeDayAction(){
