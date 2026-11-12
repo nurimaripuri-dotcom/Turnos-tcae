@@ -239,6 +239,7 @@ setTimeout(function(){
       <button class="menu-item" id="tab-resumen" onclick="menuGoTab('resumen')">📊 Resumen</button>
       <button class="menu-item" id="tab-props" onclick="menuGoTab('props')">🔄 Cambios <span id="propBadge" class="menu-item-badge" style="display:none">0</span></button>
       <button class="menu-item" id="menuSuggestBtn" onclick="closeMenu();openSuggestBox()">💡 Sugerir algo</button>
+      <button class="menu-item" id="menuPrefsBtn" onclick="closeMenu();openPrefs()">⚙️ Mis preferencias de cambio</button>
       <button class="menu-item" id="menuChangeCodeBtn" onclick="closeMenu();changePin()">🔑 Cambiar código</button>
       <button class="menu-item" id="menuLangBtn" onclick="closeMenu();toggleLang()">🌐 Cambiar a Galego</button>
       <button class="menu-item" id="menuThemeBtn" onclick="closeMenu();toggleTheme()">🌙 Modo oscuro</button>
@@ -828,7 +829,7 @@ function agendaPath(scope){return scope==="priv"?"tcaes_agenda_priv/"+noteOwner(
 function initCouple(){
   try{
     if(isPartner){
-      ["mtab-todos","mtab-enf","tab-props","tab-resumen","menuSuggestBtn","tab-sugerencias"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+      ["mtab-todos","mtab-enf","tab-props","tab-resumen","menuSuggestBtn","tab-sugerencias","menuPrefsBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
     }
     if(!isCouple()||!db||coupleInit)return;
     coupleInit=true;
@@ -1064,6 +1065,7 @@ function initApp(){
 }
 
 function startDataListeners(){
+  try{db.ref("tcaes_prefs").on("value",snap=>{tcaesPrefs=snap.val()||{};},()=>{});}catch(e){}
   try{
     db.ref("rota_changes").on("value",snap=>{
       const raw=snap.val()||{};
@@ -2415,6 +2417,8 @@ function openPropModal(dateKey,turno){
   if(ptd)ptd.innerHTML='<option value="" id="propTheirDayDefaultOpt">'+t("primeroSelecciona")+'</option>';
   const pc=document.getElementById("propComment");
   if(pc)pc.value="";
+  propSugKind=null;
+  try{renderSuggestions();}catch(e){console.log("sugerencias:",e);}
   document.getElementById("overlayProp").classList.add("open");
 }
 function closePropModal(){
@@ -2447,6 +2451,177 @@ function loadPersonDays(){
   opts.forEach(o=>sel.innerHTML+='<option value="'+o.dk+'" data-turn="'+o.t+'">'+o.label+'</option>');
 }
 
+
+// ===== Sugerencias de cambio: a quién pedírselo =====
+// Tipos: mismo día M↔T · otro día (quien libra tu día y trabaja uno que tú libras, ±14 días) · N↔N · doblar (M/T o T/N)
+// Reglas: nadie trabaja el día después de una noche; ⚠️ si queda tarde y al día siguiente mañana.
+// Preferencias de cada persona en tcaes_prefs/{fila} = {turno:"M"|"T"|"", doble:"si"|"no"|""}
+const SUG_DAYS=14;
+let tcaesPrefs={};
+let propSugKind=null; // {pi, dk, kind:"doble"} cuando se elige una sugerencia de doblar
+function sugDs(d){return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");}
+function sugDate(ds){return new Date(+ds.slice(0,4),+ds.slice(4,6)-1,+ds.slice(6,8),12);}
+function sugAdd(ds,n){const d=sugDate(ds);d.setDate(d.getDate()+n);return sugDs(d);}
+function sugCell(pi0,ds){ // pi0 = índice 0-based en PEOPLE
+  const k=pi0+"_"+ds;
+  const ov=window.dateOverrides?window.dateOverrides[k]:undefined;
+  if(ov!==undefined)return ov===null?["L",null]:(typeof ov==="string"?[ov,null]:ov);
+  const p=PEOPLE[pi0];if(!p)return ["L",null];
+  const d=sugDate(ds);
+  return ROTA[rowFor(p.startRow,mondayOf(d))][(d.getDay()+6)%7]||["L",null];
+}
+function sugT(pi0,ds){const c=sugCell(pi0,ds);return c&&c[0]?c[0]:"L";}
+const SUG_WORK=new Set(["M","T","N","MT","TN"]);
+function sugFree(pi0,ds){return sugT(pi0,ds)==="L";}
+function sugHasM(t){return t==="M"||t==="MT";}
+function sugHasT(t){return t==="T"||t==="MT"||t==="TN";}
+function sugHasN(t){return t==="N"||t==="TN";}
+// ¿Puede pi0 trabajar el turno nt el día ds? Devuelve null si no; si sí, lista de avisos
+function sugCanWork(pi0,ds,nt){
+  const prev=sugT(pi0,sugAdd(ds,-1)),next=sugT(pi0,sugAdd(ds,1));
+  if(sugHasN(prev))return null;                         // viene de noche: es saliente
+  if(sugHasN(nt)&&SUG_WORK.has(next))return null;      // tras una noche no se trabaja
+  const w=[];
+  if(sugHasM(nt)&&sugHasT(prev))w.push("tarde y al día siguiente mañana");
+  if(sugHasT(nt)&&!sugHasN(nt)&&sugHasM(next))w.push("tarde y al día siguiente mañana");
+  return w;
+}
+function sugPrefScore(pi0,gets){ // gets = turno que recibe la compañera
+  const pr=tcaesPrefs[pi0+1]||{};
+  if(!pr.turno)return 0;
+  if(gets===pr.turno)return 2;
+  if((gets==="M"||gets==="T")&&gets!==pr.turno)return -1;
+  return 0;
+}
+function sugFmt(ds){return I18N[lang].days[(sugDate(ds).getDay()+6)%7]+" "+(+ds.slice(6,8))+"/"+(+ds.slice(4,6));}
+function computeSuggestions(myPi0,X,myT){
+  const out={same:[],other:[],doble:[]};
+  const todayDs=sugDs(new Date());
+  const meCanGive=SUG_WORK.has(myT)&&myT!=="MT"&&myT!=="TN";
+  if(!meCanGive)return out;
+  PEOPLE.forEach((p,pi0)=>{
+    if(pi0===myPi0||!p||!p.name)return;
+    const herX=sugT(pi0,X);
+    // 1) Mismo día M↔T
+    if((myT==="M"&&herX==="T")||(myT==="T"&&herX==="M")){
+      const wHer=sugCanWork(pi0,X,myT),wMe=sugCanWork(myPi0,X,herX);
+      if(wHer&&wMe)out.same.push({pi:pi0+1,Y:X,yT:herX,warn:[...wHer.map(s=>p.name+": "+s),...wMe.map(s=>"tú: "+s)],score:10+sugPrefScore(pi0,myT)});
+    }
+    // 2/3) Otro día: ella libra X y trabaja Y que tú libras
+    if(herX==="L"){
+      const wHer=sugCanWork(pi0,X,myT);
+      if(wHer){
+        for(let i=-SUG_DAYS;i<=SUG_DAYS;i++){
+          if(!i)continue;
+          const Y=sugAdd(X,i);if(Y<=todayDs)continue;
+          const herY=sugT(pi0,Y);
+          if(!SUG_WORK.has(herY)||herY==="MT"||herY==="TN")continue;
+          if(myT==="N"?herY!=="N":herY==="N")continue;     // noches solo por noches
+          if(!sugFree(myPi0,Y))continue;
+          // ella debe seguir pudiendo trabajar X aunque libere Y (comprobado arriba con su calendario actual)
+          const wMe=sugCanWork(myPi0,Y,herY);if(!wMe)continue;
+          out.other.push({pi:pi0+1,Y,yT:herY,warn:[...wHer.map(s=>p.name+": "+s),...wMe.map(s=>"tú: "+s)],
+            score:5+sugPrefScore(pi0,myT)+(herY===myT?1:0)-Math.abs(i)/SUG_DAYS});
+        }
+      }
+    }
+    // 4) Doblar: ella ya trabaja X el turno de al lado; tú le cubres otro día
+    let combo=null;
+    if((myT==="M"&&herX==="T")||(myT==="T"&&herX==="M"))combo="MT";
+    else if((myT==="T"&&herX==="N")||(myT==="N"&&herX==="T"))combo="TN";
+    const pr=tcaesPrefs[pi0+1]||{};
+    if(combo&&pr.doble!=="no"){
+      const prev=sugT(pi0,sugAdd(X,-1)),next=sugT(pi0,sugAdd(X,1));
+      const ok=!sugHasN(prev)&&!(combo==="TN"&&SUG_WORK.has(next));
+      if(ok){
+        const wHer=[];
+        if(combo==="MT"&&sugHasT(prev))wHer.push(p.name+": tarde y al día siguiente mañana");
+        if(combo==="MT"&&sugHasM(next))wHer.push(p.name+": tarde y al día siguiente mañana");
+        for(let i=-SUG_DAYS;i<=SUG_DAYS;i++){
+          if(!i)continue;
+          const Y=sugAdd(X,i);if(Y<=todayDs)continue;
+          const herY=sugT(pi0,Y);
+          if(!SUG_WORK.has(herY)||herY==="MT"||herY==="TN")continue;
+          if(!sugFree(myPi0,Y))continue;
+          const wMe=sugCanWork(myPi0,Y,herY);if(!wMe)continue;
+          out.doble.push({pi:pi0+1,Y,yT:herY,combo,warn:[...wHer,...wMe.map(s=>"tú: "+s)],
+            score:(pr.doble==="si"?3:0)-Math.abs(i)/SUG_DAYS});
+        }
+      }
+    }
+  });
+  const byScore=(a,b)=>b.score-a.score||(a.Y<b.Y?-1:1);
+  out.same.sort(byScore);
+  // otro día y doblar: como mucho 2 opciones por persona, para que la lista no se llene de la misma
+  const cap=(arr,n)=>{const c={};return arr.sort(byScore).filter(s=>(c[s.pi]=(c[s.pi]||0)+1)<=n);};
+  out.other=cap(out.other,2).slice(0,6);
+  out.doble=cap(out.doble,1).slice(0,4);
+  return out;
+}
+function renderSuggestions(){
+  const box=document.getElementById("propSuggest");if(!box)return;
+  box.innerHTML="";
+  if(!propFromDay||isPartner)return;
+  const X=(propFromDay.dateKey||"").split("_")[1];
+  const myT=propFromDay.turno;
+  if(!X||!SUG_WORK.has(myT)||myT==="MT"||myT==="TN"){return;}
+  const s=computeSuggestions(userRow-1,X,myT);
+  window._sugList=[];
+  const item=(sg,txt)=>{
+    const i=window._sugList.push(sg)-1;
+    const warn=sg.warn&&sg.warn.length?`<div style="font-size:.66rem;color:#b26a00;margin-top:2px">⚠️ ${escH(sg.warn.join(" · "))}</div>`:"";
+    const pr=tcaesPrefs[sg.pi]||{};
+    const tag=(pr.turno?`<span style="font-size:.62rem;color:var(--mu)"> · prefiere ${pr.turno==="M"?"mañanas":"tardes"}</span>`:"")+(sg.combo&&pr.doble==="si"?`<span style="font-size:.62rem;color:var(--mu)"> · le gusta doblar</span>`:"");
+    return `<div onclick="pickSuggestion(${i})" style="cursor:pointer;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;margin-bottom:5px;background:var(--s1)">
+      <div style="font-size:.8rem"><b>${escH(PEOPLE[sg.pi-1].name)}</b>${tag}</div>
+      <div style="font-size:.72rem;color:var(--mu)">${txt}</div>${warn}</div>`;
+  };
+  const sec=(title,arr,fn)=>arr.length?`<div style="font-size:.72rem;font-weight:700;margin:8px 0 4px">${title}</div>`+arr.map(fn).join(""):"";
+  let h="";
+  h+=sec("↔️ Mismo día",s.same,sg=>item(sg,`Te da su ${sg.yT} y hace tu ${myT}`));
+  h+=sec("📅 Otro día",s.other,sg=>item(sg,`Hace tu ${myT} el ${sugFmt(X)} · tú haces su ${sg.yT} el ${sugFmt(sg.Y)}`));
+  h+=sec("⏩ Doblar",s.doble,sg=>item(sg,`Hace ${sg.combo==="MT"?"M/T":"T/N"} el ${sugFmt(X)} (viene un día menos) · tú haces su ${sg.yT} el ${sugFmt(sg.Y)}`));
+  if(!h)h=`<div style="font-size:.72rem;color:var(--mu)">No encuentro cambios que encajen (±${SUG_DAYS} días). Puedes elegir a alguien a mano abajo.</div>`;
+  box.innerHTML=`<details open style="margin-bottom:10px;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;background:var(--s2)">
+    <summary style="font-size:.82rem;font-weight:700;cursor:pointer">💡 ¿A quién se lo pido?</summary>${h}
+    <div style="font-size:.62rem;color:var(--mu);margin-top:6px">Según los turnos de la app. Compruébalo antes de enviar.</div></details>`;
+}
+function pickSuggestion(i){
+  const sg=(window._sugList||[])[i];if(!sg)return;
+  const sel=document.getElementById("propPerson");
+  sel.value=String(sg.pi);loadPersonDays();
+  const dk=(sg.pi-1)+"_"+sg.Y;
+  const ds=document.getElementById("propTheirDay");
+  if(![...ds.options].some(o=>o.value===dk)){
+    const o=document.createElement("option");o.value=dk;o.dataset.turn=sg.yT;
+    o.textContent=sg.Y.slice(6,8)+"/"+sg.Y.slice(4,6)+" ("+sg.yT+")";ds.appendChild(o);
+  }
+  ds.value=dk;
+  propSugKind=sg.combo?{pi:sg.pi,dk,kind:"doble",combo:sg.combo}:null;
+  const pc=document.getElementById("propComment");
+  if(pc&&!pc.value)pc.value=sg.combo?("¿Doblas "+(sg.combo==="MT"?"M/T":"T/N")+" ese día? Yo te hago tu "+sg.yT+" del "+sugFmt(sg.Y)):"";
+  document.getElementById("propPerson").scrollIntoView({behavior:"smooth",block:"center"});
+}
+// --- Preferencias de cambio (cada persona las suyas) ---
+function openPrefs(){
+  if(isPartner||!userRow)return;
+  const pr=tcaesPrefs[userRow]||{};
+  const btn=(grp,val,lbl,cur)=>`<button onclick="setPref('${grp}','${val}')" style="flex:1;padding:10px 4px;border-radius:8px;border:2px solid ${cur===val?"var(--I)":"var(--bd)"};background:${cur===val?"var(--s2)":"transparent"};color:var(--tx);font-weight:${cur===val?"800":"500"};font-size:.8rem;cursor:pointer">${lbl}</button>`;
+  document.getElementById("prefsBody").innerHTML=
+    `<div class="slabel">Si tengo que elegir, prefiero hacer:</div><div style="display:flex;gap:6px;margin:6px 0 14px">${btn("turno","M","🌅 Mañanas",pr.turno||"")}${btn("turno","T","🌇 Tardes",pr.turno||"")}${btn("turno","","Me da igual",pr.turno||"")}</div>`+
+    `<div class="slabel">¿Te interesa doblar (M/T o T/N) para venir un día menos?</div><div style="display:flex;gap:6px;margin:6px 0 6px">${btn("doble","si","Sí",pr.doble||"")}${btn("doble","no","No",pr.doble||"")}${btn("doble","","A veces",pr.doble||"")}</div>`+
+    `<p style="font-size:.68rem;color:var(--mu);margin-top:8px">Lo ven tus compañeras al buscar con quién cambiar, para proponerte cambios que te encajen.</p>`;
+  document.getElementById("overlayPrefs").classList.add("open");
+}
+function setPref(grp,val){
+  if(pinLocked){showPinWarn();return;}
+  if(!db||!userRow)return;
+  tcaesPrefs[userRow]=Object.assign({},tcaesPrefs[userRow]||{},{[grp]:val});
+  db.ref("tcaes_prefs/"+userRow+"/"+grp).set(val).catch(()=>{});
+  openPrefs();
+}
+function closePrefs(){document.getElementById("overlayPrefs").classList.remove("open");}
+
 function sendProposal(){
   const toPi=parseInt(document.getElementById("propPerson").value);
   const theirDaySel=document.getElementById("propTheirDay");
@@ -2459,6 +2634,7 @@ function sendProposal(){
   const prop={from:userRow,fromName:userName,fromDay:propFromDay.dateKey,fromTurn:propFromDay.turno,
     to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
     commentFrom:comment,commentTo:"",createdAt:new Date().toLocaleString("es-ES")};
+  if(propSugKind&&propSugKind.kind==="doble"&&propSugKind.pi===toPi&&propSugKind.dk===theirDay){prop.kind="doble";prop.combo=propSugKind.combo;}
   db.ref("tcaes_proposals").push(prop).then(()=>{
     closePropModal();
     alert(t("propuestaEnviada")+" "+PEOPLE[toPi-1].name);
@@ -2477,6 +2653,7 @@ function openRespondModal(key){
   html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
   html+='🔄 '+t("teDaSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' <b>'+fmt(fromDs)+'</b><br>';
   html+=t("aCambioQuiere")+' <b>'+fmt(toDs)+'</b></p>';
+  if(p.kind==="doble")html+='<p style="font-size:.78rem;margin:4px 0">⏩ Ese día harías <b>'+(p.combo==="MT"?"M/T":"T/N")+'</b> y el '+fmt(toDs)+' no vienes.</p>';
   if(p.commentFrom)html+='<p style="font-size:.75rem;font-style:italic;color:#555">💬 "'+p.commentFrom+'"</p>';
   html+='</div>';
   document.getElementById("respondContent").innerHTML=html;
@@ -2506,11 +2683,24 @@ function respondProposal(decision){
     const toTurn=p.toTurn||"L";
     // Swap: from person now has toTurn on toDate, to person now has fromTurn on fromDate
     // Also free up original days
+    // Se copian las casillas completas (turno + unidad) tal como están ahora
+    const fromCell=sugCell(fromPi,fromDate), toCell=sugCell(toPi,toDate);
+    const fc=fromCell&&fromCell[0]===fromTurn?fromCell:[fromTurn,null];
+    const tc=toCell&&toCell[0]===toTurn?toCell:[toTurn,null];
+    let toGets=fc;
+    if(p.kind==="doble"){
+      // "to" ya trabaja ese día el turno de al lado: queda doblando (M/T o T/N)
+      const her=sugCell(toPi,fromDate)||["L",null];
+      const ord={M:0,T:1,N:2};
+      const a=[fc[0],fc[1]||null],b=[her[0],her[1]||null];
+      const [first,second]=ord[a[0]]<ord[b[0]]?[a,b]:[b,a];
+      toGets=[first[0]+second[0],first[1],second[1]];
+    }
     const updates={};
-    updates["rota_changes/"+fromPi+"_"+fromDate]="L"; // from person free on original day
-    updates["rota_changes/"+fromPi+"_"+toDate]=toTurn; // from person works to person's day
-    updates["rota_changes/"+toPi+"_"+toDate]="L"; // to person free on original day
-    updates["rota_changes/"+toPi+"_"+fromDate]=fromTurn; // to person works from person's day
+    updates["rota_changes/"+fromPi+"_"+fromDate]=["L",null]; // from person free on original day
+    updates["rota_changes/"+fromPi+"_"+toDate]=tc;           // from person works to person's day
+    updates["rota_changes/"+toPi+"_"+toDate]=["L",null];     // to person free on original day
+    updates["rota_changes/"+toPi+"_"+fromDate]=toGets;       // to person works from person's day (o dobla)
     db.ref().update(updates);
   }
   db.ref("tcaes_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
@@ -2649,8 +2839,9 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
   <div class="modal">
     <h2 id="propModalTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:4px">🔄 Proponer cambio</h2>
     <p id="propMyDay" style="font-size:.78rem;color:var(--mu);margin-bottom:12px"></p>
+    <div id="propSuggest"></div>
     <div class="slabel" id="propPersonLabel">Compañera/o:</div>
-    <select id="propPerson" onchange="loadPersonDays()" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
+    <select id="propPerson" onchange="propSugKind=null;loadPersonDays()" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-family:'DM Mono',monospace;font-size:.82rem;margin-top:4px">
       <option value="" id="propPersonDefaultOpt">Selecciona...</option>
     </select>
     <div class="slabel" id="propTheirDayLabel" style="margin-top:10px">Día que quieres de ella/él:</div>
@@ -2663,6 +2854,15 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
       <button class="mbtn mbtn-ghost" id="propBackBtn" onclick="closePropModal()" style="flex:1">← Volver</button>
       <button class="mbtn mbtn-save" id="propSendBtn" onclick="sendProposal()" style="flex:1">Enviar</button>
     </div>
+  </div>
+</div>
+
+<!-- PREFERENCIAS DE CAMBIO -->
+<div class="overlay" id="overlayPrefs" onclick="if(event.target.id==='overlayPrefs')closePrefs()">
+  <div class="modal">
+    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:10px">⚙️ Mis preferencias de cambio</h2>
+    <div id="prefsBody"></div>
+    <button class="mbtn mbtn-ghost" onclick="closePrefs()" style="width:100%;margin-top:12px">← Volver</button>
   </div>
 </div>
 
