@@ -138,11 +138,11 @@ function turnoEvent(key, x) {
     const end = new Date(Date.UTC(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8) + plus));
     ev = { summary: x.t + (units.length ? " · " + units.join(" + ") : ""),
       start: { dateTime: `${date}T${a}:00`, timeZone: TZ }, end: { dateTime: `${end.toISOString().slice(0, 10)}T${b}:00`, timeZone: TZ } };
-  } else if (x.t === "V" || x.t === "LD" || x.t === "LDA") {
+  } else if (["V", "LD", "LDA", "L", "/"].includes(x.t)) {
     const next = new Date(Date.UTC(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8) + 1));
-    const names = { V: "🏖 Vacaciones", LD: "📋 LD", LDA: "📋 LD año pasado" };
+    const names = { V: "🏖 Vacaciones", LD: "📋 LD", LDA: "📋 LD año pasado", L: "L · Libre", "/": "/ · Saliente" };
     ev = { summary: names[x.t], start: { date }, end: { date: next.toISOString().slice(0, 10) } };
-  } else return null;   // L, / y libres: sin evento
+  } else return null;
   ev.description = "Turno TCE 3ºC";
   ev.extendedProperties = { private: { appKey: key } };
   ev.extendedProperties.private.appHash = crypto.createHash("sha1")
