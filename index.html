@@ -2367,6 +2367,18 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
   }
   const ab=document.getElementById("dayActionAgendaBtn");
   if(ab)ab.style.display=isCouple()?"block":"none";
+  // Apuntes de la agenda de ese día: lo primero que se ve
+  {const nd=document.getElementById("dayActionNotes");
+   if(nd){
+     const fk=date.getFullYear()+String(date.getMonth()+1).padStart(2,"0")+String(date.getDate()).padStart(2,"0");
+     let items=[];try{if(isCouple())items=agendaFor(fk);}catch(e){}
+     if(items.length){
+       nd.innerHTML=items.map(([sc,k,e])=>`<div onclick="dayActionAgenda()" style="cursor:pointer;padding:9px 10px;border-radius:9px;margin-bottom:6px;background:${sc==="shared"?"rgba(111,66,193,.10)":"var(--s2)"};border-left:4px solid ${sc==="shared"?"#6f42c1":"var(--mu)"}">
+         <div style="font-size:.95rem;font-weight:600;line-height:1.3">${e.time?"<b>"+escH(e.time)+"</b> · ":""}${escH(e.text)}</div>
+         <div style="font-size:.68rem;color:var(--mu);margin-top:2px">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}${e.time?"":" · 🗓 Todo el día"}</div></div>`).join("");
+       nd.style.display="block";
+     }else{nd.innerHTML="";nd.style.display="none";}
+   }}
   ["dayActionEditBtn","dayActionProposeBtn"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=isPartner?"none":"";});
   document.getElementById("overlayDayAction").classList.add("open");
 }
@@ -2602,6 +2614,7 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
   <div class="modal">
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
+    <div id="dayActionNotes" style="display:none;margin-bottom:10px"></div>
     <div id="dayActionFest" style="display:none;background:#fde8e8;color:#c0392b;border-left:4px solid #d32f2f;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:.82rem;font-weight:700"></div>
     <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
     <div id="dayActionCard"></div>
