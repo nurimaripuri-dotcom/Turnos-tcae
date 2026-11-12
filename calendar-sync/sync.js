@@ -93,7 +93,7 @@ async function syncOne(client, name, calId, items, build, range) {
 }
 
 
-// ===== Turnos de Alberto (fila 4) -> GCAL_TURNOS_ID =====
+// ===== Turnos de Alberto (fila 4) -> GCAL_TURNOS_ID (calendario "Turnos Alberto") =====
 // El cuadrante (ROTA, PEOPLE, REF_MONDAY) se lee del propio index.html del repo, así nunca se desincroniza de la app.
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const TURNO_ROW = 4;
