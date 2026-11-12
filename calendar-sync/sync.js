@@ -1,8 +1,11 @@
-// Sincroniza la agenda de la app TCE (Alberto y Yoli) con Google Calendar, en un solo sentido: app -> Google.
+// Sincroniza la agenda de la app TCE (Alberto y Yoli) con Google Calendar EN LOS DOS SENTIDOS
+// (los turnos, en cambio, van solo app -> Google).
 //   tcaes_agenda                -> calendario compartido   (GCAL_SHARED_ID)
 //   tcaes_agenda_priv/alberto   -> calendario de Alberto   (GCAL_ALBERTO_ID)
 //   tcaes_agenda_priv/yoli      -> calendario de Yoli      (GCAL_YOLI_ID)
 // Cada evento guarda su clave de la app en extendedProperties.private.appKey; así se actualiza o borra sin duplicar.
+// Doble sentido: lo último sincronizado se guarda en Firebase (tcaes_gcal_sync/{cal}/{appKey} = {gid, gu}) para saber
+// qué se ha borrado o editado en cada lado desde la vez anterior. Los eventos creados a mano en Google se importan a la app.
 process.on("uncaughtException", e => { console.log("::error::" + (e.code ? e.code + ": " : "") + String(e.message || e).slice(0, 600)); process.exit(1); });
 process.on("unhandledRejection", e => { console.log("::error::" + (e && e.code ? e.code + ": " : "") + String((e && e.message) || e).slice(0, 600)); process.exit(1); });
 const { initializeApp, cert, getApp } = require("firebase-admin/app");
@@ -63,12 +66,13 @@ function plan(appItems, gEvents, build = eventFor) {
   return { create, update, del };
 }
 
-async function listAppEvents(client, calId, range) {
+async function listAppEvents(client, calId, range, tz) {
   const out = []; let pageToken;
   do {
     // Se listan todos los eventos y plan() se queda solo con los que llevan appKey
     const params = new URLSearchParams({ maxResults: "2500", showDeleted: "false", singleEvents: "true" });
     if (range) { params.set("timeMin", range.min); params.set("timeMax", range.max); }
+    if (tz) params.set("timeZone", tz);
     if (pageToken) params.set("pageToken", pageToken);
     const r = await client.request({ url: API + encodeURIComponent(calId) + "/events?" + params });
     out.push(...(r.data.items || []));
@@ -150,6 +154,113 @@ function turnoEvent(key, x) {
   return ev;
 }
 
+// ===== Agenda en doble sentido =====
+const WIN_PAST_DAYS = 60, WIN_FUTURE_DAYS = 400, MAX_APP_DELETES = 15;
+const ymdOf = (iso) => iso.slice(0, 4) + iso.slice(5, 7) + iso.slice(8, 10);
+function inWindow(d, minD, maxD) { return d >= minD && d <= maxD; }
+// Evento de Google -> apunte de la app (solo el día de inicio; hora de inicio si la tiene)
+function appItemFromGoogle(g, prev) {
+  const st = g.start || {};
+  let d, time = "";
+  if (st.date) d = ymdOf(st.date);
+  else if (st.dateTime) { d = ymdOf(st.dateTime); time = st.dateTime.slice(11, 16); }
+  else return null;
+  const item = Object.assign({}, prev || {}, { d, time, text: String(g.summary || "(sin texto)").slice(0, 300) });
+  if (!prev) { item.ts = Date.now(); item.src = "google"; }
+  return item;
+}
+const gKey = (gid) => "g_" + crypto.createHash("sha1").update(gid).digest("hex").slice(0, 16);
+
+// Decide qué hacer en cada lado. Puro (sin red) para poder probarlo.
+//   app: {key: item}   gEvents: eventos de Google (ya filtrados a la ventana)   state: {key: {gid, gu}}
+function planTwoWay(app, gEvents, state, minD, maxD) {
+  const out = { gCreate: [], gUpdate: [], gDelete: [], gAdopt: [], appSet: {}, appDel: [], stateSet: {}, stateDel: [] };
+  const gByKey = new Map(), unmanaged = [];
+  for (const g of gEvents) {
+    if (g.recurringEventId || g.recurrence) continue;            // eventos repetitivos: no se tocan
+    const k = g.extendedProperties && g.extendedProperties.private && g.extendedProperties.private.appKey;
+    if (!k) { unmanaged.push(g); continue; }
+    if (gByKey.has(k)) out.gDelete.push(g.id); else gByKey.set(k, g);
+  }
+  // 1) Eventos nuevos creados a mano en Google -> a la app
+  for (const g of unmanaged) {
+    const item = appItemFromGoogle(g, null);
+    if (!item) continue;
+    const key = gKey(g.id);
+    out.appSet[key] = item;
+    out.gAdopt.push([g.id, key]);                                  // se le pone appKey para reconocerlo en adelante
+  }
+  // 2) Emparejados por clave
+  const keys = new Set([...Object.keys(app || {}), ...gByKey.keys(), ...Object.keys(state || {})]);
+  for (const key of keys) {
+    const a = app[key], g = gByKey.get(key), s = state[key];
+    const aIn = a && inWindow(String(a.d || ""), minD, maxD);
+    if (a && !aIn) continue;                                       // fuera de la ventana: no se toca
+    if (aIn && !g) {
+      if (s) { out.appDel.push(key); out.stateDel.push(key); }     // se borró en Google
+      else out.gCreate.push(key);                                  // nuevo en la app
+    } else if (!a && g) {
+      out.gDelete.push(g.id);                                      // se borró en la app (o resto antiguo)
+      if (s) out.stateDel.push(key);
+    } else if (aIn && g) {
+      if (!s) out.gUpdate.push(key);                               // primera vez: manda la app (como antes)
+      else if (s.gu !== g.updated) {                               // editado en Google -> a la app
+        const item = appItemFromGoogle(g, a);
+        if (item) out.appSet[key] = item;
+        out.stateSet[key] = { gid: g.id, gu: g.updated };
+      }
+    } else if (!a && !g && s) {
+      // Desapareció de los dos lados, o el apunte está fuera de la ventana: solo se limpia si ya no existe en la app
+      if (!app[key]) out.stateDel.push(key);
+    }
+  }
+  return out;
+}
+
+async function syncTwoWay(client, db, name, calId, appPath, stateKey) {
+  if (!calId) { console.log(`[${name}] sin calendario configurado, se omite`); return; }
+  const now = new Date();
+  const min = new Date(now.getTime() - WIN_PAST_DAYS * 86400000), max = new Date(now.getTime() + WIN_FUTURE_DAYS * 86400000);
+  const minD = ymd(min), maxD = ymd(max);
+  const [appSnap, stSnap] = await Promise.all([db.ref(appPath).once("value"), db.ref("tcaes_gcal_sync/" + stateKey).once("value")]);
+  const app = appSnap.val() || {}, state = stSnap.val() || {};
+  const gAll = await listAppEvents(client, calId, { min: min.toISOString(), max: max.toISOString() }, TZ);
+  const p = planTwoWay(app, gAll, state, minD, maxD);
+  console.log(`::notice::[${name}] app ${Object.keys(app).length} · Google ${gAll.length} → Google: crear ${p.gCreate.length}, actualizar ${p.gUpdate.length}, borrar ${p.gDelete.length} · App: nuevos/cambiados ${Object.keys(p.appSet).length}, borrar ${p.appDel.length}`);
+  if (p.appDel.length > MAX_APP_DELETES) {
+    throw new Error(`se iban a borrar ${p.appDel.length} apuntes de la app de golpe; se para por seguridad (revisar el calendario)`);
+  }
+  if (DRY) return;
+  const base = API + encodeURIComponent(calId) + "/events";
+  const st = {};                                                   // cambios de estado a escribir
+  for (const key of p.gCreate) {
+    const ev = eventFor(key, app[key]); if (!ev) continue;
+    const r = await client.request({ url: base, method: "POST", data: ev });
+    st[key] = { gid: r.data.id, gu: r.data.updated };
+  }
+  for (const key of p.gUpdate) {
+    const ev = eventFor(key, app[key]); if (!ev) continue;
+    const g = gAll.find(x => x.extendedProperties && x.extendedProperties.private && x.extendedProperties.private.appKey === key);
+    const r = await client.request({ url: base + "/" + g.id, method: "PUT", data: ev });
+    st[key] = { gid: r.data.id, gu: r.data.updated };
+  }
+  for (const [gid, key] of p.gAdopt) {
+    const r = await client.request({ url: base + "/" + gid, method: "PATCH",
+      data: { extendedProperties: { private: { appKey: key } } } });
+    st[key] = { gid, gu: r.data.updated };
+  }
+  for (const id of p.gDelete) {
+    try { await client.request({ url: base + "/" + id, method: "DELETE" }); }
+    catch (e) { if (!e.response || ![404, 410].includes(e.response.status)) throw e; }
+  }
+  const upd = {};
+  for (const [k, v] of Object.entries(p.appSet)) upd[appPath + "/" + k] = v;
+  for (const k of p.appDel) upd[appPath + "/" + k] = null;
+  for (const [k, v] of Object.entries(Object.assign({}, p.stateSet, st))) upd["tcaes_gcal_sync/" + stateKey + "/" + k] = v;
+  for (const k of p.stateDel) if (!st[k]) upd["tcaes_gcal_sync/" + stateKey + "/" + k] = null;
+  if (Object.keys(upd).length) await db.ref().update(upd);
+}
+
 async function main() {
   const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   initializeApp({ credential: cert(sa),
@@ -157,11 +268,6 @@ async function main() {
   const db = getDatabase();
   const client = new JWT({ email: sa.client_email, key: sa.private_key,
     scopes: ["https://www.googleapis.com/auth/calendar.events"] });
-  const [shared, alb, yoli] = await Promise.all([
-    db.ref("tcaes_agenda").once("value"),
-    db.ref("tcaes_agenda_priv/alberto").once("value"),
-    db.ref("tcaes_agenda_priv/yoli").once("value"),
-  ]);
   let failed = false;
   if (process.env.GCAL_TURNOS_ID) {
     // Desde el día 1 del mes anterior hasta ~6 meses vista
@@ -178,10 +284,10 @@ async function main() {
       console.log(`::error::[Turnos] ${e.response && e.response.data && e.response.data.error ? e.response.data.error.message : e.message}`);
     }
   }
-  for (const [name, id, snap] of [["Compartido", process.env.GCAL_SHARED_ID, shared],
-                                   ["Privado Alberto", process.env.GCAL_ALBERTO_ID, alb],
-                                   ["Privado Yoli", process.env.GCAL_YOLI_ID, yoli]]) {
-    try { await syncOne(client, name, id, snap.val() || {}); }
+  for (const [name, id, path, stKey] of [["Compartido", process.env.GCAL_SHARED_ID, "tcaes_agenda", "shared"],
+                                         ["Privado Alberto", process.env.GCAL_ALBERTO_ID, "tcaes_agenda_priv/alberto", "alberto"],
+                                         ["Privado Yoli", process.env.GCAL_YOLI_ID, "tcaes_agenda_priv/yoli", "yoli"]]) {
+    try { await syncTwoWay(client, db, name, id, path, stKey); }
     catch (e) {
       failed = true;
       const st = e.response && e.response.status;
@@ -194,5 +300,5 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { eventFor, plan, turnosItems, turnoEvent };
+module.exports = { eventFor, plan, planTwoWay, appItemFromGoogle, gKey, turnosItems, turnoEvent };
 
