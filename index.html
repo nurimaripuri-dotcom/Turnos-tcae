@@ -366,7 +366,7 @@ function closeComparePeople(){document.getElementById("overlayComparePeople").cl
 
 
 // ===== Aviso de novedad (se ve unos días; se puede cerrar) =====
-const NEWS={id:"sugerencias-2026-11",until:"20261127",
+const NEWS={id:"sugerencias-2026-11",until:"20261117",
   es:{banner:"🆕 Novedad: al tocar un día tuyo verás con quién podrías cambiarlo · toca para ver",title:"🆕 ¿A quién le pido el cambio?",items:['Toca un día tuyo de trabajo en <b>Mi turno</b>: ahora se abre a pantalla completa.', 'Debajo de los botones verás <b>💡 ¿A quién se lo pido?</b>: con quién te encaja cambiar ese día (mismo día M↔T, otro día, noches por noches o doblar M/T o T/N).', 'Toca una sugerencia para proponérselo en la app, o háblalo con ella directamente.', 'En <b>⋮ → ⚙️ Mis preferencias de cambio</b> marca si prefieres mañanas o tardes y si te interesa doblar: así te sugieren cambios que te encajan.']},
   gl:{banner:"🆕 Novidade: ao tocar un día teu verás con quen poderías cambialo · toca para ver",title:"🆕 A quen lle pido o cambio?",items:['Toca un día teu de traballo en <b>A miña quenda</b>: agora ábrese a pantalla completa.', 'Debaixo dos botóns verás <b>💡 A quen llo pido?</b>: con quen che encaixa cambiar ese día (mesmo día M↔T, outro día, noites por noites ou dobrar M/T ou T/N).', 'Toca unha suxestión para propoñerllo na app, ou fálao con ela directamente.', 'En <b>⋮ → ⚙️ Mis preferencias de cambio</b> marca se prefires mañás ou tardes e se che interesa dobrar.']}};
 function newsActive(){
@@ -377,12 +377,13 @@ function newsActive(){
 }
 function newsTx(){return NEWS[(typeof lang!=="undefined"&&lang==="gl")?"gl":"es"];}
 function newsBannerHTML(){
-  if(!newsActive())return "";
-  // La primera vez en cada móvil se abre sola la explicación
-  try{if(userRow&&!localStorage.getItem("news_popped_"+NEWS.id)){localStorage.setItem("news_popped_"+NEWS.id,"1");setTimeout(openNews,900);}}catch(e){}
-  return `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f39c12;color:#fff;animation:videoPulse 2s ease-in-out 3">
-    <div onclick="openNews()" style="flex:1;padding:10px 12px;font-weight:700;font-size:.8rem;cursor:pointer;text-align:center">${newsTx().banner}</div>
-    <button onclick="dismissNews()" aria-label="Cerrar" style="border:none;background:rgba(0,0,0,.15);color:#fff;font-size:1rem;padding:0 12px;cursor:pointer">✕</button></div>`;
+  // Sin franja: la explicación se abre sola una vez al día, hasta NEWS.until o "No volver a mostrar"
+  if(!newsActive()||!userRow)return "";
+  try{
+    const n=new Date(),ds=n.getFullYear()+String(n.getMonth()+1).padStart(2,"0")+String(n.getDate()).padStart(2,"0");
+    if(localStorage.getItem("news_day_"+NEWS.id)!==ds){localStorage.setItem("news_day_"+NEWS.id,ds);setTimeout(openNews,900);}
+  }catch(e){}
+  return "";
 }
 function openNews(){
   const T=newsTx();
