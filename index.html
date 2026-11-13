@@ -2481,6 +2481,7 @@ function openDayAction(day,ri,di,dk,turno,dateObj){
      }else{nd.innerHTML="";nd.style.display="none";}
    }}
   ["dayActionEditBtn","dayActionProposeBtn","dayActionTurn","dayActionCard"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=isPartner?"none":"";});
+  renderDaySuggestions();
   document.getElementById("overlayDayAction").classList.add("open");
 }
 function closeDayAction(){
@@ -2499,6 +2500,34 @@ function dayActionPropose(){
   const ctx={...dayActionCtx};
   closeDayAction();
   setTimeout(()=>openPropModal(ctx.dk,ctx.turno),300);
+}
+
+
+// Sugerencias de cambio también al tocar un día propio (sin tener que entrar en "Proponer cambio")
+function renderDaySuggestions(){
+  const box=document.getElementById("dayActionSug");if(!box)return;
+  box.innerHTML="";
+  try{renderSuggestions("dayActionSug","sugFromDay",dayActionCtx);}catch(e){console.log("sugerencias día:",e);}
+  if(box.innerHTML){
+    const d=box.querySelector("details");
+    if(d){d.style.maxHeight="38vh";d.style.overflowY="auto";}
+    const note=box.querySelector("details > div:last-child");
+    if(note)note.textContent=GL_SUG()?"Toca unha para propoñerllo na app, ou fálao con ela directamente.":"Toca una para proponérselo en la app, o háblalo con ella directamente.";
+  }
+}
+function GL_SUG(){return typeof lang!=="undefined"&&lang==="gl";}
+function sugFromDay(i){
+  const sg=(window._sugList||[])[i];if(!sg)return;
+  if(pinLocked){closeDayAction();showPinWarn();return;}
+  const ctx={...dayActionCtx};
+  closeDayAction();
+  setTimeout(()=>{
+    openPropModal(ctx.dk,ctx.turno);
+    const list=window._sugList||[];
+    let j=list.findIndex(x=>x.pi===sg.pi&&x.Y===sg.Y&&(x.combo||"")===(sg.combo||""));
+    if(j<0){list.push(sg);j=list.length-1;window._sugList=list;}
+    pickSuggestion(j);
+  },300);
 }
 
 function openPropModal(dateKey,turno){
@@ -2657,12 +2686,14 @@ function computeSuggestions(myPi0,X,myT){
   out.doble=cap(out.doble,1).slice(0,4);
   return out;
 }
-function renderSuggestions(){
-  const box=document.getElementById("propSuggest");if(!box)return;
+function renderSuggestions(boxId,pickFn,ctx){
+  boxId=boxId||"propSuggest";pickFn=pickFn||"pickSuggestion";ctx=ctx||propFromDay;
+  const box=document.getElementById(boxId);if(!box)return;
   box.innerHTML="";
-  if(!propFromDay||isPartner)return;
-  const X=(propFromDay.dateKey||"").split("_")[1];
-  const myT=propFromDay.turno;
+  if(!ctx||isPartner)return;
+  const X=(ctx.dateKey||ctx.dk||"").split("_")[1];
+  const myT=ctx.turno;
+  if(X&&X<=sugDs(new Date()))return;
   if(!X||!SUG_WORK.has(myT)||myT==="MT"||myT==="TN"){return;}
   const s=computeSuggestions(userRow-1,X,myT);
   window._sugList=[];
@@ -2671,7 +2702,7 @@ function renderSuggestions(){
     const warn=sg.warn&&sg.warn.length?`<div style="font-size:.66rem;color:#b26a00;margin-top:2px">⚠️ ${escH(sg.warn.join(" · "))}</div>`:"";
     const pr=tcaesPrefs[sg.pi]||{};
     const tag=(pr.turno?`<span style="font-size:.62rem;color:var(--mu)"> · prefiere ${pr.turno==="M"?"mañanas":"tardes"}</span>`:"")+(sg.combo&&pr.doble==="si"?`<span style="font-size:.62rem;color:var(--mu)"> · le gusta doblar</span>`:"");
-    return `<div onclick="pickSuggestion(${i})" style="cursor:pointer;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;margin-bottom:5px;background:var(--s1)">
+    return `<div onclick="${pickFn}(${i})" style="cursor:pointer;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;margin-bottom:5px;background:var(--s1)">
       <div style="font-size:.8rem"><b>${escH(PEOPLE[sg.pi-1].name)}</b>${tag}</div>
       <div style="font-size:.72rem;color:var(--mu)">${txt}</div>${warn}</div>`;
   };
@@ -2907,6 +2938,7 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
     <div id="dayActionFest" style="display:none;background:#fde8e8;color:#c0392b;border-left:4px solid #d32f2f;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:.82rem;font-weight:700"></div>
     <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
     <div id="dayActionCard"></div>
+    <div id="dayActionSug"></div>
     <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
     <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
     <button id="dayActionAgendaBtn" onclick="dayActionAgenda()" style="display:none;width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-top:10px;text-align:left">📅 Agenda del día</button>
