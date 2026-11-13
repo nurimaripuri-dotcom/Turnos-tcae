@@ -17,6 +17,23 @@ const TZ = "Europe/Madrid";
 const DRY = process.env.DRY_RUN === "1";
 const API = "https://www.googleapis.com/calendar/v3/calendars/";
 
+// Apuntes repetidos: rep = "w" (cada semana) | "m" (cada mes) | "y" (cada año)
+const REP_RRULE = { w: "RRULE:FREQ=WEEKLY", m: "RRULE:FREQ=MONTHLY", y: "RRULE:FREQ=YEARLY" };
+// Regla de Google -> rep ("" si no se repite; null si es una repetición compleja que no se importa)
+function repFromRecurrence(rec) {
+  if (!rec || !rec.length) return "";
+  if (rec.length !== 1 || !/^RRULE:/.test(rec[0])) return null;
+  const parts = Object.fromEntries(rec[0].slice(6).split(";").map(x => x.split("=")));
+  for (const k of Object.keys(parts)) {
+    if (k === "FREQ" || k === "WKST" || (k === "INTERVAL" && parts[k] === "1")) continue;
+    if (k === "BYDAY" && parts.FREQ === "WEEKLY" && !parts.BYDAY.includes(",")) continue;
+    if ((k === "BYMONTHDAY" && parts.FREQ !== "WEEKLY") || (k === "BYMONTH" && parts.FREQ === "YEARLY")) continue;
+    return null;
+  }
+  return { WEEKLY: "w", MONTHLY: "m", YEARLY: "y" }[parts.FREQ] || null;
+}
+const itemHash = (a) => crypto.createHash("sha1").update(JSON.stringify([a.d || "", a.time || "", a.text || "", a.rep || ""])).digest("hex").slice(0, 16);
+
 function eventFor(key, e) {
   const d = String(e.d || "");
   if (!/^\d{8}$/.test(d)) return null;
@@ -37,6 +54,7 @@ function eventFor(key, e) {
     ev.start = { date };
     ev.end = { date: next.toISOString().slice(0, 10) };
   }
+  if (REP_RRULE[e.rep]) ev.recurrence = [REP_RRULE[e.rep]];
   ev.extendedProperties.private.appHash = crypto.createHash("sha1")
     .update(JSON.stringify([ev.summary, ev.description, ev.start, ev.end])).digest("hex").slice(0, 16);
   return ev;
@@ -70,7 +88,8 @@ async function listAppEvents(client, calId, range, tz) {
   const out = []; let pageToken;
   do {
     // Se listan todos los eventos y plan() se queda solo con los que llevan appKey
-    const params = new URLSearchParams({ maxResults: "2500", showDeleted: "false", singleEvents: "true" });
+    const params = new URLSearchParams({ maxResults: "2500", showDeleted: "false", singleEvents: range === "masters" ? "false" : "true" });
+    if (range === "masters") range = null;   // agenda: eventos "madre" (los repetidos vienen una sola vez, con su regla)
     if (range) { params.set("timeMin", range.min); params.set("timeMax", range.max); }
     if (tz) params.set("timeZone", tz);
     if (pageToken) params.set("pageToken", pageToken);
@@ -165,7 +184,10 @@ function appItemFromGoogle(g, prev) {
   if (st.date) d = ymdOf(st.date);
   else if (st.dateTime) { d = ymdOf(st.dateTime); time = st.dateTime.slice(11, 16); }
   else return null;
+  const rep = repFromRecurrence(g.recurrence);
+  if (rep === null) return null;                                   // repetición compleja: no se importa
   const item = Object.assign({}, prev || {}, { d, time, text: String(g.summary || "(sin texto)").slice(0, 300) });
+  if (rep) item.rep = rep; else delete item.rep;
   if (!prev) { item.ts = Date.now(); item.src = "google"; }
   return item;
 }
@@ -177,7 +199,7 @@ function planTwoWay(app, gEvents, state, minD, maxD) {
   const out = { gCreate: [], gUpdate: [], gDelete: [], gAdopt: [], appSet: {}, appDel: [], stateSet: {}, stateDel: [] };
   const gByKey = new Map(), unmanaged = [];
   for (const g of gEvents) {
-    if (g.recurringEventId || g.recurrence) continue;            // eventos repetitivos: no se tocan
+    if (g.recurringEventId) continue;                              // excepciones sueltas de una serie: no se tocan
     const k = g.extendedProperties && g.extendedProperties.private && g.extendedProperties.private.appKey;
     if (!k) { unmanaged.push(g); continue; }
     if (gByKey.has(k)) out.gDelete.push(g.id); else gByKey.set(k, g);
@@ -186,15 +208,16 @@ function planTwoWay(app, gEvents, state, minD, maxD) {
   for (const g of unmanaged) {
     const item = appItemFromGoogle(g, null);
     if (!item) continue;
+    if (!item.rep && !inWindow(item.d, minD, maxD)) continue;     // antiguos o muy lejanos: no se importan
     const key = gKey(g.id);
     out.appSet[key] = item;
-    out.gAdopt.push([g.id, key]);                                  // se le pone appKey para reconocerlo en adelante
+    out.gAdopt.push([g.id, key, itemHash(item)]);                                  // se le pone appKey para reconocerlo en adelante
   }
   // 2) Emparejados por clave
   const keys = new Set([...Object.keys(app || {}), ...gByKey.keys(), ...Object.keys(state || {})]);
   for (const key of keys) {
     const a = app[key], g = gByKey.get(key), s = state[key];
-    const aIn = a && inWindow(String(a.d || ""), minD, maxD);
+    const aIn = a && (a.rep ? String(a.d || "") <= maxD : inWindow(String(a.d || ""), minD, maxD));
     if (a && !aIn) continue;                                       // fuera de la ventana: no se toca
     if (aIn && !g) {
       if (s) { out.appDel.push(key); out.stateDel.push(key); }     // se borró en Google
@@ -203,12 +226,16 @@ function planTwoWay(app, gEvents, state, minD, maxD) {
       out.gDelete.push(g.id);                                      // se borró en la app (o resto antiguo)
       if (s) out.stateDel.push(key);
     } else if (aIn && g) {
+      const gChanged = s && s.gu !== g.updated;
+      const aChanged = s && s.ah && s.ah !== itemHash(a);
       if (!s) out.gUpdate.push(key);                               // primera vez: manda la app (como antes)
-      else if (s.gu !== g.updated) {                               // editado en Google -> a la app
+      else if (aChanged && (!gChanged || (a.upd || 0) >= Date.parse(g.updated || 0))) {
+        out.gUpdate.push(key);                                     // editado en la app (o en los dos y la app es más reciente)
+      } else if (gChanged) {                                       // editado en Google -> a la app
         const item = appItemFromGoogle(g, a);
-        if (item) out.appSet[key] = item;
-        out.stateSet[key] = { gid: g.id, gu: g.updated };
-      }
+        if (item) { out.appSet[key] = item; out.stateSet[key] = { gid: g.id, gu: g.updated, ah: itemHash(item) }; }
+        else out.stateSet[key] = { gid: g.id, gu: g.updated, ah: s.ah || itemHash(a) };
+      } else if (!s.ah) out.stateSet[key] = { gid: g.id, gu: g.updated, ah: itemHash(a) };   // estado antiguo: se completa
     } else if (!a && !g && s) {
       // Desapareció de los dos lados, o el apunte está fuera de la ventana: solo se limpia si ya no existe en la app
       if (!app[key]) out.stateDel.push(key);
@@ -224,7 +251,7 @@ async function syncTwoWay(client, db, name, calId, appPath, stateKey) {
   const minD = ymd(min), maxD = ymd(max);
   const [appSnap, stSnap] = await Promise.all([db.ref(appPath).once("value"), db.ref("tcaes_gcal_sync/" + stateKey).once("value")]);
   const app = appSnap.val() || {}, state = stSnap.val() || {};
-  const gAll = await listAppEvents(client, calId, { min: min.toISOString(), max: max.toISOString() }, TZ);
+  const gAll = await listAppEvents(client, calId, "masters", TZ);
   const p = planTwoWay(app, gAll, state, minD, maxD);
   console.log(`::notice::[${name}] app ${Object.keys(app).length} · Google ${gAll.length} → Google: crear ${p.gCreate.length}, actualizar ${p.gUpdate.length}, borrar ${p.gDelete.length} · App: nuevos/cambiados ${Object.keys(p.appSet).length}, borrar ${p.appDel.length}`);
   if (p.appDel.length > MAX_APP_DELETES) {
@@ -236,18 +263,18 @@ async function syncTwoWay(client, db, name, calId, appPath, stateKey) {
   for (const key of p.gCreate) {
     const ev = eventFor(key, app[key]); if (!ev) continue;
     const r = await client.request({ url: base, method: "POST", data: ev });
-    st[key] = { gid: r.data.id, gu: r.data.updated };
+    st[key] = { gid: r.data.id, gu: r.data.updated, ah: itemHash(app[key]) };
   }
   for (const key of p.gUpdate) {
     const ev = eventFor(key, app[key]); if (!ev) continue;
     const g = gAll.find(x => x.extendedProperties && x.extendedProperties.private && x.extendedProperties.private.appKey === key);
     const r = await client.request({ url: base + "/" + g.id, method: "PUT", data: ev });
-    st[key] = { gid: r.data.id, gu: r.data.updated };
+    st[key] = { gid: r.data.id, gu: r.data.updated, ah: itemHash(app[key]) };
   }
-  for (const [gid, key] of p.gAdopt) {
+  for (const [gid, key, ah] of p.gAdopt) {
     const r = await client.request({ url: base + "/" + gid, method: "PATCH",
       data: { extendedProperties: { private: { appKey: key } } } });
-    st[key] = { gid, gu: r.data.updated };
+    st[key] = { gid, gu: r.data.updated, ah };
   }
   for (const id of p.gDelete) {
     try { await client.request({ url: base + "/" + id, method: "DELETE" }); }
@@ -300,5 +327,5 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { eventFor, plan, planTwoWay, appItemFromGoogle, gKey, turnosItems, turnoEvent };
+module.exports = { eventFor, plan, planTwoWay, appItemFromGoogle, gKey, itemHash, repFromRecurrence, turnosItems, turnoEvent };
 

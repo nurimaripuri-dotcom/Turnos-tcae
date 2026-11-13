@@ -841,8 +841,29 @@ function initCouple(){
 function agendaAll(){
   return [...Object.entries(agendaData).map(([k,e])=>["shared",k,e]),...Object.entries(agendaPriv).map(([k,e])=>["priv",k,e])].filter(x=>x[2]&&x[2].d);
 }
+// --- Apuntes repetidos: e.rep = "w" (cada semana) | "m" (cada mes) | "y" (cada año); e.d = primer día ---
+const REP_LBL={w:"Cada semana",m:"Cada mes",y:"Cada año"};
+function agDate(ds){return new Date(+ds.slice(0,4),+ds.slice(4,6)-1,+ds.slice(6,8),12);}
+function agDs(d){return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");}
+function agendaOccurs(e,ds){
+  if(!e||!e.d)return false;
+  if(e.d===ds)return true;
+  if(!e.rep||ds<e.d)return false;
+  if(e.rep==="w")return agDate(e.d).getDay()===agDate(ds).getDay();
+  if(e.rep==="m")return e.d.slice(6,8)===ds.slice(6,8);
+  if(e.rep==="y")return e.d.slice(4,8)===ds.slice(4,8);
+  return false;
+}
+function agendaNext(e,fromDs){ // próxima vez (>= fromDs), o null
+  if(!e.rep)return e.d>=fromDs?e.d:null;
+  if(e.d>=fromDs)return e.d;
+  const d=agDate(fromDs);
+  for(let i=0;i<=1500;i++){const ds=agDs(d);if(agendaOccurs(e,ds))return ds;d.setDate(d.getDate()+1);}
+  return null;
+}
+function agendaFold(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");}
 function agendaFor(dateStr){
-  return agendaAll().filter(x=>x[2].d===dateStr).sort((a,b)=>(a[2].time||"00").localeCompare(b[2].time||"00"));
+  return agendaAll().filter(x=>agendaOccurs(x[2],dateStr)).sort((a,b)=>(a[2].time||"00").localeCompare(b[2].time||"00"));
 }
 function agendaBadgeHTML(dateStr){
   if(!isCouple())return "";
@@ -859,12 +880,13 @@ function agendaIcon(scope,e){return scope==="priv"?"🔒":"👥"+(e.by?" "+escH(
 function agendaUpcomingHTML(){
   const now=new Date();
   const todayStr=now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0");
-  const list=agendaAll().filter(x=>x[2].d>=todayStr)
-    .sort((a,b)=>(a[2].d+(a[2].time||"00")).localeCompare(b[2].d+(b[2].time||"00"))).slice(0,5);
+  const list=agendaAll().map(x=>[...x,agendaNext(x[2],todayStr)]).filter(x=>x[3])
+    .sort((a,b)=>(a[3]+(a[2].time||"00")).localeCompare(b[3]+(b[2].time||"00"))).slice(0,5);
   let h=`<div style="margin-top:12px;background:var(--s2);border-radius:12px;padding:10px 12px;flex-shrink:0">
-    <div style="font-weight:800;font-size:.85rem;margin-bottom:6px">📅 Próximos</div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-weight:800;font-size:.85rem">📅 Próximos</span>
+    <button onclick="openAgendaSearch()" style="border:1px solid var(--bd);background:var(--s1);color:var(--tx);border-radius:14px;padding:3px 10px;font-size:.75rem;cursor:pointer;font-family:'DM Mono',monospace">🔎 Buscar</button></div>`;
   if(!list.length)h+=`<div style="font-size:.78rem;color:var(--mu)">Nada apuntado. Toca un día del calendario → Agenda del día.</div>`;
-  list.forEach(([sc,k,e])=>{h+=`<div onclick="openAgendaDay('${e.d}')" style="font-size:.8rem;padding:3px 0;cursor:pointer"><b>${escH(fmtAgendaDate(e.d))}</b>${e.time?" · "+escH(e.time):" · todo el día"} — ${escH(e.text)} <span style="color:var(--mu);font-size:.7rem">${agendaIcon(sc,e)}</span></div>`;});
+  list.forEach(([sc,k,e,nd])=>{h+=`<div onclick="openAgendaDay('${nd}')" style="font-size:.8rem;padding:3px 0;cursor:pointer"><b>${escH(fmtAgendaDate(nd))}</b>${e.time?" · "+escH(e.time):" · todo el día"} — ${escH(e.text)}${e.rep?" 🔁":""} <span style="color:var(--mu);font-size:.7rem">${agendaIcon(sc,e)}</span></div>`;});
   return h+`</div>`;
 }
 function dayActionAgenda(){
@@ -886,9 +908,7 @@ function setAgendaVis(v){
 function openAgendaDay(dateStr){
   agendaDayKey=dateStr;
   document.getElementById("agendaTitle").textContent="📅 "+fmtAgendaDate(dateStr);
-  document.getElementById("agendaTime").value="";
-  document.getElementById("agendaText").value="";
-  setAgendaVis("shared");
+  agendaCancelEdit();
   renderAgendaDay();
   document.getElementById("overlayAgenda").classList.add("open");
 }
@@ -898,23 +918,102 @@ function renderAgendaDay(){
   if(!cont||!agendaDayKey)return;
   const items=agendaFor(agendaDayKey);
   if(!items.length){cont.innerHTML=`<div style="font-size:.8rem;color:var(--mu)">Nada apuntado este día.</div>`;return;}
-  cont.innerHTML=items.map(([sc,k,e])=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid ${sc==="shared"?"#6f42c1":"var(--bd)"};border-radius:8px;margin-bottom:6px">
-    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":"<b>🗓 Todo el día</b> · "}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}</div></div>
-    <button onclick="deleteAgendaEvent('${sc}','${k}')" style="border:none;background:transparent;font-size:1rem;cursor:pointer">🗑</button></div>`).join("");
+  cont.innerHTML=items.map(([sc,k,e])=>{
+    const ed=agendaEditing&&agendaEditing.sc===sc&&agendaEditing.k===k;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:8px;border:${ed?"2px":"1px"} solid ${ed?"var(--V)":(sc==="shared"?"#6f42c1":"var(--bd)")};border-radius:8px;margin-bottom:6px">
+    <div style="flex:1;font-size:.85rem">${e.time?"<b>"+escH(e.time)+"</b> · ":"<b>🗓 Todo el día</b> · "}${escH(e.text)}<div style="font-size:.68rem;color:var(--mu)">${sc==="priv"?"🔒 Privado":"👥 Compartido"+(e.by?" · "+escH(e.by):"")}${e.rep?" · 🔁 "+REP_LBL[e.rep]+(e.d!==agendaDayKey?" (desde "+escH(fmtAgendaDate(e.d))+(e.d.slice(0,4)!==agendaDayKey.slice(0,4)?"/"+e.d.slice(0,4):"")+")":""):""}</div></div>
+    <button onclick="editAgendaEvent('${sc}','${k}')" title="Editar" style="border:none;background:transparent;font-size:1rem;cursor:pointer">✏️</button>
+    <button onclick="deleteAgendaEvent('${sc}','${k}')" title="Borrar" style="border:none;background:transparent;font-size:1rem;cursor:pointer">🗑</button></div>`;}).join("");
+}
+let agendaEditing=null; // {sc,k} mientras se edita un apunte
+function agendaFormReset(){
+  document.getElementById("agendaTime").value="";
+  document.getElementById("agendaText").value="";
+  document.getElementById("agendaRep").value="";
+  document.getElementById("agendaDateRow").style.display="none";
+}
+function agendaCancelEdit(){
+  agendaEditing=null;
+  agendaFormReset();
+  setAgendaVis("shared");
+  document.getElementById("agendaSaveBtn").textContent="➕ Añadir";
+  document.getElementById("agendaCancelBtn").style.display="none";
+  if(agendaDayKey)renderAgendaDay();
+}
+function editAgendaEvent(sc,k){
+  const e=(sc==="priv"?agendaPriv:agendaData)[k];if(!e)return;
+  agendaEditing={sc,k};
+  document.getElementById("agendaTime").value=e.time||"";
+  document.getElementById("agendaText").value=e.text||"";
+  document.getElementById("agendaRep").value=e.rep||"";
+  const dI=document.getElementById("agendaDate");
+  dI.value=e.d.slice(0,4)+"-"+e.d.slice(4,6)+"-"+e.d.slice(6,8);
+  document.getElementById("agendaDateRow").style.display="flex";
+  setAgendaVis(sc);
+  document.getElementById("agendaSaveBtn").textContent="💾 Guardar cambios";
+  document.getElementById("agendaCancelBtn").style.display="block";
+  renderAgendaDay();
+  document.getElementById("agendaText").focus();
 }
 function addAgendaEvent(){
   const text=document.getElementById("agendaText").value.trim();
   const time=document.getElementById("agendaTime").value||"";
+  const rep=document.getElementById("agendaRep").value||"";
   if(!text||!agendaDayKey||!db)return;
+  const done=()=>{agendaCancelEdit();setTimeout(renderAgendaDay,200);};
+  if(agendaEditing){
+    const {sc,k}=agendaEditing;
+    const old=(sc==="priv"?agendaPriv:agendaData)[k];if(!old){done();return;}
+    const dv=document.getElementById("agendaDate").value;
+    const d=/^\d{4}-\d{2}-\d{2}$/.test(dv)?dv.replace(/-/g,""):old.d;
+    const data=Object.assign({},old,{d,time,text,upd:Date.now()});
+    if(rep)data.rep=rep;else delete data.rep;
+    if(agendaVis===sc){
+      db.ref(agendaPath(sc)+"/"+k).set(data).then(done).catch(()=>alert(t("errorEnviar")));
+    }else{ // pasa de compartido a privado o al revés
+      if(agendaVis==="shared")data.by=meName();else delete data.by;
+      db.ref(agendaPath(agendaVis)).push(data).then(()=>db.ref(agendaPath(sc)+"/"+k).remove()).then(done).catch(()=>alert(t("errorEnviar")));
+    }
+    return;
+  }
   const data={d:agendaDayKey,time,text,ts:Date.now()};
+  if(rep)data.rep=rep;
   if(agendaVis==="shared")data.by=meName();
-  db.ref(agendaPath(agendaVis)).push(data)
-    .then(()=>{document.getElementById("agendaText").value="";document.getElementById("agendaTime").value="";setTimeout(renderAgendaDay,200);})
-    .catch(()=>alert(t("errorEnviar")));
+  db.ref(agendaPath(agendaVis)).push(data).then(done).catch(()=>alert(t("errorEnviar")));
 }
 function deleteAgendaEvent(sc,k){
-  if(!confirm(sc==="shared"?"¿Borrar? Se borra para los dos.":"¿Borrar este apunte?"))return;
+  const e=(sc==="priv"?agendaPriv:agendaData)[k]||{};
+  const msg=(e.rep?"Es un apunte que se repite: se borran todas las repeticiones. ":"")+(sc==="shared"?"¿Borrar? Se borra para los dos.":"¿Borrar este apunte?");
+  if(!confirm(msg))return;
+  if(agendaEditing&&agendaEditing.k===k)agendaCancelEdit();
   db.ref(agendaPath(sc)+"/"+k).remove().then(()=>setTimeout(renderAgendaDay,200));
+}
+// --- Buscador de apuntes ---
+function openAgendaSearch(){
+  const i=document.getElementById("agendaSearchInput");i.value="";
+  renderAgendaSearch();
+  document.getElementById("overlayAgendaSearch").classList.add("open");
+  setTimeout(()=>i.focus(),150);
+}
+function closeAgendaSearch(){document.getElementById("overlayAgendaSearch").classList.remove("open");}
+function renderAgendaSearch(){
+  const q=agendaFold(document.getElementById("agendaSearchInput").value.trim());
+  const out=document.getElementById("agendaSearchList");
+  const now=new Date(),todayStr=agDs(now);
+  let items=agendaAll();
+  if(q)items=items.filter(x=>agendaFold(x[2].text).includes(q));
+  // Próximos primero (por fecha) y después los pasados (del más reciente al más antiguo)
+  const rows=items.map(x=>{const nd=agendaNext(x[2],todayStr);return {x,day:nd||x[2].d,future:!!nd};});
+  rows.sort((a,b)=>a.future!==b.future?(a.future?-1:1):(a.future?a.day.localeCompare(b.day):b.day.localeCompare(a.day)));
+  if(!rows.length){out.innerHTML=`<div style="font-size:.8rem;color:var(--mu);padding:8px 0">${q?"No hay apuntes con ese texto.":"Todavía no hay apuntes."}</div>`;return;}
+  let lastF=null,h="";
+  rows.slice(0,100).forEach(({x:[sc,k,e],day,future})=>{
+    if(future!==lastF){h+=`<div style="font-size:.7rem;font-weight:700;color:var(--mu);margin:8px 0 4px">${future?"Próximos":"Pasados"}</div>`;lastF=future;}
+    h+=`<div onclick="closeAgendaSearch();openAgendaDay('${day}')" style="cursor:pointer;padding:8px;border:1px solid ${sc==="shared"?"#6f42c1":"var(--bd)"};border-radius:8px;margin-bottom:5px">
+      <div style="font-size:.85rem">${escH(e.text)}${e.rep?" 🔁":""}</div>
+      <div style="font-size:.68rem;color:var(--mu)">${escH(fmtAgendaDate(day))}${day.slice(0,4)!==todayStr.slice(0,4)?"/"+day.slice(0,4):""}${e.time?" · "+escH(e.time):" · todo el día"} · ${sc==="priv"?"🔒":"👥"}${e.rep?" · "+REP_LBL[e.rep]:""}</div></div>`;
+  });
+  out.innerHTML=h;
 }
 
 // --- Widget de Android (7 días): la web calcula los turnos y se los pasa a la app nativa ---
@@ -2825,12 +2924,33 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
       <input id="agendaText" type="text" maxlength="200" placeholder="Qué hay…" style="flex:1;min-width:0;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
     </div>
     <div style="margin:-2px 0 10px;font-size:.75rem;color:var(--mu)">🗓 Sin hora = todo el día</div>
+    <div id="agendaDateRow" style="display:none;gap:6px;align-items:center;margin-bottom:8px;font-size:.78rem">
+      <span style="flex:0 0 auto">📆 Fecha</span>
+      <input id="agendaDate" type="date" style="flex:1;min-width:0;padding:9px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace">
+    </div>
+    <select id="agendaRep" style="width:100%;padding:10px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace;margin-bottom:8px">
+      <option value="">🔁 No se repite</option>
+      <option value="w">🔁 Cada semana</option>
+      <option value="m">🔁 Cada mes</option>
+      <option value="y">🔁 Cada año</option>
+    </select>
     <div style="display:flex;gap:6px;margin-bottom:8px">
       <button id="agendaVisShared" onclick="setAgendaVis('shared')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">👥 Compartido</button>
       <button id="agendaVisPriv" onclick="setAgendaVis('priv')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">🔒 Privado</button>
     </div>
-    <button onclick="addAgendaEvent()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--V);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">➕ Añadir</button>
+    <button id="agendaSaveBtn" onclick="addAgendaEvent()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--V);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer">➕ Añadir</button>
+    <button id="agendaCancelBtn" onclick="agendaCancelEdit()" style="display:none;width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--tx);cursor:pointer;font-size:.82rem;margin-top:8px;font-family:'DM Mono',monospace">✖ Cancelar edición</button>
     <button onclick="closeAgendaDay()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:10px;font-family:'DM Mono',monospace">← Volver</button>
+  </div>
+</div>
+
+<!-- BUSCADOR DE APUNTES -->
+<div class="overlay" id="overlayAgendaSearch" onclick="if(event.target.id==='overlayAgendaSearch')closeAgendaSearch()">
+  <div class="modal">
+    <h2 style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:10px">🔎 Buscar en la agenda</h2>
+    <input id="agendaSearchInput" type="search" oninput="renderAgendaSearch()" placeholder="Escribe una palabra… (dentista, cumple…)" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;border:1.5px solid var(--bd);background:var(--s1);color:var(--tx);font-family:'DM Mono',monospace;margin-bottom:6px">
+    <div id="agendaSearchList" style="max-height:55vh;overflow-y:auto"></div>
+    <button onclick="closeAgendaSearch()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:10px;font-family:'DM Mono',monospace">← Volver</button>
   </div>
 </div>
 
