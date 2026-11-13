@@ -378,7 +378,9 @@ function newsActive(){
 function newsTx(){return NEWS[(typeof lang!=="undefined"&&lang==="gl")?"gl":"es"];}
 function newsBannerHTML(){
   if(!newsActive())return "";
-  return `<div style="display:flex;align-items:stretch;gap:0;margin-top:12px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f39c12;color:#fff">
+  // La primera vez en cada móvil se abre sola la explicación
+  try{if(userRow&&!localStorage.getItem("news_popped_"+NEWS.id)){localStorage.setItem("news_popped_"+NEWS.id,"1");setTimeout(openNews,900);}}catch(e){}
+  return `<div style="display:flex;align-items:stretch;gap:0;margin-bottom:8px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f39c12;color:#fff;animation:videoPulse 2s ease-in-out 3">
     <div onclick="openNews()" style="flex:1;padding:10px 12px;font-weight:700;font-size:.8rem;cursor:pointer;text-align:center">${newsTx().banner}</div>
     <button onclick="dismissNews()" aria-label="Cerrar" style="border:none;background:rgba(0,0,0,.15);color:#fff;font-size:1rem;padding:0 12px;cursor:pointer">✕</button></div>`;
 }
@@ -1904,7 +1906,7 @@ function renderMiTurno(){
     if(t==="D")cD++;else if(t==="M")cM++;else if(t==="T")cT++;else if(t==="N")cN++;
   }
 
-  let html="";  // tarjeta "quién está de turno conmigo" retirada a petición de Alberto
+  let html=newsBannerHTML();  // aviso de novedad arriba del todo (tarjeta "quién está de turno conmigo" retirada)
   // Cabecera compacta: mes + año y contadores en una sola línea
   html+=`<div id="miHead" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-shrink:0;flex-wrap:wrap">
     <span style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800">${MONTHS()[miMonth]} <span style="font-size:.85rem;font-weight:600;color:var(--mu)">${miYear}</span></span>
@@ -1952,7 +1954,6 @@ function renderMiTurno(){
   html+=`</tbody></table>
   </div>`;
   if(isCouple())html+=agendaUpcomingHTML();
-  html+=newsBannerHTML();
   html+=`<div class="video-promo-banner" onclick="openVideoHelp()" style="background:var(--I);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;flex-shrink:0">${t("videoPromoBanner")}</div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   setTimeout(fitMiCalendar,0);
