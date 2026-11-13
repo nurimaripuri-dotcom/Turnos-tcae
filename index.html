@@ -127,6 +127,11 @@ td.today-col{background:var(--today-bg)!important}
 .overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--s1);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;transform:translateY(20px);transition:transform .2s;max-height:85vh;overflow-y:auto}
 .overlay.open .modal{transform:translateY(0)}
+/* Ventana del día a pantalla completa */
+#overlayDayAction{align-items:stretch}
+#overlayDayAction .modal{max-height:none;height:100%;box-sizing:border-box;border-radius:0;position:relative;padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+#overlayDayAction .modal h2{padding-right:44px;font-size:1.05rem}
+#dayActionClose{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;width:38px;height:38px;border-radius:50%;border:1px solid var(--bd);background:var(--s2);color:var(--tx);font-size:1.1rem;cursor:pointer}
 .modal h2{font-family:"Syne",sans-serif;font-size:.95rem;margin-bottom:3px}
 .msub{font-size:.72rem;color:var(--mu);margin-bottom:12px}
 .slabel{font-size:.73rem;color:var(--mu);margin-bottom:6px;margin-top:8px}
@@ -2510,7 +2515,7 @@ function renderDaySuggestions(){
   try{renderSuggestions("dayActionSug","sugFromDay",dayActionCtx);}catch(e){console.log("sugerencias día:",e);}
   if(box.innerHTML){
     const d=box.querySelector("details");
-    if(d){d.style.maxHeight="38vh";d.style.overflowY="auto";}
+    if(d){d.style.marginTop="10px";}
     const note=box.querySelector("details > div:last-child");
     if(note)note.textContent=GL_SUG()?"Toca unha para propoñerllo na app, ou fálao con ela directamente.":"Toca una para proponérselo en la app, o háblalo con ella directamente.";
   }
@@ -2933,15 +2938,16 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <!-- DAY ACTION MODAL -->
 <div class="overlay" id="overlayDayAction" onclick="if(event.target.id==='overlayDayAction')closeDayAction()">
   <div class="modal">
+    <button id="dayActionClose" onclick="closeDayAction()" aria-label="Cerrar">✕</button>
     <h2 id="dayActionTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:8px"></h2>
     <div id="dayActionNotes" style="display:none;margin-bottom:10px"></div>
     <div id="dayActionFest" style="display:none;background:#fde8e8;color:#c0392b;border-left:4px solid #d32f2f;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:.82rem;font-weight:700"></div>
     <div id="dayActionTurn" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;text-align:center"></div>
     <div id="dayActionCard"></div>
-    <div id="dayActionSug"></div>
     <button id="dayActionEditBtn" onclick="dayActionEdit()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:10px;text-align:left">✏️ Anotar cambio de turno</button>
     <button id="dayActionProposeBtn" onclick="dayActionPropose()" style="width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;text-align:left">🔄 Proponer cambio con compañera/o</button>
     <button id="dayActionAgendaBtn" onclick="dayActionAgenda()" style="display:none;width:100%;padding:14px;border-radius:10px;border:1.5px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;font-size:.88rem;font-weight:600;font-family:'DM Mono',monospace;margin-top:10px;text-align:left">📅 Agenda del día</button>
+    <div id="dayActionSug"></div>
     <button id="dayActionBackBtn" onclick="closeDayAction()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.82rem;margin-top:12px;font-family:'DM Mono',monospace">← Volver</button>
   </div>
 </div>
