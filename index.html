@@ -364,6 +364,37 @@ function saveHiddenPeople(){localStorage.setItem("tcaes_hidden_people",JSON.stri
 function openComparePeople(){renderPeopleCheckList();document.getElementById("overlayComparePeople").classList.add("open");}
 function closeComparePeople(){document.getElementById("overlayComparePeople").classList.remove("open");}
 
+
+// ===== Aviso de novedad (se ve unos días; se puede cerrar) =====
+const NEWS={id:"sugerencias-2026-11",until:"20261127",
+  es:{banner:"🆕 Novedad: al tocar un día tuyo verás con quién podrías cambiarlo · toca para ver",title:"🆕 ¿A quién le pido el cambio?",items:['Toca un día tuyo de trabajo en <b>Mi turno</b>: ahora se abre a pantalla completa.', 'Debajo de los botones verás <b>💡 ¿A quién se lo pido?</b>: con quién te encaja cambiar ese día (mismo día M↔T, otro día, noches por noches o doblar M/T o T/N).', 'Toca una sugerencia para proponérselo en la app, o háblalo con ella directamente.', 'En <b>⋮ → ⚙️ Mis preferencias de cambio</b> marca si prefieres mañanas o tardes y si te interesa doblar: así te sugieren cambios que te encajan.']},
+  gl:{banner:"🆕 Novidade: ao tocar un día teu verás con quen poderías cambialo · toca para ver",title:"🆕 A quen lle pido o cambio?",items:['Toca un día teu de traballo en <b>A miña quenda</b>: agora ábrese a pantalla completa.', 'Debaixo dos botóns verás <b>💡 A quen llo pido?</b>: con quen che encaixa cambiar ese día (mesmo día M↔T, outro día, noites por noites ou dobrar M/T ou T/N).', 'Toca unha suxestión para propoñerllo na app, ou fálao con ela directamente.', 'En <b>⋮ → ⚙️ Mis preferencias de cambio</b> marca se prefires mañás ou tardes e se che interesa dobrar.']}};
+function newsActive(){
+  try{if(localStorage.getItem("news_seen_"+NEWS.id))return false;}catch(e){}
+  if(typeof isPartner!=='undefined'&&isPartner)return false;
+  const n=new Date(),ds=n.getFullYear()+String(n.getMonth()+1).padStart(2,"0")+String(n.getDate()).padStart(2,"0");
+  return ds<=NEWS.until;
+}
+function newsTx(){return NEWS[(typeof lang!=="undefined"&&lang==="gl")?"gl":"es"];}
+function newsBannerHTML(){
+  if(!newsActive())return "";
+  return `<div style="display:flex;align-items:stretch;gap:0;margin-top:12px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f39c12;color:#fff">
+    <div onclick="openNews()" style="flex:1;padding:10px 12px;font-weight:700;font-size:.8rem;cursor:pointer;text-align:center">${newsTx().banner}</div>
+    <button onclick="dismissNews()" aria-label="Cerrar" style="border:none;background:rgba(0,0,0,.15);color:#fff;font-size:1rem;padding:0 12px;cursor:pointer">✕</button></div>`;
+}
+function openNews(){
+  const T=newsTx();
+  document.getElementById("newsTitle").textContent=T.title;
+  document.getElementById("newsBody").innerHTML="<ol style='padding-left:20px;margin:0'>"+T.items.map(x=>"<li style='margin-bottom:8px;font-size:.85rem;line-height:1.4'>"+x+"</li>").join("")+"</ol>";
+  document.getElementById("overlayNews").classList.add("open");
+}
+function closeNews(){document.getElementById("overlayNews").classList.remove("open");}
+function dismissNews(){
+  try{localStorage.setItem("news_seen_"+NEWS.id,"1");}catch(e){}
+  closeNews();
+  try{renderMiTurno();}catch(e){}
+}
+
 const HELP_VIDEO_ID="Qfm1c_x7YVA";
 function openVideoHelp(){
   document.getElementById("videoTitleEl").textContent=t("videoTitle");
@@ -1921,6 +1952,7 @@ function renderMiTurno(){
   html+=`</tbody></table>
   </div>`;
   if(isCouple())html+=agendaUpcomingHTML();
+  html+=newsBannerHTML();
   html+=`<div class="video-promo-banner" onclick="openVideoHelp()" style="background:var(--I);color:#fff;border-radius:12px;padding:10px 14px;margin-top:12px;text-align:center;font-weight:700;font-size:.8rem;flex-shrink:0">${t("videoPromoBanner")}</div>`;
   document.getElementById("miTurnoContent").innerHTML=html;
   setTimeout(fitMiCalendar,0);
@@ -2933,6 +2965,16 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
 <div id="view-props" style="flex:1;overflow:auto;padding:14px 16px;display:none">
   <h2 id="propsHeading" style="font-family:Syne,sans-serif;font-size:1rem;margin-bottom:14px">🔄 Propuestas de cambio</h2>
   <div id="propsContent"></div>
+</div>
+
+<!-- AVISO DE NOVEDAD -->
+<div class="overlay" id="overlayNews" onclick="if(event.target.id==='overlayNews')closeNews()">
+  <div class="modal">
+    <h2 id="newsTitle" style="font-family:Syne,sans-serif;font-size:.95rem;margin-bottom:12px"></h2>
+    <div id="newsBody"></div>
+    <button onclick="closeNews()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--V);color:#fff;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;margin-top:12px">OK</button>
+    <button onclick="dismissNews()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mu);cursor:pointer;font-size:.8rem;margin-top:8px;font-family:'DM Mono',monospace">No volver a mostrar</button>
+  </div>
 </div>
 
 <!-- DAY ACTION MODAL -->
