@@ -2466,6 +2466,7 @@ function initProposals(){
   db.ref("tcaes_proposals").on("value",snap=>{
     proposals=snap.val()||{};
     updatePropBadge();
+    try{maybeAutoOpenIncoming();}catch(e){}
     const v=document.getElementById("view-props");
     if(v&&v.style.display!=="none") renderProposals();
   });
@@ -2729,6 +2730,7 @@ function renderSuggestions(boxId,pickFn,ctx){
   boxId=boxId||"propSuggest";pickFn=pickFn||"pickSuggestion";ctx=ctx||propFromDay;
   const box=document.getElementById(boxId);if(!box)return;
   box.innerHTML="";
+  window._sugCtx=ctx;
   if(!ctx||isPartner)return;
   const X=(ctx.dateKey||ctx.dk||"").split("_")[1];
   const myT=ctx.turno;
@@ -2743,7 +2745,7 @@ function renderSuggestions(boxId,pickFn,ctx){
     const tag=(pr.turno?`<span style="font-size:.62rem;color:var(--mu)"> · prefiere ${pr.turno==="M"?"mañanas":"tardes"}</span>`:"")+(sg.combo&&pr.doble==="si"?`<span style="font-size:.62rem;color:var(--mu)"> · le gusta doblar</span>`:"");
     return `<div onclick="${pickFn}(${i})" style="cursor:pointer;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;margin-bottom:5px;background:var(--s1)">
       <div style="font-size:.8rem"><b>${escH(PEOPLE[sg.pi-1].name)}</b>${tag}</div>
-      <div style="font-size:.72rem;color:var(--mu)">${txt}</div>${warn}</div>`;
+      <div style="font-size:.72rem;color:var(--mu)">${txt}</div>${warn}<button onclick="event.stopPropagation();sugWhatsApp(${i})" style="margin-top:6px;border:none;background:#25D366;color:#fff;border-radius:7px;padding:6px 10px;font-size:.72rem;font-weight:700;cursor:pointer">📲 ${typeof lang!=="undefined"&&lang==="gl"?"Pedir por WhatsApp":"Pedir por WhatsApp"}</button></div>`;
   };
   const sec=(title,arr,fn)=>arr.length?`<div style="font-size:.72rem;font-weight:700;margin:8px 0 4px">${title}</div>`+arr.map(fn).join(""):"";
   let h="";
@@ -2791,7 +2793,97 @@ function setPref(grp,val){
 }
 function closePrefs(){document.getElementById("overlayPrefs").classList.remove("open");}
 
-function sendProposal(){
+const WA_PROPS_NODE="tcaes_proposals";function WA_PEOPLE(){return PEOPLE;}
+
+// ===== Pedir el cambio por WhatsApp (sin enlaces) + ventana automática de propuestas recibidas =====
+// La propuesta se guarda en la app como siempre; WhatsApp solo lleva el aviso. Acepta quien cede su turno, desde la app.
+function waGL(){return typeof lang!=="undefined"&&lang==="gl";}
+function waOpen(text){
+  const u="https://wa.me/?text="+encodeURIComponent(text);
+  try{const w=window.open(u,"_blank");if(!w)location.href=u;}catch(e){location.href=u;}
+}
+function waDay(dk){const ds=String(dk||"").split("_")[1]||"";return ds?sugFmt(ds).toLowerCase():"?";}
+function waFirst(n){return String(n||"").split(/[ .]/)[0];}
+function waAskText(p){
+  const gl=waGL(),X=waDay(p.fromDay),Y=waDay(p.toDay),same=String(p.fromDay).split("_")[1]===String(p.toDay).split("_")[1];
+  const hi=(gl?"Ola ":"Hola ")+waFirst(p.toName)+", ";
+  let q;
+  if(p.kind==="doble"){
+    const c=p.combo==="MT"?"M/T":"T/N";
+    q=gl?`dobrarías ${c} o ${X} facéndome a miña ${p.fromTurn}? A cambio eu fago a túa ${p.toTurn} do ${Y}.`
+        :`¿doblarías ${c} el ${X} haciéndome mi ${p.fromTurn}? A cambio yo te hago tu ${p.toTurn} del ${Y}.`;
+  }else if(same){
+    q=gl?`cámbiasme a túa ${p.toTurn} do ${X} pola miña ${p.fromTurn}?`:`¿me cambias tu ${p.toTurn} del ${X} por mi ${p.fromTurn}?`;
+  }else{
+    q=gl?`fasme a miña ${p.fromTurn} do ${X}? A cambio eu fago a túa ${p.toTurn} do ${Y}.`
+        :`¿me haces mi ${p.fromTurn} del ${X}? A cambio yo te hago tu ${p.toTurn} del ${Y}.`;
+  }
+  return hi+q+(gl?" Deixeicho na app de quendas para que o aceptes.":" Te lo dejé en la app de turnos para que lo aceptes.");
+}
+function waReplyText(p,decision){
+  const gl=waGL(),X=waDay(p.fromDay);
+  if(decision==="accepted")return gl?`✅ Aceptei o cambio do ${X}. Xa está apuntado na app.`:`✅ Acepté el cambio del ${X}. Ya está apuntado en la app.`;
+  return gl?`Síntoo, non podo facer o cambio do ${X}.`:`Lo siento, no puedo hacer el cambio del ${X}.`;
+}
+// Crea la propuesta y abre WhatsApp en el mismo toque (si no, el móvil bloquea la ventana)
+function waPushProposal(prop,viaWA){
+  if(!db){alert(typeof t==="function"?t("sinConexionSimple"):"Sin conexión");return null;}
+  const pr=db.ref(WA_PROPS_NODE).push(prop);
+  if(viaWA)waOpen(waAskText(prop));
+  return pr;
+}
+function sugWhatsApp(i){
+  const sg=(window._sugList||[])[i],ctx=window._sugCtx;if(!sg||!ctx)return;
+  if(typeof pinLocked!=="undefined"&&pinLocked){showPinWarn();return;}
+  const ppl=WA_PEOPLE(),name=(ppl[sg.pi-1]||{}).name||"?";
+  const gl=waGL();
+  if(!confirm(gl?`Pedirlle o cambio a ${name} por WhatsApp?\n\nGárdase a proposta na app e ábrese WhatsApp coa mensaxe escrita.`
+                 :`¿Pedirle el cambio a ${name} por WhatsApp?\n\nSe guarda la propuesta en la app y se abre WhatsApp con el mensaje escrito.`))return;
+  const prop={from:userRow,fromName:userName,fromDay:ctx.dateKey||ctx.dk,fromTurn:ctx.turno,
+    to:sg.pi,toName:name,toDay:(sg.pi-1)+"_"+sg.Y,toTurn:sg.yT,status:"pending",
+    commentFrom:"",commentTo:"",createdAt:new Date().toLocaleString("es-ES"),via:"whatsapp"};
+  if(sg.combo){prop.kind="doble";prop.combo=sg.combo;}
+  const pr=waPushProposal(prop,true);
+  if(pr)pr.catch(()=>alert(typeof t==="function"?t("errorEnviar"):"Error"));
+  try{closeDayAction();}catch(e){}
+  try{closePropModal();}catch(e){}
+}
+// Propuestas recibidas: se abren solas al entrar en la app (una vez por cada apertura)
+const _autoPropShown=new Set();
+function maybeAutoOpenIncoming(){
+  if(typeof isPartner!=="undefined"&&isPartner)return;
+  if(!userRow){setTimeout(maybeAutoOpenIncoming,2000);return;}
+  const mine=Object.entries(proposals||{}).filter(([k,p])=>p&&Number(p.to)===Number(userRow)&&p.status==="pending"&&!_autoPropShown.has(k));
+  if(!mine.length)return;
+  setTimeout(()=>{
+    if(document.querySelector(".overlay.open")){setTimeout(maybeAutoOpenIncoming,2500);return;}
+    const left=mine.filter(([k])=>!_autoPropShown.has(k));if(!left.length)return;
+    const [k,p]=left[0];
+    if(!proposals[k]||proposals[k].status!=="pending")return;
+    _autoPropShown.add(k);
+    openRespondModal(k);
+    const tl=document.getElementById("respondModalTitle");
+    if(tl)tl.textContent="📩 "+waFirst(p.fromName)+(waGL()?" proponche un cambio":" te propone un cambio");
+  },1500);
+}
+// Tras responder: se queda la ventana con el resultado y un botón para avisar por WhatsApp
+function respondShowResult(p,decision){
+  const gl=waGL();
+  const ok=decision==="accepted";
+  document.getElementById("respondContent").innerHTML=
+    `<div style="font-size:.95rem;font-weight:700;margin:6px 0 12px">${ok?(gl?"✅ Cambio aceptado e apuntado":"✅ Cambio aceptado y apuntado"):(gl?"❌ Proposta rexeitada":"❌ Propuesta rechazada")}</div>
+     <button onclick='waOpen(${JSON.stringify(waReplyText(p,decision))})' style="width:100%;padding:13px;border-radius:10px;border:none;background:#25D366;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer">📲 ${gl?"Avisar a":"Avisar a"} ${sugEscWA(waFirst(p.fromName))} ${gl?"por WhatsApp":"por WhatsApp"}</button>`;
+  ["respondCommentLabel","respondComment","respondRejectBtn","respondAcceptBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+  const b=document.getElementById("respondBackBtn");if(b)b.textContent=gl?"Pechar":"Cerrar";
+}
+function respondResetUI(){
+  ["respondCommentLabel","respondComment","respondRejectBtn","respondAcceptBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="";});
+  const b=document.getElementById("respondBackBtn");if(b)b.textContent="← Volver";
+  const tl=document.getElementById("respondModalTitle");if(tl)tl.textContent=waGL()?"🔄 Responder proposta":"🔄 Responder propuesta";
+}
+function sugEscWA(x){return String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function sendProposal(viaWA){
   const toPi=parseInt(document.getElementById("propPerson").value);
   const theirDaySel=document.getElementById("propTheirDay");
   const theirDay=theirDaySel.value;
@@ -2804,13 +2896,16 @@ function sendProposal(){
     to:toPi,toName:PEOPLE[toPi-1].name,toDay:theirDay,toTurn:toTurn,status:"pending",
     commentFrom:comment,commentTo:"",createdAt:new Date().toLocaleString("es-ES")};
   if(propSugKind&&propSugKind.kind==="doble"&&propSugKind.pi===toPi&&propSugKind.dk===theirDay){prop.kind="doble";prop.combo=propSugKind.combo;}
-  db.ref("tcaes_proposals").push(prop).then(()=>{
+  if(viaWA===true)prop.via="whatsapp";
+  waPushProposal(prop,viaWA===true).then(()=>{
     closePropModal();
+    if(viaWA===true)return;
     alert(t("propuestaEnviada")+" "+PEOPLE[toPi-1].name);
   }).catch(()=>alert(t("errorEnviar")));
 }
 
 function openRespondModal(key){
+  respondResetUI();
   currentPropKey=key;
   const p=proposals[key];
   if(!p)return;
@@ -2873,9 +2968,8 @@ function respondProposal(decision){
     db.ref().update(updates);
   }
   db.ref("tcaes_proposals/"+currentPropKey).update({status:decision,commentTo:comment,respondedAt:new Date().toLocaleString("es-ES")}).then(()=>{
-    closeRespondModal();
-    if(decision==="accepted"){alert(t("cambioAplicado"));render();}
-    else alert(t("propuestaRechazada"));
+    if(decision==="accepted"){try{render();}catch(e){}}
+    respondShowResult(p,decision);
   });
 }
 
@@ -3056,6 +3150,7 @@ window.onload=()=>{applyLangStatic();if(userName){render();renderMiTurno();showT
       <button class="mbtn mbtn-ghost" id="propBackBtn" onclick="closePropModal()" style="flex:1">← Volver</button>
       <button class="mbtn mbtn-save" id="propSendBtn" onclick="sendProposal()" style="flex:1">Enviar</button>
     </div>
+    <button id="propSendWaBtn" onclick="sendProposal(true)" style="width:100%;margin-top:8px;padding:12px;border-radius:10px;border:none;background:#25D366;color:#fff;font-weight:700;font-size:.85rem;cursor:pointer">📲 Enviar y avisar por WhatsApp</button>
   </div>
 </div>
 
