@@ -2798,9 +2798,32 @@ const WA_PROPS_NODE="tcaes_proposals";function WA_PEOPLE(){return PEOPLE;}
 // ===== Pedir el cambio por WhatsApp (sin enlaces) + ventana automática de propuestas recibidas =====
 // La propuesta se guarda en la app como siempre; WhatsApp solo lleva el aviso. Acepta quien cede su turno, desde la app.
 function waGL(){return typeof lang!=="undefined"&&lang==="gl";}
+function waCopy(text){
+  // Copia de seguridad: si WhatsApp no pone el texto, se puede pegar
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(()=>waCopyOld(text));return;}}catch(e){}
+  waCopyOld(text);
+}
+function waCopyOld(text){
+  try{const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="absolute";ta.style.left="-9999px";
+    document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}catch(e){}
+}
+function waToast(msg){
+  try{let el=document.getElementById("waToast");
+    if(!el){el=document.createElement("div");el.id="waToast";el.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:9999;background:#075E54;color:#fff;border-radius:12px;padding:12px 14px;font-size:.82rem;line-height:1.35;box-shadow:0 4px 16px rgba(0,0,0,.25)";document.body.appendChild(el);}
+    el.textContent=msg;el.style.display="block";clearTimeout(el._t);el._t=setTimeout(()=>{el.style.display="none";},7000);}catch(e){}
+}
 function waOpen(text){
-  const u="https://wa.me/?text="+encodeURIComponent(text);
-  try{const w=window.open(u,"_blank");if(!w)location.href=u;}catch(e){location.href=u;}
+  waCopy(text);
+  const enc=encodeURIComponent(text);
+  const C=window.Capacitor,native=!!(C&&C.isNativePlatform&&C.isNativePlatform());
+  const mobile=native||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||"");
+  // En el móvil se abre la app de WhatsApp directamente (whatsapp://), que conserva el texto al elegir el chat
+  const u=mobile?"whatsapp://send?text="+enc:"https://wa.me/?text="+enc;
+  try{
+    if(mobile)location.href=u;
+    else{const w=window.open(u,"_blank");if(!w)location.href=u;}
+  }catch(e){try{window.open("https://wa.me/?text="+enc,"_blank");}catch(_){}}
+  waToast(waGL()?"📋 Mensaxe copiada. Elixe o chat; se non aparece o texto, mantén premido e Pegar.":"📋 Mensaje copiado. Elige el chat; si no aparece el texto, mantén pulsado y Pegar.");
 }
 function waDay(dk){const ds=String(dk||"").split("_")[1]||"";return ds?sugFmt(ds).toLowerCase():"?";}
 function waFirst(n){return String(n||"").split(/[ .]/)[0];}
