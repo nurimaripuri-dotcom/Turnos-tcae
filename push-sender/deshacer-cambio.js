@@ -31,7 +31,8 @@ const letter = v => v == null ? null : (typeof v === "string" ? v : (Array.isArr
   for (const k of keys) {
     const got = letter(cur[k]);
     const want = expect[k];
-    const match = want === null ? true : got === want;
+    // La casilla de Alberto ya puede estar corregida a mano a su turno original (M): también vale
+    const match = want === null ? true : (got === want || (k === fromPi + "_" + X && got === p.fromTurn));
     console.log(" casilla", k.replace(/^\d+_/, "fila?_"), "ahora:", got, "· esperado:", want, match ? "✓" : "✗");
     if (!match) ok = false;
   }
