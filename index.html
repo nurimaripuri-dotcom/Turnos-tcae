@@ -908,7 +908,18 @@ function agendaBadgeHTML(dateStr){
   if(!isCouple())return "";
   const n=agendaFor(dateStr).length;
   if(!n)return "";
-  return `<div style="position:absolute;top:3px;left:3px;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;background:#6f42c1;color:#fff;border-radius:8px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2">📅${n>1?n:""}</div>`;
+  return `<div onclick="showMiAgenda(event,'${dateStr}')" style="position:absolute;top:3px;left:3px;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;background:#6f42c1;color:#fff;border-radius:8px;font-size:.55rem;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2;cursor:pointer">📅${n>1?n:""}</div>`;
+}
+// Al tocar el 📅 de un día se ven sus apuntes (como el ✎ de los cambios), sin abrir la ventana del día
+function showMiAgenda(e,dateStr){
+  e.stopPropagation();
+  const items=agendaFor(dateStr);if(!items.length)return;
+  const popup=document.getElementById("logPopup");
+  popup.innerHTML=`<div style="font-weight:700;margin-bottom:4px">📅 ${escH(fmtAgendaDate(dateStr))}</div>`+
+    items.map(([sc,k,e])=>`<div style="padding:3px 0;border-top:1px solid rgba(128,128,128,.25)">${e.time?"<b>"+escH(e.time)+"</b> · ":""}${escH(e.text)}${e.rep?" 🔁":""} <span style="opacity:.75;font-size:.85em">${sc==="priv"?"🔒":"👥"}</span></div>`).join("");
+  popup.style.display="block";
+  popup.onclick=()=>{popup.style.display="none";};
+  clearTimeout(popup._t);popup._t=setTimeout(()=>popup.style.display="none",8000);
 }
 function fmtAgendaDate(dateStr){
   const y=+dateStr.slice(0,4),m=+dateStr.slice(4,6)-1,d=+dateStr.slice(6,8);
