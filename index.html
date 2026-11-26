@@ -172,6 +172,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
   animation:videoPulse 1.8s ease-out infinite;
   cursor:pointer;
 }
+.grecaptcha-badge{visibility:hidden!important}
 </style>
 </head>
 <body>
@@ -333,6 +334,7 @@ setTimeout(function(){
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
 <script>
 const ROTA = [
   [["T","V"],["T","I"],["N","I"],["/",null],["L",null],["L",null],["M","I"]],
@@ -604,7 +606,7 @@ const I18N={
     selectAll:"Todas", selectNone:"Ninguna", cerrar:"Cerrar",
     menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
     legalConfirm:"¿Estás seguro? Al aceptar, confirmas que usas la app de forma voluntaria y bajo tu propia responsabilidad.",
-    legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
+    legalBody:"<p style='margin-bottom:10px'>Esta app es un proyecto personal para facilitar la consulta y gestión de los turnos del servicio. Su uso es <b>totalmente voluntario</b> — nadie está obligado a usarla, es una herramienta pensada para la comodidad de quien quiera aprovecharla.</p><p style='margin-bottom:10px'>Datos que se guardan: nombre, código, turnos, cambios propuestos y comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico de la app, tengo acceso a esos datos desde el sistema donde se almacenan. No se guarda ni se accede a ninguna otra cuenta tuya (email personal, contraseñas, redes sociales, datos bancarios, etc.).</p><p style='margin-bottom:10px'>Para proteger la app frente a accesos automáticos se usa Google reCAPTCHA, que puede recoger datos técnicos del navegador. Se aplican la <a href='https://policies.google.com/privacy' target='_blank' rel='noopener'>Política de Privacidad</a> y las <a href='https://policies.google.com/terms' target='_blank' rel='noopener'>Condiciones del Servicio</a> de Google.</p><p>El uso de la app es bajo la responsabilidad de cada usuaria. Si tienes dudas o quieres que se eliminen tus datos, puedes contactar conmigo.</p>",
     days:["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"],
     months:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],
     tabEnf:"👥 DUE", tabTce:"📋 TCE", tabDue:"👥 DUE", tceHint:"✏️ Toca una casilla de tu fila para cambiar tu turno", newFeatTitle:"🆕 Novedades", newFeatHead:"Ahora hay 3 pestañas arriba", newFeatL1:"<b>👤 Mi turno</b>: tu calendario del mes", newFeatL2:"<b>📋 TCE</b>: el cuadrante de todas las TCE. Toca una casilla de <b>tu fila</b> para cambiar tu turno", newFeatL3:"<b>👥 DUE</b>: el cuadrante de las enfermeras (solo consulta)", newFeatFoot:"El resto de opciones (Cambios, código, idioma, vídeo…) siguen en el menú ⋮.", newFeatOk:"Entendido ✓", dueHint:"👁 Solo consulta", tabSugerencias:"📬 Sugerencias",
@@ -675,7 +677,7 @@ const I18N={
     selectAll:"Todas", selectNone:"Ningunha", cerrar:"Pechar",
     menuLegal:"📜 Aviso legal", legalTitle:"📜 Aviso legal", legalAccept:"Acepto",
     legalConfirm:"¿Estás segura? Ao aceptar, confirmas que usas a app de forma voluntaria e baixo a túa propia responsabilidade.",
-    legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
+    legalBody:"<p style='margin-bottom:10px'>Esta app é un proxecto persoal para facilitar a consulta e xestión dos turnos do servizo. O seu uso é <b>totalmente voluntario</b> — ninguén está obrigado a usala, é unha ferramenta pensada para a comodidade de quen queira aproveitala.</p><p style='margin-bottom:10px'>Datos que se gardan: nome, código, turnos, cambios propostos e comentarios asociados.</p><p style='margin-bottom:10px'>Como responsable técnico da app, teño acceso a eses datos dende o sistema onde se almacenan. Non se garda nin se accede a ningunha outra conta túa (email persoal, contrasinais, redes sociais, datos bancarios, etc.).</p><p style='margin-bottom:10px'>Para protexer a app fronte a accesos automáticos úsase Google reCAPTCHA, que pode recoller datos técnicos do navegador. Aplícanse a <a href='https://policies.google.com/privacy' target='_blank' rel='noopener'>Política de Privacidade</a> e as <a href='https://policies.google.com/terms' target='_blank' rel='noopener'>Condicións do Servizo</a> de Google.</p><p>O uso da app é baixo a responsabilidade de cada usuaria. Se tes dúbidas ou queres que se eliminen os teus datos, podes contactar comigo.</p>",
     days:["Luns","Martes","Mércores","Xoves","Venres","Sábado","Domingo"],
     months:["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"],
     tabEnf:"👥 DUE", tabTce:"📋 TCE", tabDue:"👥 DUE", tceHint:"✏️ Toca unha casiña da túa fila para cambiar a túa quenda", newFeatTitle:"🆕 Novidades", newFeatHead:"Agora hai 3 pestanas arriba", newFeatL1:"<b>👤 A miña quenda</b>: o teu calendario do mes", newFeatL2:"<b>📋 TCE</b>: o cadrante de todas as TCE. Toca unha casiña da <b>túa fila</b> para cambiar a túa quenda", newFeatL3:"<b>👥 DUE</b>: o cadrante das enfermeiras (só consulta)", newFeatFoot:"O resto de opcións (Cambios, código, idioma, vídeo…) seguen no menú ⋮.", newFeatOk:"Entendido ✓", dueHint:"👁 Só consulta", tabSugerencias:"📬 Suxestións",
@@ -815,6 +817,10 @@ try{
   };
   if(!firebase.apps.length) firebase.initializeApp(_fc,"tcaes_app");
   else if(!firebase.apps.find(a=>a.name==="tcaes_app")) firebase.initializeApp(_fc,"tcaes_app");
+  // App Check (Fraud Defense / reCAPTCHA Enterprise): solo deja usar la base de datos desde esta web/app.
+  // Si falla (bloqueador, sin red), la app sigue funcionando: solo aplica cuando se active "Aplicar" en Firebase.
+  try{ firebase.app("tcaes_app").appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider("6LcLGTQuAAAAADve0URJhuYzgiBcaeQ-rTnFqAwI"), true); }
+  catch(e){console.log("App Check:",e);}
   db=firebase.database(firebase.app("tcaes_app"));
   firebase.app("tcaes_app").auth().signInAnonymously().catch(e=>console.log("Auth anónima falló:",e));
 }catch(e){console.log("Firebase early init:",e);}
