@@ -1,0 +1,57 @@
+name: Copia de seguridad cifrada
+
+# Cada noche descarga la base de datos, la cifra con BACKUP_PASSPHRASE (AES-256, openssl)
+# y la guarda como artefacto 30 días. El servidor de casa descarga la última copia.
+# El repo es público: el archivo sin cifrar se borra antes de subir nada y nunca se imprime.
+on:
+  schedule:
+    - cron: '37 1 * * *'   # ~02:37 en España (respaldo; normalmente la lanza el servidor de casa)
+  workflow_dispatch:
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  copia:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: monitor
+    steps:
+      - name: Comprobar configuración
+        working-directory: .
+        env:
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ ${#PASS} -lt 32 ]; then echo "::error title=Falta BACKUP_PASSPHRASE::Crea el secret BACKUP_PASSPHRASE (32 caracteres o más)"; exit 1; fi
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: monitor/package-lock.json
+      - name: Exportar y cifrar
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          umask 077
+          npm ci --no-audit --no-fund
+          F="turnos-$(TZ=Europe/Madrid date +%Y%m%d-%H%M)"
+          node backup.js "$RUNNER_TEMP/$F.json"
+          mkdir -p "$RUNNER_TEMP/out"
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:PASS \
+            -in "$RUNNER_TEMP/$F.json" -out "$RUNNER_TEMP/out/$F.json.enc"
+          # Comprobar que se descifra bien antes de borrar el original
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:PASS \
+            -in "$RUNNER_TEMP/out/$F.json.enc" | cmp - "$RUNNER_TEMP/$F.json"
+          shred -u "$RUNNER_TEMP/$F.json" || rm -f "$RUNNER_TEMP/$F.json"
+          ls -l "$RUNNER_TEMP/out" | tail -n +2 | awk '{print "Cifrado:", $9, $5, "bytes"}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copia-turnos
+          path: ${{ runner.temp }}/out/*.json.enc
+          retention-days: 30
+          if-no-files-found: error
