@@ -25,6 +25,7 @@ jobs:
         env:
           PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
+          PASS="$(printf '%s' "$PASS" | tr -d '[:space:]')"
           if [ ${#PASS} -lt 32 ]; then echo "::error title=Falta BACKUP_PASSPHRASE::Crea el secret BACKUP_PASSPHRASE (32 caracteres o más)"; exit 1; fi
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -38,6 +39,8 @@ jobs:
           PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           umask 077
+          # Quitar espacios o saltos de línea que se cuelan al pegar el secret (la clave base64 no lleva)
+          PASS="$(printf '%s' "$PASS" | tr -d '[:space:]')"; export PASS
           npm ci --no-audit --no-fund
           F="turnos-$(TZ=Europe/Madrid date +%Y%m%d-%H%M)"
           node backup.js "$RUNNER_TEMP/$F.json"
