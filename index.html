@@ -815,7 +815,7 @@ try{
   else if(!firebase.apps.find(a=>a.name==="tcaes_app")) firebase.initializeApp(_fc,"tcaes_app");
   // App Check (Fraud Defense / reCAPTCHA Enterprise): solo deja usar la base de datos desde esta web/app.
   // Si falla (bloqueador, sin red), la app sigue funcionando: solo aplica cuando se active "Aplicar" en Firebase.
-  try{ firebase.app("tcaes_app").appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider("6LcLGTQuAAAAADve0URJhuYzgiBcaeQ-rTnFqAwI"), true); }
+  try{ firebase.app("tcaes_app").appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider("6LdNVzUuAAAAAM1XL_QcpJ_ip9LPbbaz36DOyvqj"), true); }
   catch(e){console.log("App Check:",e);}
   db=firebase.database(firebase.app("tcaes_app"));
   firebase.app("tcaes_app").auth().signInAnonymously().catch(e=>console.log("Auth anónima falló:",e));

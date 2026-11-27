@@ -18,7 +18,7 @@ pg.on("response", async (r) => {
 });
 await pg.goto(url, { waitUntil: "load" });
 await pg.waitForTimeout(15000);
-const KEY = "6LcLGTQuAAAAADve0URJhuYzgiBcaeQ-rTnFqAwI";
+const KEY = "6LdNVzUuAAAAAM1XL_QcpJ_ip9LPbbaz36DOyvqj";
 console.log("execute directo:", await pg.evaluate(async (k) => {
   try { await new Promise(r => grecaptcha.enterprise.ready(r));
         const t = await grecaptcha.enterprise.execute(k, { action: "diag" });
