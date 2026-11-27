@@ -1,0 +1,17 @@
+name: Diagnóstico App Check
+on: workflow_dispatch
+jobs:
+  diag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - name: Probar la web real
+        working-directory: diag
+        run: |
+          npm init -y >/dev/null && npm i --no-audit --no-fund playwright@1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          echo "=== TCE"; node appcheck.mjs https://nurimaripuri-dotcom.github.io/Turnos-tcae/
+          echo "=== Enfermeras"; node appcheck.mjs https://nurimaripuri-dotcom.github.io/Turnos-enfermeras/
