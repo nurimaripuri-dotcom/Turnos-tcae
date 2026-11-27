@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
@@ -187,7 +187,7 @@ input[type=text]{width:100%;padding:8px 10px;border-radius:7px;border:1px solid 
 setTimeout(function(){
   var sp=document.getElementById("splashScreen");
   if(sp){ sp.classList.add("hide"); setTimeout(function(){ sp.remove(); }, 450); }
-}, 1700);
+}, 700);
 </script>
 
 <div id="nameScreen">
@@ -804,6 +804,19 @@ let changeLogData={},changeIcons={};
 window.dateOverrides={};
 let db=null;
 
+function normName(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim().replace(/\s+/g," ");}
+// Lee una ruta esperando a que haya sesión anónima, con límite de tiempo
+function readWhenAuthed(path,ms){
+  const a=firebase.app("tcaes_app").auth();
+  const ready=new Promise(res=>{if(a.currentUser)return res();const u=a.onAuthStateChanged(x=>{if(x){u();res();}});});
+  const to=new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms||12000));
+  return Promise.race([ready.then(()=>db.ref(path).once("value")),to]);
+}
+function pinCheckFailed(){
+  const el=document.getElementById("pinError");
+  el.textContent=lang==="gl"?"⚠️ Non se puido comprobar o código. Revisa a conexión e téntao de novo.":"⚠️ No se pudo comprobar el código. Revisa la conexión e inténtalo de nuevo.";
+  el.style.display="block";
+}
 // Initialize Firebase early for PIN verification
 try{
   const _fc={
@@ -829,7 +842,7 @@ let miMonth=new Date().getMonth(),miYear=new Date().getFullYear();
 function saveName(){
   const n=document.getElementById("nameInput").value.trim();
   if(!n)return;
-  const nl=n.toLowerCase();
+  const nl=normName(n);
   if(PARTNER_NAMES.includes(nl)){
     isPartner=true;pinLocked=true;userName="Yoli";userRow=ALBERTO_ROW;
     localStorage.setItem("tcaes_partner","1");
@@ -843,15 +856,15 @@ function saveName(){
     return;
   }
   isPartner=false;localStorage.removeItem("tcaes_partner");
-  const idx=PEOPLE.findIndex(p=>p.name.toLowerCase()===nl);
+  const idx=PEOPLE.findIndex(p=>normName(p.name)===nl);
   if(idx<0){
     const names=PEOPLE.map(p=>p.name).join(", ");
     document.getElementById("nameError").textContent="❌ Nombre no encontrado. Válidos: "+names;
     document.getElementById("nameError").style.display="block";
     return;
   }
-  userName=n; userRow=idx+1;
-  localStorage.setItem("tcaes_user",n);
+  userName=PEOPLE[idx].name; userRow=idx+1;
+  localStorage.setItem("tcaes_user",userName);
   localStorage.setItem("tcaes_row",String(userRow));
   // Go to PIN step
   document.getElementById("stepName").style.display="none";
@@ -1534,7 +1547,7 @@ function showLogEnf(e,pi_,dateStr){
   const data=enfChangeIcons[pi_]&&enfChangeIcons[pi_][dateStr];
   if(!data)return;
   const popup=document.getElementById("logPopup");
-  popup.innerHTML=`✎ <b>${data.quien||"?"}</b> con <b>${data.con||"—"}</b><br>${data.cambio||""}`;
+  popup.innerHTML=`✎ <b>${escH(data.quien)||"?"}</b> con <b>${escH(data.con)||"—"}</b><br>${escH(data.cambio)||""}`;
   popup.style.display="block";
   setTimeout(()=>popup.style.display="none",4000);
 }
@@ -1550,7 +1563,7 @@ function renderSugerencias(){
   cont.innerHTML=suggestions.map(s=>`
     <div onclick="openSugDetail('${s.key}')" style="cursor:pointer;background:var(--s2);border-radius:10px;padding:12px 14px;margin-bottom:10px;${s.read?"":"border-left:3px solid var(--I)"}">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+        <span style="font-weight:700;font-size:.85rem">${escH(s.from||"?")}</span>
         <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
       </div>
       <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>
@@ -1586,7 +1599,7 @@ function renderSugDetail(){
   if(!s)return;
   document.getElementById("sugDetailOriginal").innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-      <span style="font-weight:700;font-size:.85rem">${s.from||"?"}</span>
+      <span style="font-weight:700;font-size:.85rem">${escH(s.from||"?")}</span>
       <span style="font-size:.68rem;color:var(--mu)">${s.date||""}</span>
     </div>
     <div style="font-size:.85rem;white-space:pre-wrap">${(s.text||"").replace(/</g,"&lt;")}</div>`;
@@ -1594,7 +1607,7 @@ function renderSugDetail(){
   repliesDiv.innerHTML=s.replies.length?s.replies.map(r=>`
     <div style="background:var(--s2);border-radius:8px;padding:8px 10px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
-        <span style="font-weight:600;font-size:.78rem">${STANCE_LBL[r.stance]||"💬"} ${r.from||"?"}</span>
+        <span style="font-weight:600;font-size:.78rem">${STANCE_LBL[r.stance]||"💬"} ${escH(r.from||"?")}</span>
         <span style="font-size:.65rem;color:var(--mu)">${r.date||""}</span>
       </div>
       ${r.text?`<div style="font-size:.78rem;white-space:pre-wrap">${(r.text||"").replace(/</g,"&lt;")}</div>`:""}
@@ -1623,7 +1636,7 @@ function showLog(e,pi_,dateStr){
   const data=changeIcons[pi_]&&changeIcons[pi_][dateStr];
   if(!data)return;
   const popup=document.getElementById("logPopup");
-  popup.innerHTML=`✎ <b>${data.quien||"?"}</b> con <b>${data.con||"—"}</b><br>${data.cambio||""}`;
+  popup.innerHTML=`✎ <b>${escH(data.quien)||"?"}</b> con <b>${escH(data.con)||"—"}</b><br>${escH(data.cambio)||""}`;
   popup.style.display="block";
   setTimeout(()=>popup.style.display="none",4000);
 }
@@ -2012,7 +2025,7 @@ function showMiLog(e,day){
   if(pinLocked){
     popup.innerHTML=t("commentLockedShort");
   } else {
-    popup.innerHTML=`👤 <b>${data.quien||"?"}</b> 🔄 Con: <b>${data.con||"—"}</b><br>${data.comentario?"💬 "+data.comentario+"<br>":""}📋 ${data.cambio||""}`;
+    popup.innerHTML=`👤 <b>${escH(data.quien)||"?"}</b> 🔄 Con: <b>${escH(data.con)||"—"}</b><br>${data.comentario?"💬 "+escH(data.comentario)+"<br>":""}📋 ${escH(data.cambio)||""}`;
   }
   popup.style.display="block";
   setTimeout(()=>popup.style.display="none",5000);
@@ -2359,7 +2372,7 @@ function checkPin(){
     return;
   }
   if(db){
-    db.ref(pinPath()).once("value").then(snap=>{
+    readWhenAuthed(pinPath()).then(snap=>{
       const stored=snap.val()||"0000";
       if(pin===stored){
         enterApp();
@@ -2368,15 +2381,9 @@ function checkPin(){
         document.getElementById("pinError").style.display="block";
         document.getElementById("pinInput").value="";
       }
-    }).catch(()=>enterApp());
+    }).catch(()=>pinCheckFailed());
   } else {
-    const stored=localStorage.getItem("tcaes_pin_"+userRow)||"0000";
-    if(pin===stored){enterApp();}
-    else {
-      document.getElementById("pinError").textContent=t("codeWrong");
-      document.getElementById("pinError").style.display="block";
-      document.getElementById("pinInput").value="";
-    }
+    pinCheckFailed();
   }
 }
 
@@ -2481,7 +2488,7 @@ function initProposals(){
     return;
   }
   db.ref("tcaes_proposals").on("value",snap=>{
-    proposals=snap.val()||{};
+    proposals=Object.fromEntries(Object.entries(snap.val()||{}).filter(([k])=>/^[A-Za-z0-9_-]+$/.test(k)));
     updatePropBadge();
     try{maybeAutoOpenIncoming();}catch(e){}
     const v=document.getElementById("view-props");
@@ -2912,7 +2919,7 @@ function respondShowResult(p,decision){
   const ok=decision==="accepted";
   document.getElementById("respondContent").innerHTML=
     `<div style="font-size:.95rem;font-weight:700;margin:6px 0 12px">${ok?(gl?"✅ Cambio aceptado e apuntado":"✅ Cambio aceptado y apuntado"):(gl?"❌ Proposta rexeitada":"❌ Propuesta rechazada")}</div>
-     <button onclick='waOpen(${JSON.stringify(waReplyText(p,decision))})' style="width:100%;padding:13px;border-radius:10px;border:none;background:#25D366;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer">📲 ${gl?"Avisar a":"Avisar a"} ${sugEscWA(waFirst(p.fromName))} ${gl?"por WhatsApp":"por WhatsApp"}</button>`;
+     <button onclick="waOpen(${escH(JSON.stringify(waReplyText(p,decision)))})" style="width:100%;padding:13px;border-radius:10px;border:none;background:#25D366;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer">📲 ${gl?"Avisar a":"Avisar a"} ${sugEscWA(waFirst(p.fromName))} ${gl?"por WhatsApp":"por WhatsApp"}</button>`;
   ["respondCommentLabel","respondComment","respondRejectBtn","respondAcceptBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
   const b=document.getElementById("respondBackBtn");if(b)b.textContent=gl?"Pechar":"Cerrar";
 }
@@ -2953,12 +2960,12 @@ function openRespondModal(key){
   const fromDs=(p.fromDay||"").split("_")[1];
   const toDs=(p.toDay||"").split("_")[1];
   let html='<div class="prop-card pending" style="margin-bottom:12px">';
-  html+='<p style="font-size:.82rem"><b>'+p.fromName+'</b> '+t("tePropone")+'</p>';
+  html+='<p style="font-size:.82rem"><b>'+escH(p.fromName)+'</b> '+t("tePropone")+'</p>';
   html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
-  html+='🔄 '+t("teDaSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' <b>'+fmt(fromDs)+'</b><br>';
+  html+='🔄 '+t("teDaSu")+' <b>'+escH(p.fromTurn||"?")+'</b> '+t("delDia")+' <b>'+fmt(fromDs)+'</b><br>';
   html+=t("aCambioQuiere")+' <b>'+fmt(toDs)+'</b></p>';
   if(p.kind==="doble")html+='<p style="font-size:.78rem;margin:4px 0">⏩ Ese día harías <b>'+(p.combo==="MT"?"M/T":"T/N")+'</b> y el '+fmt(toDs)+' no vienes.</p>';
-  if(p.commentFrom)html+='<p style="font-size:.75rem;font-style:italic;color:#555">💬 "'+p.commentFrom+'"</p>';
+  if(p.commentFrom)html+='<p style="font-size:.75rem;font-style:italic;color:#555">💬 "'+escH(p.commentFrom)+'"</p>';
   html+='</div>';
   document.getElementById("respondContent").innerHTML=html;
   document.getElementById("respondComment").value="";
@@ -3055,16 +3062,16 @@ function renderProposals(){
     html+='<div class="prop-card '+ccls+'" style="margin-bottom:12px">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
     html+='<span style="font-size:.75rem;font-weight:700">'+slabel+'</span>';
-    html+='<span style="font-size:.7rem;color:var(--mu)">'+(p.createdAt||"")+'</span></div>';
-    html+='<p style="font-size:.82rem">'+(isFrom?t("propuestaA")+" <b>"+p.toName+"</b>":t("propuestaDe")+" <b>"+p.fromName+"</b>")+'</p>';
+    html+='<span style="font-size:.7rem;color:var(--mu)">'+escH(p.createdAt||"")+'</span></div>';
+    html+='<p style="font-size:.82rem">'+(isFrom?t("propuestaA")+" <b>"+escH(p.toName)+"</b>":t("propuestaDe")+" <b>"+escH(p.fromName)+"</b>")+'</p>';
     html+='<p style="font-size:.78rem;color:var(--mu);margin:6px 0">';
-    html+='🔄 <b>'+p.fromName+'</b> '+t("daSu")+' <b>'+(p.fromTurn||"?")+'</b> '+t("delDia")+' '+fmt(fromDs)+'<br>';
-    html+='🔄 <b>'+p.toName+'</b> '+t("daSu")+' turno '+t("delDia")+' '+fmt(toDs)+'</p>';
+    html+='🔄 <b>'+escH(p.fromName)+'</b> '+t("daSu")+' <b>'+escH(p.fromTurn||"?")+'</b> '+t("delDia")+' '+fmt(fromDs)+'<br>';
+    html+='🔄 <b>'+escH(p.toName)+'</b> '+t("daSu")+' turno '+t("delDia")+' '+fmt(toDs)+'</p>';
     if(pinLocked){
       html+='<p style="font-size:.75rem;color:#c0392b;margin-top:4px">'+t("commentLockedLong")+'</p>';
     } else {
-      if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.fromName+': "'+p.commentFrom+'"</p>';
-      if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+p.toName+': "'+p.commentTo+'"</p>';
+      if(p.commentFrom)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+escH(p.fromName)+': "'+escH(p.commentFrom)+'"</p>';
+      if(p.commentTo)html+='<p style="font-size:.75rem;color:#555;margin-top:4px">💬 '+escH(p.toName)+': "'+escH(p.commentTo)+'"</p>';
     }
     if(p.status==="pending"&&!pinLocked){
       if(!isFrom){
