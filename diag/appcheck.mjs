@@ -18,5 +18,18 @@ pg.on("response", async (r) => {
 });
 await pg.goto(url, { waitUntil: "load" });
 await pg.waitForTimeout(15000);
+const KEY = "6LcLGTQuAAAAADve0URJhuYzgiBcaeQ-rTnFqAwI";
+console.log("execute directo:", await pg.evaluate(async (k) => {
+  try { await new Promise(r => grecaptcha.enterprise.ready(r));
+        const t = await grecaptcha.enterprise.execute(k, { action: "diag" });
+        return "token de " + (t ? t.length : 0) + " caracteres"; }
+  catch (e) { return "ERROR: " + String(e && e.message || e); }
+}, KEY));
+for (const f of pg.frames()) {
+  if (/recaptcha\/enterprise\/anchor/.test(f.url())) {
+    try { console.log("ANCHOR texto:", (await f.evaluate(() => document.body.innerText)).replace(/\s+/g, " ").slice(0, 300)); } catch (e) { console.log("ANCHOR no legible", String(e).slice(0,100)); }
+  }
+}
+console.log("divs app check:", await pg.evaluate(() => [...document.querySelectorAll("div[id^=fire_app_check]")].map(d => d.id + " en " + (d.parentElement && d.parentElement.tagName) + " visible=" + (d.offsetParent!==null)).join(" | ") || "ninguno"));
 console.log("grecaptcha:", await pg.evaluate(() => typeof window.grecaptcha + " enterprise:" + typeof (window.grecaptcha && window.grecaptcha.enterprise)));
 await b.close();
