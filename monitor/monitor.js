@@ -19,6 +19,7 @@ const KNOWN_ROOTS = [
   "tcaes_agenda_priv", "tcaes_gcal_sync", "tcaes_push_tokens", "tcaes_push_sent",
   "enf_changes", "enf_icons", "enf_log", "enf_pins", "enf_proposals",
   "enf_legal_acceptances", "enf_push_tokens", "enf_push_sent",
+  "fixes",      // marcas de limpiezas antiguas de TCE (mayo 2026), legítimo
   "_monitor",
 ];
 
