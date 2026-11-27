@@ -97,13 +97,13 @@ async function main() {
       const r = Number(row);
       if (!Number.isInteger(r) || r < lo || r > hi) add("PIN en una fila que no existe", node + "/" + row);
       if (pin !== null && !/^\d{4}$/.test(String(pin))) add("PIN con formato no válido", node + "/" + row);
-      pinHashes[node + "/" + row] = hmac(pin);
+      pinHashes[node + ":" + row] = hmac(pin);
     }
   }
   const partnerPin = root.tcaes_partner && root.tcaes_partner.pin;
   if (partnerPin != null) {
     if (!/^\d{4}$/.test(String(partnerPin))) add("PIN con formato no válido", "tcaes_partner/pin");
-    pinHashes["tcaes_partner/pin"] = hmac(partnerPin);
+    pinHashes["tcaes_partner:pin"] = hmac(partnerPin);
   }
   let pinChanges = 0;
   if (prev && prev.pins) {
